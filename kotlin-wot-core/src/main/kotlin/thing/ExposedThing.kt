@@ -71,7 +71,7 @@ class ExposedThing(
      *
      * @return
      */
-    fun readProperties(): CompletableFuture<Map<String, Any>> {
+    suspend fun readProperties(): CompletableFuture<Map<String, Any>> {
         val futures: MutableList<CompletableFuture<*>> = ArrayList()
         val values: MutableMap<String, Any> = HashMap()
         properties.forEach { (name, property) ->
@@ -92,7 +92,7 @@ class ExposedThing(
      * @param values
      * @return
      */
-    fun writeProperties(values: Map<String, Any>): CompletableFuture<Map<String, Any>> {
+    suspend fun writeProperties(values: Map<String, Any>): CompletableFuture<Map<String, Any>> {
         val futures: MutableList<CompletableFuture<*>> = ArrayList()
         val returnValues: MutableMap<String, Any> = HashMap()
         values.forEach { (name, value) ->

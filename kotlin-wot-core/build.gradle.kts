@@ -9,4 +9,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.slf4j:slf4j-api")
+
+    testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.4.1")
+
+
 }

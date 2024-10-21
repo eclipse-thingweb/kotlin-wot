@@ -14,11 +14,7 @@ import java.io.IOException
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-open class Thing<
-        P : ThingProperty<Any?>,
-        A : ThingAction<Any?, Any?>,
-        E : ThingEvent<Any?>
-        >(
+open class Thing<P : ThingProperty<Any?>, A : ThingAction<Any?, Any?>, E : ThingEvent<Any?>>(
     @JsonProperty("@type") @JsonInclude(JsonInclude.Include.NON_NULL) val objectType: Type? = null,
     @JsonProperty("@context") @JsonInclude(JsonInclude.Include.NON_NULL) val objectContext: Context? = null,
     val id: String,
@@ -112,7 +108,7 @@ open class Thing<
             }
         }
 
-        fun fromMap(map: Map<String?, Map<*, *>?>?): Thing<*, *, *> {
+        fun fromMap(map: Map<*, *>): Thing<*, *, *> {
             return JSON_MAPPER.convertValue(map, Thing::class.java)
         }
     }

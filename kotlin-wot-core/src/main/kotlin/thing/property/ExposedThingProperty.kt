@@ -52,7 +52,7 @@ class ExposedThingProperty<T>(
             log.debug("'{}' calls registered readHandler for Property '{}'", thing.id, name)
 
             try {
-                state.readHandler.get().whenComplete { customValue, e -> state.setValue(customValue) }
+                state.readHandler!!.get().whenComplete { customValue, e -> state.setValue(customValue) }
             } catch (e: Exception) {
                 CompletableFuture.failedFuture<T>(e)
             }
@@ -69,7 +69,7 @@ class ExposedThingProperty<T>(
         return if (state.writeHandler != null) {
             log.debug("'{}' calls registered writeHandler for Property '{}'", thing.id, name)
             try {
-                state.writeHandler.apply(value).whenComplete { customValue, e ->
+                state.writeHandler!!.apply(value).whenComplete { customValue, e ->
                     log.debug(
                         "'{}' write handler for Property '{}' sets custom value '{}'",
                         thing.id,
