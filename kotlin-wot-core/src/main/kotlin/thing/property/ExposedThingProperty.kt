@@ -47,7 +47,7 @@ class ExposedThingProperty<T>(
         property?.optionalProperties ?: emptyMap()
     )
 
-    fun read(): CompletableFuture<T> {
+    suspend fun read(): CompletableFuture<T> {
         return if (state.readHandler != null) {
             log.debug("'{}' calls registered readHandler for Property '{}'", thing.id, name)
 
@@ -85,10 +85,10 @@ class ExposedThingProperty<T>(
                 CompletableFuture.failedFuture<T?>(e)
             }
         } else {
-            if (state.getValue() != value) {
+            if (state.value != value) {
                 log.debug("'{}' sets Property '{}' to internal value '{}'", thing.id, name, value)
                 state.setValue(value)
-                state.getSubject().onNext(Optional.ofNullable(value))
+                state.emit(value)
             }
             CompletableFuture.completedFuture<T?>(null)
         }

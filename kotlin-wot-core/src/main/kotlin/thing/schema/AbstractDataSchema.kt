@@ -1,6 +1,5 @@
 package ai.ancf.lmos.wot.schema
 
-import thing.schema.DataSchema
 
 abstract class AbstractDataSchema<T> : DataSchema<T> {
     override fun hashCode(): Int {

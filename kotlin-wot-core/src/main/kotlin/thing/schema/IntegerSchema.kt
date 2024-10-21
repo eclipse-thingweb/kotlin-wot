@@ -1,13 +1,14 @@
 package ai.ancf.lmos.wot.schema
 
-import ai.ancf.lmos.wot.schema.AbstractDataSchema
-
 /**
  * Describes data of type [integer](https://www.w3.org/TR/wot-thing-description/#integerschema).
  */
-class IntegerSchema : AbstractDataSchema<Int?>() {
-    override val type: String?
+class IntegerSchema : AbstractDataSchema<Int>() {
+    override val type: String
         get() = TYPE
+
+    override val classType: Class<Int>
+        get() = Int::class.javaObjectType
 
     override fun toString(): String {
         return "IntegerSchema{}"
@@ -15,7 +16,5 @@ class IntegerSchema : AbstractDataSchema<Int?>() {
 
     companion object {
         const val TYPE = "integer"
-        val classType = Int::class.java
-            get() = Companion.field
     }
 }

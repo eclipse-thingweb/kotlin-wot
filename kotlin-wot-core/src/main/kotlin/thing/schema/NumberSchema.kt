@@ -1,13 +1,15 @@
 package ai.ancf.lmos.wot.schema
 
-import ai.ancf.lmos.wot.schema.AbstractDataSchema
-
 /**
  * Describes data of type [number](https://www.w3.org/TR/wot-thing-description/#numberschema).
  */
-class NumberSchema : AbstractDataSchema<Number?>() {
-    override val type: String?
+
+class NumberSchema : AbstractDataSchema<Number>() {
+    override val type: String
         get() = TYPE
+
+    override val classType: Class<Number>
+        get() = Number::class.java
 
     override fun toString(): String {
         return "NumberSchema{}"
@@ -15,7 +17,5 @@ class NumberSchema : AbstractDataSchema<Number?>() {
 
     companion object {
         const val TYPE = "number"
-        val classType = Number::class.java
-            get() = Companion.field
     }
 }

@@ -1,13 +1,14 @@
 package ai.ancf.lmos.wot.schema
 
-import ai.ancf.lmos.wot.schema.AbstractDataSchema
-
 /**
  * Describes data of type [string](https://www.w3.org/TR/wot-thing-description/#stringschema).
  */
-class StringSchema : AbstractDataSchema<String?>() {
-    override val type: String?
+class StringSchema : AbstractDataSchema<String>() {
+    override val type: String
         get() = TYPE
+
+    override val classType: Class<String>
+        get() = String::class.java
 
     override fun toString(): String {
         return "StringSchema{}"
@@ -15,7 +16,5 @@ class StringSchema : AbstractDataSchema<String?>() {
 
     companion object {
         const val TYPE = "string"
-        val classType = String::class.java
-            get() = Companion.field
     }
 }
