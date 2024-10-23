@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.security
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import thing.security.SecurityScheme
 
 /**
  * Raw public key asymmetric key security configuration identified by the term public (i.e.,

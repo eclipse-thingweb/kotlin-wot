@@ -1,23 +1,28 @@
 package ai.ancf.lmos.wot.thing.property
 
 import ai.ancf.lmos.wot.thing.ExposedThing
+import kotlinx.coroutines.runBlocking
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class ExposedThingProperty<T>(
-    name: String,
-    thing: ExposedThing,
-    state: PropertyState<T>,
-    objectType: String,
+    val name: String,
+    val thing: ExposedThing,
+    val state: PropertyState<T>,
+    objectType: String? = null,
     description: String? = null,
     descriptions: Map<String, String>? = null,
     type: String = "string",
     observable: Boolean = false,
     readOnly: Boolean = false,
     writeOnly: Boolean = false,
-    uriVariables: Map<String, Map<String, Any?>?>? = null,
+    uriVariables: Map<String, Map<String, Any>>? = null,
     optionalProperties: Map<String, Any> = emptyMap()
 ) : ThingProperty<T>(
+    description,
+    descriptions,
+    null,
+    uriVariables,
     objectType,
     type,
     observable,
@@ -25,11 +30,6 @@ class ExposedThingProperty<T>(
     writeOnly,
     optionalProperties
 ) {
-    private val name: String = name
-    private val thing: ExposedThing = thing
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private val state: PropertyState<T> = state
 
     // Constructor accepting a ThingProperty
     constructor(name: String, property: ThingProperty<T>?, thing: ExposedThing) : this(
@@ -52,7 +52,11 @@ class ExposedThingProperty<T>(
             log.debug("'{}' calls registered readHandler for Property '{}'", thing.id, name)
 
             try {
-                state.readHandler!!.get().whenComplete { customValue, e -> state.setValue(customValue) }
+                state.readHandler!!.get().whenComplete { customValue, e ->
+                    runBlocking {
+                        state.setValue(customValue)
+                    }
+                }
             } catch (e: Exception) {
                 CompletableFuture.failedFuture<T>(e)
             }
@@ -65,7 +69,7 @@ class ExposedThingProperty<T>(
         }
     }
 
-    suspend fun write(value: T): CompletableFuture<T?> {
+    suspend fun write(value: T): CompletableFuture<T> {
         return if (state.writeHandler != null) {
             log.debug("'{}' calls registered writeHandler for Property '{}'", thing.id, name)
             try {
@@ -77,8 +81,10 @@ class ExposedThingProperty<T>(
                         customValue
                     )
                     if (state.value != customValue) {
-                        state.setValue(customValue)
-                        state.emit(customValue)
+                        runBlocking {
+                            state.setValue(customValue)
+                            state.emit(customValue)
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -92,10 +98,6 @@ class ExposedThingProperty<T>(
             }
             CompletableFuture.completedFuture<T?>(null)
         }
-    }
-    
-    fun getState(): PropertyState<T> {
-        return state
     }
 
     override fun hashCode(): Int {
@@ -117,7 +119,7 @@ class ExposedThingProperty<T>(
                 ", objectType='${objectType}'" +
                 ", type='${type}'"
                 ", readOnly=$isReadOnly" +
-                ", writeOnly=$writeOnly" +
+                ", writeOnly=$isWriteOnly" +
                 ", optionalProperties=$optionalProperties" +
                 ", description='$description'" +
                 ", descriptions=$descriptions" +

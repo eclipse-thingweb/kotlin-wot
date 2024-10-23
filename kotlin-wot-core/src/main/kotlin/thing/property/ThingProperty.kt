@@ -3,11 +3,17 @@ package ai.ancf.lmos.wot.thing.property
 import ai.ancf.lmos.wot.schema.DataSchema
 import ai.ancf.lmos.wot.schema.VariableDataSchema
 import ai.ancf.lmos.wot.thing.ThingInteraction
+import ai.ancf.lmos.wot.thing.form.Form
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 
 abstract class ThingProperty<T>(
+
+    description: String? = null,
+    descriptions: Map<String, String>? = null,
+    forms: MutableList<Form>? ,
+    uriVariables: Map<String, Map<String, Any>>? = emptyMap(),
 
     @JsonProperty("@type")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,7 +34,7 @@ abstract class ThingProperty<T>(
     @JsonAnyGetter
     val optionalProperties: Map<String, Any> = emptyMap()
 
-) : ThingInteraction<ThingProperty<T>?>(), DataSchema<T> {
+) : ThingInteraction<ThingProperty<T>?>(description, descriptions, forms, uriVariables), DataSchema<T> {
 
     override val classType: Class<T>
         get() = VariableDataSchema.Builder()

@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.security
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import thing.security.SecurityScheme
 
 /**
  * Certificate-based asymmetric key security configuration conformant with X509V3 identified by the

@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.security
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import thing.security.SecurityScheme
 
 /**
  * Proof-of-possession (PoP) token authentication security configuration identified by the term pop

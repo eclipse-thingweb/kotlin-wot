@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.security
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import thing.security.SecurityScheme
 
 /**
  * Digest authentication security configuration identified by the term digest (i.e., "scheme":

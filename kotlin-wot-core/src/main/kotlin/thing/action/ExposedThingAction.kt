@@ -2,6 +2,7 @@ package ai.ancf.lmos.wot.thing.action
 
 import ai.ancf.lmos.wot.schema.DataSchema
 import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.form.Form
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -12,11 +13,12 @@ class ExposedThingAction<I, O>(
     private val state: ActionState<I, O>,
     description: String?,
     descriptions: Map<String, String>?,
-    uriVariables: Map<String, Map<String, Any>?>,
+    uriVariables: Map<String, Map<String, Any>>?,
+    forms: MutableList<Form>?,
     objectType: String?,
     input: DataSchema<I>?,
     output: DataSchema<O>?
-) : ThingAction<I, O>(description, descriptions, uriVariables, objectType, input, output) {
+) : ThingAction<I, O>(description, descriptions, uriVariables, forms, objectType, input, output) {
 
     constructor(name: String, action: ThingAction<I, O>, thing: ExposedThing) : this(
         name,
@@ -25,6 +27,7 @@ class ExposedThingAction<I, O>(
         action.description,
         action.descriptions,
         action.uriVariables,
+        null,
         action.objectType,
         action.getInput(),
         action.getOutput()

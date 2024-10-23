@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing.form
 
 import com.fasterxml.jackson.annotation.*
-import com.sun.org.slf4j.internal.LoggerFactory
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URISyntaxException
 

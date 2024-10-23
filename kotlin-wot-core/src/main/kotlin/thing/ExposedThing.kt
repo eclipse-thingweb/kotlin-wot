@@ -22,10 +22,10 @@ class ExposedThing(
     securityDefinitions: Map<String, SecurityScheme>,
     base: String?,
     metadata: Map<String, Any>,
-    properties: Map<String, ExposedThingProperty<Any?>>,
-    actions: Map<String, ExposedThingAction<Any?, Any?>>,
-    events: Map<String, ExposedThingEvent<Any?>>
-) : Thing<ExposedThingProperty<Any?>, ExposedThingAction<Any?, Any?>, ExposedThingEvent<Any?>>(
+    properties: Map<String, ExposedThingProperty<Any>>,
+    actions: Map<String, ExposedThingAction<Any, Any>>,
+    events: Map<String, ExposedThingEvent<Any>>
+) : Thing<ExposedThingProperty<Any>, ExposedThingAction<Any, Any>, ExposedThingEvent<Any>>(
     objectType,
     objectContext,
     id,
@@ -75,7 +75,7 @@ class ExposedThing(
         val futures: MutableList<CompletableFuture<*>> = ArrayList()
         val values: MutableMap<String, Any> = HashMap()
         properties.forEach { (name, property) ->
-            val readFuture: CompletableFuture<Any?> = property.read()
+            val readFuture: CompletableFuture<Any> = property.read()
             val putValuesFuture = readFuture.thenApply { value: Any? -> values[name] = value as Any }
             futures.add(putValuesFuture)
         }
@@ -96,9 +96,9 @@ class ExposedThing(
         val futures: MutableList<CompletableFuture<*>> = ArrayList()
         val returnValues: MutableMap<String, Any> = HashMap()
         values.forEach { (name, value) ->
-            val property: ExposedThingProperty<Any?>? = properties[name]
+            val property: ExposedThingProperty<Any>? = properties[name]
             if (property != null) {
-                val future: CompletableFuture<Any?> = property.write(value)
+                val future: CompletableFuture<Any> = property.write(value)
                 futures.add(future)
                 future.whenComplete { _, _ -> returnValues[name] = value }
             }

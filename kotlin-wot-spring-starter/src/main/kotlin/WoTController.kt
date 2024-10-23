@@ -1,7 +1,7 @@
 package ai.anfc.lmos.wot.spring
 
-import io.github.sanecity.wot.thing.ExposedThing
-import io.github.sanecity.wot.thing.property.ExposedThingProperty
+import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -18,7 +18,7 @@ class WoTController(private val things: Map<String, ExposedThing>) {
     fun invokeAction(@PathVariable id: String, @PathVariable actionName: String?): Any {
 
         val thing = things[id] ?: throw ThingNotFound("Thing not found with id: $id")
-        val action = thing.actions?.get(actionName) ?: throw ActionNotFound("Action not found with name: $actionName")
+        val action = thing.actions[actionName] ?: throw ActionNotFound("Action not found with name: $actionName")
 
         return action.invoke().get()
     }
@@ -38,7 +38,7 @@ class WoTController(private val things: Map<String, ExposedThing>) {
     ): ExposedThingProperty<Any> {
         val thing = things[id] ?: throw ThingNotFound("Thing not found with id: $id")
 
-        return thing.properties?.get(propertyName)
+        return thing.properties[propertyName]
             ?: throw PropertyNotFound("Property not found with name: $propertyName")
     }
 

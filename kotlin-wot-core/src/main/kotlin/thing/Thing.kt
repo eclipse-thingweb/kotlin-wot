@@ -14,7 +14,7 @@ import java.io.IOException
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-open class Thing<P : ThingProperty<Any?>, A : ThingAction<Any?, Any?>, E : ThingEvent<Any?>>(
+open class Thing<P : ThingProperty<Any>, A : ThingAction<Any, Any>, E : ThingEvent<Any>>(
     @JsonProperty("@type") @JsonInclude(JsonInclude.Include.NON_NULL) val objectType: Type? = null,
     @JsonProperty("@context") @JsonInclude(JsonInclude.Include.NON_NULL) val objectContext: Context? = null,
     val id: String,

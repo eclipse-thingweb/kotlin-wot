@@ -1,6 +1,5 @@
 package ai.ancf.lmos.wot.security
 
-import thing.security.SecurityScheme
 
 /**
  * A security configuration corresponding to identified by the term nosec (i.e., "scheme": "nosec"),
