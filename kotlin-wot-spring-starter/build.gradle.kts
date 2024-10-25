@@ -5,8 +5,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":kotlin-wot-core"))
-    implementation("io.github.sane-city:wot-servient:1.16-SNAPSHOT")
+    api(project(":kotlin-wot"))
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")

@@ -8,7 +8,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/kotlin-wot-core" />
+            <option value="$PROJECT_DIR$/kotlin-wot" />
+            <option value="$PROJECT_DIR$/kotlin-wot-binding-http" />
             <option value="$PROJECT_DIR$/kotlin-wot-spring-starter" />
           </set>
         </option>
