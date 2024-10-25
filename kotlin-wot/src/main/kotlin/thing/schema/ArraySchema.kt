@@ -1,4 +1,4 @@
-package ai.ancf.lmos.wot.schema
+package ai.ancf.lmos.wot.thing.schema
 /**
  * Describes data of type [Array](https://www.w3.org/TR/wot-thing-description/#arrayschema).
  */

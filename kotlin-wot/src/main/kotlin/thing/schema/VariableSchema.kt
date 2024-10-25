@@ -1,4 +1,4 @@
-package thing.schema
+package ai.ancf.lmos.wot.thing.schema
 
 
 

@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing.action
 
 
-import thing.schema.VariableSchema
+import ai.ancf.lmos.wot.thing.schema.VariableSchema
 import java.util.concurrent.CompletableFuture
 import java.util.function.BiFunction
 

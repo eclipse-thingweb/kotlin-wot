@@ -2,8 +2,15 @@ package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.anfc.lmos.wot.binding.ProtocolServerException
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.*
 import io.ktor.server.testing.*
 import io.mockk.*
@@ -13,96 +20,126 @@ import kotlin.test.*
 class HttpProtocolServerTest {
 
     private lateinit var server: HttpProtocolServer
-    private val servient: Servient = mockk(relaxed = true)
-    private val embeddedServer: ApplicationEngine = mockk(relaxed = true)
-    private val exposedThing: ExposedThing = mockk(relaxed = true)
+    private val servient: Servient = mockk()
+    private val mockServer: EmbeddedServer<*, *> = mockk()
+    private val exposedThing: ExposedThing = ExposedThing(id = "testThing")
 
     @BeforeTest
     fun setUp() {
-        server = HttpProtocolServer()
+        server = HttpProtocolServer(createServer = { host, port, servient ->
+            mockServer
+        })
     }
 
     @AfterTest
     fun tearDown() = runBlocking {
-        server.stop()
         clearAllMocks()
     }
 
     @Test
-    fun `start should initialize and start the server`() = runBlocking {
-        every { embeddedServer.start(any()) } just Awaits
+    fun `start should start the embedded server`() = runBlocking {
+        every { mockServer.start(any()) } answers { mockServer }
         server.start(servient)
 
-        verify { servient wasNot Called }
+        verify { mockServer.start(any()) }
         assertTrue(server.started)
     }
 
     @Test
-    fun `stop should shutdown the server`() = runBlocking {
-        server = HttpProtocolServer() // reset server state
+    fun `stop should throw exception if server not started`(): Unit = runBlocking {
+        // Assert
+        assertFailsWith<ProtocolServerException> {
+            server.stop()
+        }
+    }
 
-        // Start the server first
+    @Test
+    fun `stop should stop the embedded server`() = runBlocking {
+        every { mockServer.start(any()) } answers { mockServer }
+        every { mockServer.stop(any(), any()) } just Runs
+
         server.start(servient)
-        assertTrue(server.started)
 
         // Stop the server
         server.stop()
+        verify { mockServer.stop(any(), any()) }
         assertFalse(server.started)
     }
 
     @Test
     fun `expose should add a thing to things map`() = runBlocking {
-        every { exposedThing.id } returns "testThing"
+        every { mockServer.start(any()) } answers { mockServer }
 
         // Expose the thing
         server.start(servient)  // Ensure server has started
         server.expose(exposedThing)
 
-        assertTrue(server.things.containsKey("testThing"))
-        verify { exposedThing.id }
+        assertTrue(server.things.containsKey(exposedThing.id))
+    }
+
+    @Test
+    fun `expose should throw exception if server not started`(): Unit = runBlocking {
+        // Assert
+        assertFailsWith<ProtocolServerException> {
+            server.expose(exposedThing)
+        }
     }
 
     @Test
     fun `destroy should remove a thing from things map`() = runBlocking {
-        every { exposedThing.id } returns "testThing"
+        every { mockServer.start(any()) } answers { mockServer }
 
         // Add the thing first
         server.start(servient)  // Ensure server has started
         server.expose(exposedThing)
-        assertTrue(server.things.containsKey("testThing"))
+        assertTrue(server.things.containsKey(exposedThing.id))
 
         // Now remove it
         server.destroy(exposedThing)
-        assertFalse(server.things.containsKey("testThing"))
+        assertFalse(server.things.containsKey(exposedThing.id))
     }
 
     @Test
     fun `GET on root route returns all things`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        val client = httpClient()
         // Setup test data
-        every { servient.things } returns mutableMapOf("thing1" to exposedThing)
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform GET request on "/"
         val response = client.get("/")
 
+        val things : List<ExposedThing> = response.body()
+
         assertEquals(HttpStatusCode.OK, response.status)
-        verify { servient.things } // Verify that the things were requested
+        assertContains(things, exposedThing)
     }
 
     @Test
     fun `GET on {id} route returns thing details`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        val client = httpClient()
         // Setup mock thing data
-        every { exposedThing.id } returns "testThing"
-        every { servient.things } returns mutableMapOf("testThing" to exposedThing)
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform GET request on "/testThing"
-        val response = client.get("/testThing")
+        val response = client.get("/${exposedThing.id}")
+        val thing : ExposedThing = response.body()
 
         assertEquals(HttpStatusCode.OK, response.status)
-        verify { servient.things }
+        assertEquals(thing, exposedThing)
     }
 
     @Test
     fun `GET on {id} returns 404 if thing not found`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        val client = httpClient()
         // Mock an empty things map
         every { servient.things } returns mutableMapOf()
 
@@ -110,15 +147,17 @@ class HttpProtocolServerTest {
         val response = client.get("/nonexistentThing")
 
         assertEquals(HttpStatusCode.NotFound, response.status)
-        verify { servient.things }
     }
 
     @Test
     fun `PUT on properties updates a thing property`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        val client = httpClient()
         // Setup test data for property
         val propertyName = "property1"
-        every { exposedThing.id } returns "testThing"
-        every { servient.things } returns mutableMapOf("testThing" to exposedThing)
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform PUT request on property endpoint
         val response = client.put("/testThing/properties/$propertyName") {
@@ -129,11 +168,25 @@ class HttpProtocolServerTest {
         assertEquals(HttpStatusCode.OK, response.status)
     }
 
+    private fun ApplicationTestBuilder.httpClient(): HttpClient {
+        val client = createClient {
+            install(ContentNegotiation) {
+                jackson {
+                    enable(SerializationFeature.INDENT_OUTPUT)
+                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                }
+            }
+        }
+        return client
+    }
+
     @Test
     fun `POST on actions invokes action`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
         // Setup action data
-        every { exposedThing.id } returns "testThing"
-        every { servient.things } returns mutableMapOf("testThing" to exposedThing)
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform POST request on action endpoint
         val response = client.post("/testThing/actions/action1") {

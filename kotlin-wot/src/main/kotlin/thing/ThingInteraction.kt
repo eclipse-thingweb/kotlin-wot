@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.thing.form.Form
-import thing.schema.VariableSchema
+import ai.ancf.lmos.wot.thing.schema.VariableSchema
 
 abstract class ThingInteraction<T> {
 

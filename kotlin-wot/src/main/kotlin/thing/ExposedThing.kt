@@ -8,12 +8,12 @@ import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
 import ai.ancf.lmos.wot.thing.property.ThingProperty
+import ai.ancf.lmos.wot.thing.schema.VariableSchema
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.LoggerFactory
-import thing.schema.VariableSchema
 import java.io.File
 import java.io.IOException
 import java.util.*

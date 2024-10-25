@@ -1,15 +1,16 @@
 package ai.ancf.lmos.wot.thing.property
 
-import ai.ancf.lmos.wot.schema.DataSchema
-import ai.ancf.lmos.wot.schema.VariableDataSchema
+
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.ThingInteraction
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.ancf.lmos.wot.thing.schema.VariableDataSchema
+import ai.ancf.lmos.wot.thing.schema.VariableSchema
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.coroutines.runBlocking
-import thing.schema.VariableSchema
 import java.util.*
 import java.util.concurrent.CompletableFuture
 

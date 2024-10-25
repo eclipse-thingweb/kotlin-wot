@@ -1,9 +1,6 @@
 plugins {
-    id("org.springframework.boot") version "3.3.3"
-    id("io.spring.dependency-management") version "1.1.6"
     id("io.ktor.plugin") version "3.0.0"
 }
-
 
 dependencies {
     api(project(":kotlin-wot"))
@@ -21,5 +18,5 @@ dependencies {
     implementation("io.ktor:ktor-server-auto-head-response")
     //implementation("io.insert-koin:koin-ktor:4.0.0")
     testImplementation("io.ktor:ktor-server-test-host")
-    testImplementation("org.slf4j:slf4j-simple")
+    testImplementation("org.slf4j:slf4j-simple:2.0.16")
 }

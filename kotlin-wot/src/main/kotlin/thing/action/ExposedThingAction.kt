@@ -3,9 +3,9 @@ package ai.ancf.lmos.wot.thing.action
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.ThingInteraction
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.VariableSchema
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import thing.schema.VariableSchema
 import java.util.*
 import java.util.concurrent.CompletableFuture
 

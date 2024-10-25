@@ -1,4 +1,4 @@
-package ai.ancf.lmos.wot.schema
+package ai.ancf.lmos.wot.thing.schema
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties

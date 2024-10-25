@@ -1,4 +1,5 @@
-package ai.ancf.lmos.wot.schema
+package ai.ancf.lmos.wot.thing.schema
+
 
 
 abstract class AbstractDataSchema : DataSchema {

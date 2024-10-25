@@ -1,11 +1,11 @@
 package ai.ancf.lmos.wot.thing.form
 
+import ai.ancf.lmos.wot.thing.schema.VariableSchema
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import org.slf4j.LoggerFactory
-import thing.schema.VariableSchema
 import java.net.URI
 import java.net.URISyntaxException
 

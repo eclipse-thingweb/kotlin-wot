@@ -1,4 +1,6 @@
-package ai.ancf.lmos.wot.schema
+package ai.ancf.lmos.wot.thing.schema
+
+import ai.ancf.lmos.wot.thing.schema.NullSchema
 
 
 /**
