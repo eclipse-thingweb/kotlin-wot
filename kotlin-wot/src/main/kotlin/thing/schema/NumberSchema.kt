@@ -4,7 +4,7 @@ package ai.ancf.lmos.wot.thing.schema
  * Describes data of type [number](https://www.w3.org/TR/wot-thing-description/#numberschema).
  */
 
-class NumberSchema : AbstractDataSchema() {
+abstract class NumberSchema : AbstractDataSchema<Number>() {
     override val type: String
         get() = TYPE
 

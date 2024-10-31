@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.thing
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.action.ThingAction
@@ -8,40 +9,40 @@ import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.property.ThingProperty
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
-import thing.schema.VariableSchema
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ThingTest {
-    private var objectType: Type? = null
-    private var objectContext: Context? = null
-    private var id: String = "foo"
-    private var title: String? = null
-    private var description: String? = null
-    private var base: String? = null
-    private var titles: Map<String, String>? = null
-    private var descriptions: Map<String, String>? = null
-    private var properties: Map<String, ThingProperty<VariableSchema>>? = null
-    private var actions: Map<String, ThingAction<VariableSchema, VariableSchema>>? = null
-    private var events: Map<String, ThingEvent<VariableSchema>>? = null
-    private var securityDefinitions: Map<String, SecurityScheme>? = null
-    private var forms: List<Form>? = null
-    private var security: List<String>? = null
-    private var metadata: Map<String, VariableSchema>? = null
+    private lateinit var objectType: Type
+    private lateinit var objectContext: Context
+    private lateinit var id: String
+    private lateinit var title: String
+    private lateinit var description: String
+    private lateinit var base: String
+    private lateinit var titles: MutableMap<String, String>
+    private lateinit var descriptions: MutableMap<String, String>
+    private lateinit var properties: Map<String, ThingProperty<Any>>
+    private lateinit var actions: Map<String, ThingAction<Any, Any>>
+    private lateinit var events: Map<String, ThingEvent<Any>>
+    private lateinit var securityDefinitions: MutableMap<String, SecurityScheme>
+    private lateinit var forms: List<Form>
+    private lateinit var security: List<String>
+
     @BeforeTest
     fun setUp() {
         objectType = Type("Thing")
         objectContext = Context("http://www.w3.org/ns/td")
+        id = "foo"
         title = "Foo"
         description = "Bar"
         base = ""
-        titles = mapOf("de" to "Zähler")
-        descriptions = mapOf("de" to "Dies ist ein Zähler")
+        titles = mutableMapOf("de" to "Zähler")
+        descriptions = mutableMapOf("de" to "Dies ist ein Zähler")
         properties = emptyMap()
         actions = emptyMap()
         events = emptyMap()
-        securityDefinitions = mapOf("basic_sc" to BasicSecurityScheme("header"))
+        securityDefinitions = mutableMapOf("basic_sc" to BasicSecurityScheme("header"))
         security = listOf("basic_sc")
         forms = listOf()
     }
@@ -59,10 +60,8 @@ class ThingTest {
             security = security,
             securityDefinitions = securityDefinitions
         )
-        //val jsonString = Json.encodeToString(thing)
-        //println(jsonString)
 
-        val thingAsJson = thing.toJson()
+        val thingAsJson = JsonMapper.instance.writeValueAsString(thing)
         assertThatJson(thingAsJson)
             .`when`(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo(
@@ -123,10 +122,7 @@ class ThingTest {
                 thing.objectContext
             )
             assertEquals(
-                java.util.Map.of<String, BasicSecurityScheme>(
-                    "basic_sc",
-                    BasicSecurityScheme("header")
-                ), thing.securityDefinitions
+                thing.securityDefinitions["basic_sc"], BasicSecurityScheme("header")
             )
             assertEquals(listOf("basic_sc"), thing.security)
         }

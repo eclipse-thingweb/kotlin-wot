@@ -3,7 +3,7 @@ package ai.ancf.lmos.wot.thing.schema
 /**
  * Describes data of type [null](https://www.w3.org/TR/wot-thing-description/#nullschema).
  */
-class NullSchema : AbstractDataSchema() {
+abstract class NullSchema : AbstractDataSchema<Any>() {
     override val type: String
         get() = TYPE
 

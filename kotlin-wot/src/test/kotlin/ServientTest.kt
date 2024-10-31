@@ -6,7 +6,7 @@ import ai.anfc.lmos.wot.binding.ProtocolServer
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -27,7 +27,7 @@ class ServientTest {
     )
 
     @Test
-    fun `start - should start all servers and clients`() = runBlocking {
+    fun `start - should start all servers and clients`() = runTest {
         // Act
         servient.start()
 
@@ -38,7 +38,7 @@ class ServientTest {
     }
 
     @Test
-    fun `shutdown - should stop all servers and clients`() = runBlocking {
+    fun `shutdown - should stop all servers and clients`() = runTest {
         // Act
         servient.shutdown()
 
@@ -49,7 +49,7 @@ class ServientTest {
     }
 
     @Test
-    fun `expose - should throw exception if thing is not added`(): Unit = runBlocking {
+    fun `expose - should throw exception if thing is not added`(): Unit = runTest {
         val invalidId = "invalidThing"
 
         // Assert
@@ -59,7 +59,7 @@ class ServientTest {
     }
 
     @Test
-    fun `expose - should expose the thing on all servers`() = runBlocking {
+    fun `expose - should expose the thing on all servers`() = runTest {
         // Act
         servient.expose("testThing")
 
@@ -69,7 +69,7 @@ class ServientTest {
     }
 
     @Test
-    fun `destroy - should throw exception if thing is not added`(): Unit = runBlocking {
+    fun `destroy - should throw exception if thing is not added`(): Unit = runTest {
         val invalidId = "invalidThing"
 
         // Assert
@@ -79,7 +79,7 @@ class ServientTest {
     }
 
     @Test
-    fun `destroy - should stop exposing the thing on all servers`() = runBlocking {
+    fun `destroy - should stop exposing the thing on all servers`() = runTest {
         // Act
         servient.destroy("testThing")
 

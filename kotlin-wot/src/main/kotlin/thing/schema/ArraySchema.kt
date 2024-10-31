@@ -3,7 +3,7 @@ package ai.ancf.lmos.wot.thing.schema
  * Describes data of type [Array](https://www.w3.org/TR/wot-thing-description/#arrayschema).
  */
 
-class ArraySchema : AbstractDataSchema() {
+abstract class ArraySchema : AbstractDataSchema<List<Any>>() {
     override val type: String
         get() = TYPE
 

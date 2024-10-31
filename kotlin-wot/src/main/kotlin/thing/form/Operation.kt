@@ -3,24 +3,31 @@ package ai.ancf.lmos.wot.thing.form
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
+/**
+ * Enumeration representing different operation types for Property, Action, and Event Affordances.
+ */
 enum class Operation(private val tdValue: String) {
-    // properties
+    // Properties
     READ_PROPERTY("readproperty"),
     WRITE_PROPERTY("writeproperty"),
     OBSERVE_PROPERTY("observeproperty"),
     UNOBSERVE_PROPERTY("unobserveproperty"),
-    READ_ALL_PROPERTIES("readallproperty"),
-    READ_MULTIPLE_PROPERTIES("readmultipleproperty"),
+    READ_ALL_PROPERTIES("readallproperties"),
+    WRITE_ALL_PROPERTIES("writeallproperties"),
+    READ_MULTIPLE_PROPERTIES("readmultipleproperties"),
+    WRITE_MULTIPLE_PROPERTIES("writemultipleproperties"),
 
-    // events
+    // Events
     SUBSCRIBE_EVENT("subscribeevent"),
     UNSUBSCRIBE_EVENT("unsubscribeevent"),
 
-    // actions
-    INVOKE_ACTION("invokeaction");
+    // Actions
+    INVOKE_ACTION("invokeaction"),
+    QUERY_ACTION("queryaction"),
+    CANCEL_ACTION("cancelaction");
 
     @JsonValue
-    private fun toJsonValue(): String {
+    fun toJsonValue(): String {
         return tdValue
     }
 
@@ -28,8 +35,8 @@ enum class Operation(private val tdValue: String) {
         private val LOOKUP: MutableMap<String, Operation> = HashMap()
 
         init {
-            for (env in entries) {
-                LOOKUP[env.toJsonValue()] = env
+            for (operation in entries) {
+                LOOKUP[operation.toJsonValue()] = operation
             }
         }
 

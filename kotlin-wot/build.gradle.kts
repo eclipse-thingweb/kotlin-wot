@@ -6,4 +6,5 @@ dependencies {
 
     testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.4.1")
     testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation("app.cash.turbine:turbine:1.2.0")
 }

@@ -3,7 +3,7 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.form.Form
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.runTest
 import org.apache.http.StatusLine
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -22,7 +22,7 @@ class HttpProtocolClientTest {
     }
 
     @Test
-    fun `readResource should create proper request`() = runBlocking {
+    fun `readResource should create proper request`(): Unit = runTest {
         every { form?.href ?: "" } returns "http://localhost/foo"
         every { statusLine?.statusCode } returns 200 // HTTP Status OK
 

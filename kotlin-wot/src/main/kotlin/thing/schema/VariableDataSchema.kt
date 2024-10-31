@@ -1,12 +1,10 @@
 package ai.ancf.lmos.wot.thing.schema
 
-import ai.ancf.lmos.wot.thing.schema.NullSchema
-
 
 /**
  * Describes data whose type is determined at runtime.
  */
-class VariableDataSchema(override val type: String) : AbstractDataSchema() {
+abstract class VariableDataSchema(override val type: String) : AbstractDataSchema<Any>() {
 
     override val classType: Class<*>
         get() = when (type) {

@@ -1,40 +1,23 @@
 package ai.ancf.lmos.wot.thing.action
 
+import ai.ancf.lmos.wot.thing.ActionAffordance
 import ai.ancf.lmos.wot.thing.Thing
-import ai.ancf.lmos.wot.thing.ThingInteraction
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.VariableSchema
+import ai.ancf.lmos.wot.thing.schema.DataSchema
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.util.*
-import java.util.concurrent.CompletableFuture
+import org.slf4j.LoggerFactory
 
-//@Serializable
+
 class ExposedThingAction<I, O>(
-    val name: String,
-    val thing: Thing,
-    private val state: ActionState<I, O>,
-    description: String?,
-    descriptions: Map<String, String>?,
-    uriVariables: Map<String, Map<String, VariableSchema>>?,
-    forms: MutableList<Form>?,
-    objectType: String?,
-    input: VariableSchema?,
-    output: VariableSchema?
-) : ThingAction<I, O>(description, descriptions, uriVariables, forms, objectType, input, output) {
+    action: ThingAction<I, O>,
+    @JsonIgnore
+    private val thing: Thing,
+    private val state: ActionState<I, O> = ActionState()
+) : ActionAffordance<I, O> by action {
 
-    constructor(name: String, action: ThingAction<I, O>, thing: Thing) : this(
-        name,
-        thing,
-        ActionState(),
-        action.description,
-        action.descriptions,
-        action.uriVariables,
-        null,
-        action.objectType,
-        action.input,
-        action.output
-    )
     /**
      * Invokes the method and executes the handler defined in [.state]. `input`
      * contains the request payload. `options` can contain additional data (for example,
@@ -44,130 +27,75 @@ class ExposedThingAction<I, O>(
      * @param options
      * @return
      */
-    /**
-     * Invokes the method and executes the handler defined in [.state]. `input`
-     * contains the request payload.
-     *
-     * @param input
-     * @return
-     */
-    /**
-     * Invokes the method and executes the handler defined in [.state].
-     *
-     * @return
-     */
-    @JvmOverloads
-    operator fun invoke(
+    suspend fun invoke(
         input: I,
-        options: Map<String, Map<String, VariableSchema>> = emptyMap()
-    ): CompletableFuture<O>? {
-        log.debug("'{}' has Action state of '{}': {}", thing.id, name, state)
+        options: Map<String, Map<String, Any>> = emptyMap()
+    ): O? {
+        log.debug("'{}' has Action state of '{}': {}", thing.id, title, state)
         return if (state.handler != null) {
             log.debug(
-                "'{}' calls registered handler for Action '{}' with input '{}' and options '{}'", thing.id,
-                name, input, options
+                "'{}' calls registered handler for Action '{}' with input '{}' and options '{}'",
+                thing.id, title, input, options
             )
             try {
-                var output: CompletableFuture<O>? = state.handler?.apply(input, options)
-                if (output == null) {
-                    log.warn(
-                        "'{}': Called registered handler for Action '{}' returned null. This can cause problems. Give Future with null result back.",
-                        thing.id,
-                        name
-                    )
-                    output = CompletableFuture.completedFuture(null)
+                // Use the handler as a suspending function directly
+                state.handler.invoke(input, options).also { output ->
+                    if (output == null) {
+                        log.warn(
+                            "'{}': Called registered handler for Action '{}' returned null. This can cause problems.",
+                            thing.id, title
+                        )
+                    }
                 }
-                output
             } catch (e: Exception) {
-                CompletableFuture.failedFuture(e)
+                log.error("'{}' handler invocation for Action '{}' failed with exception", thing.id, title, e)
+                throw e
             }
         } else {
-            log.debug("'{}' has no handler for Action '{}'", thing.id, name)
-            CompletableFuture.completedFuture(null)
+            log.debug("'{}' has no handler for Action '{}'", thing.id, title)
+            null
         }
-    }
-
-    override fun hashCode(): Int {
-        return Objects.hash(super.hashCode(), name, thing, state)
-    }
-
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
-            return true
-        }
-        if (o == null || javaClass != o.javaClass) {
-            return false
-        }
-        if (!super.equals(o)) {
-            return false
-        }
-        val that = o as ExposedThingAction<*, *>
-        return name == that.name && thing == that.thing && state == that.state
-    }
-
-    override fun toString(): String {
-        return ((("ExposedThingAction{" +
-                "name='" + name + '\'' +
-                ", state=" + state +
-                ", input=" + input +
-                ", output=" + output +
-                ", description='" + description + '\'').toString() +
-                ", descriptions=" + descriptions).toString() +
-                ", forms=" + forms).toString() +
-                ", uriVariables=" + uriVariables +
-                '}'
     }
 
     companion object {
-        private val log: org.slf4j.Logger = org.slf4j.LoggerFactory.getLogger(ExposedThingAction::class.java)
+        private val log: org.slf4j.Logger = LoggerFactory.getLogger(ExposedThingAction::class.java)
     }
+
+    class ActionState<I, O>(val handler: (suspend (input: I, options: Map<String, Map<String, Any>>) -> O?)? = null)
 }
 
-sealed class ThingAction<I, O>(
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    override val description: String?,
+data class ThingAction<I, O>(
+    @JsonInclude(NON_EMPTY)
+    override var title: String? = null,
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    override val descriptions: Map<String, String>?,
+    @JsonInclude(NON_EMPTY)
+    override var description: String? = null,
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    override val uriVariables: Map<String, Map<String, VariableSchema>>?,
+    @JsonInclude(NON_EMPTY)
+    override var descriptions: MutableMap<String, String>? = null,
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    override val forms: MutableList<Form>?,
+    @JsonInclude(NON_EMPTY)
+    override var uriVariables: MutableMap<String, Map<String, Any>>? = null,
+
+    @JsonInclude(NON_EMPTY)
+    override var forms: MutableList<Form>? = null,
 
     @JsonProperty("@type")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    val objectType: String? = null,
+    @JsonInclude(NON_EMPTY)
+    override var objectType: String? = null,
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    val input: VariableSchema? = null,
+    @JsonInclude(NON_NULL)
+    override var input: DataSchema<I>? = null,
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    val output: VariableSchema? = null
+    @JsonInclude(NON_NULL)
+    override var output: DataSchema<O>? = null,
+    @JsonInclude(NON_DEFAULT)
+    override val safe: Boolean = false,
+    @JsonInclude(NON_DEFAULT)
+    override val idempotent: Boolean = false,
+    @JsonInclude(NON_NULL)
+    override val synchronous: Boolean? = null,
+    @JsonInclude(NON_EMPTY)
+    override var titles: MutableMap<String, String>? = null
 
-) : ThingInteraction<ThingAction<I, O>?>() {
-
-    override fun hashCode(): Int {
-        return Objects.hash(super.hashCode(), objectType, input, output)
-    }
-
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o !is ThingAction<*, *>) return false
-        if (!super.equals(o)) return false
-        return objectType == o.objectType && input == o.input && output == o.output
-    }
-
-    override fun toString(): String {
-        return "ThingAction{" +
-                "objectType='$objectType', " +
-                "input=$input, " +
-                "output=$output, " +
-                "description='$description', " +
-                "descriptions=$descriptions, " +
-                "forms=$forms, " +
-                "uriVariables=$uriVariables" +
-                '}'
-    }
-}
+) : ActionAffordance<I, O>

@@ -145,7 +145,7 @@ class Servient(
      * @return
      */
     fun addThing(exposedThing: ExposedThing): Boolean {
-        val previous: ExposedThing? = things.putIfAbsent(exposedThing.id, exposedThing)
+        val previous = things.putIfAbsent(exposedThing.id, exposedThing)
         return previous == null
     }
 
@@ -376,8 +376,7 @@ class Servient(
     }
 
     private fun discoverLocal(filter: ThingFilter): Flow<Thing> = flow {
-        val myThings: List<Thing> = things.values
-            .map { it }
+        val myThings: List<Thing> = things.values.toList() as List<Thing>
 
         // Apply the filter query if available
         val filteredThings: List<Thing> = filter.query?.filter(myThings) ?: myThings

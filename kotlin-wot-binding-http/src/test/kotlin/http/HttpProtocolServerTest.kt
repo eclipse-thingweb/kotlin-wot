@@ -14,7 +14,7 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.*
 import io.ktor.server.testing.*
 import io.mockk.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.runTest
 import kotlin.test.*
 
 class HttpProtocolServerTest {
@@ -32,12 +32,12 @@ class HttpProtocolServerTest {
     }
 
     @AfterTest
-    fun tearDown() = runBlocking {
+    fun tearDown() = runTest {
         clearAllMocks()
     }
 
     @Test
-    fun `start should start the embedded server`() = runBlocking {
+    fun `start should start the embedded server`() = runTest {
         every { mockServer.start(any()) } answers { mockServer }
         server.start(servient)
 
@@ -46,7 +46,7 @@ class HttpProtocolServerTest {
     }
 
     @Test
-    fun `stop should throw exception if server not started`(): Unit = runBlocking {
+    fun `stop should throw exception if server not started`(): Unit = runTest {
         // Assert
         assertFailsWith<ProtocolServerException> {
             server.stop()
@@ -54,7 +54,7 @@ class HttpProtocolServerTest {
     }
 
     @Test
-    fun `stop should stop the embedded server`() = runBlocking {
+    fun `stop should stop the embedded server`() = runTest {
         every { mockServer.start(any()) } answers { mockServer }
         every { mockServer.stop(any(), any()) } just Runs
 
@@ -67,7 +67,7 @@ class HttpProtocolServerTest {
     }
 
     @Test
-    fun `expose should add a thing to things map`() = runBlocking {
+    fun `expose should add a thing to things map`() = runTest {
         every { mockServer.start(any()) } answers { mockServer }
 
         // Expose the thing
@@ -78,7 +78,7 @@ class HttpProtocolServerTest {
     }
 
     @Test
-    fun `expose should throw exception if server not started`(): Unit = runBlocking {
+    fun `expose should throw exception if server not started`(): Unit = runTest {
         // Assert
         assertFailsWith<ProtocolServerException> {
             server.expose(exposedThing)
@@ -86,7 +86,7 @@ class HttpProtocolServerTest {
     }
 
     @Test
-    fun `destroy should remove a thing from things map`() = runBlocking {
+    fun `destroy should remove a thing from things map`() = runTest {
         every { mockServer.start(any()) } answers { mockServer }
 
         // Add the thing first

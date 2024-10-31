@@ -1,19 +1,21 @@
 package ai.ancf.lmos.wot
 
+import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import java.net.URI
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 
-class DefaultWotTest {
+class WotTest {
 
     // Mocked dependency
     private lateinit var servient: Servient
@@ -26,7 +28,7 @@ class DefaultWotTest {
     }
 
     @Test
-    fun `test discover with filter`() = runBlocking {
+    fun `test discover with filter`() = runTest {
         // Given
         val filter = ThingFilter(method = DiscoveryMethod.ANY)
         val thing = mockk<Thing>()
@@ -42,7 +44,7 @@ class DefaultWotTest {
     }
 
     @Test
-    fun `test discover without filter`() = runBlocking {
+    fun `test discover without filter`() = runTest {
         // Given
         val filter = ThingFilter(method = DiscoveryMethod.ANY)
         val thing = mockk<Thing>()
@@ -58,7 +60,7 @@ class DefaultWotTest {
     }
 
     @Test
-    fun `test fetch with URI`() = runBlocking {
+    fun `test fetch with URI`() = runTest {
         // Given
         val url = URI("http://example.com")
         val thing = mockk<Thing>()
@@ -73,7 +75,7 @@ class DefaultWotTest {
     }
 
     @Test
-    fun `test fetch with String URL`() = runBlocking {
+    fun `test fetch with String URL`() = runTest {
         // Given
         val urlString = "http://example.com"
         val thing = mockk<Thing>()
@@ -88,7 +90,7 @@ class DefaultWotTest {
     }
 
     @Test
-    fun `test destroy`() = runBlocking {
+    fun `test destroy`() = runTest {
         // Given
         coEvery { servient.shutdown() } just runs
 
@@ -97,5 +99,47 @@ class DefaultWotTest {
 
         // Then
         coVerify { servient.shutdown() }
+    }
+
+
+    @Test
+    fun `produce should return ExposedThing when adding is successful`() = runTest {
+        // Arrange
+
+        // Mocking servient.addThing to return true, indicating the Thing is added successfully
+        every { servient.addThing(ofType(ExposedThing::class)) } returns true
+
+        // Act
+        val exposedThing = defaultWot.produce{
+            title = "testTitle"
+            property("propA") {
+                title = "some title"
+                type = "string"
+                readOnly = true
+            }
+            property("propB") {
+                title = "some title"
+                type = "integer"
+                readOnly = true
+            }
+        }
+
+        // Assert
+        assertEquals(exposedThing.title, "testTitle")
+    }
+
+    @Test
+    fun `produce should throw WotException when thing already exists`() = runTest {
+        // Arrange
+        val thing = Thing(id = "existingThing")
+
+        // Mocking servient.addThing to return false, indicating the Thing already exists
+        coEvery { servient.addThing(ofType(ExposedThing::class)) } returns false
+
+        // Act and Assert
+        val exception = assertFailsWith<WotException> {
+            defaultWot.produce(thing)
+        }
+        assertEquals("Thing already exists: existingThing", exception.message)
     }
 }

@@ -8,92 +8,52 @@ import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
 import ai.ancf.lmos.wot.thing.property.ThingProperty
-import ai.ancf.lmos.wot.thing.schema.VariableSchema
-import com.fasterxml.jackson.annotation.*
-import com.fasterxml.jackson.databind.JsonMappingException
+import ai.ancf.lmos.wot.thing.schema.DataSchema
+import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.util.*
-import java.util.concurrent.CompletableFuture
+
 @JsonIgnoreProperties(ignoreUnknown = true)
-class ExposedThing(
-    @JsonProperty("@type") @JsonInclude(JsonInclude.Include.NON_NULL) objectType: Type? = null,
-    @JsonProperty("@context") @JsonInclude(JsonInclude.Include.NON_NULL) objectContext: Context? = null,
-    id: String,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) title: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) titles: Map<String, String>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) description: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) descriptions: Map<String, String>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) forms: List<Form>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) security: List<String>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) securityDefinitions: Map<String, SecurityScheme>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) base: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) metadata: Map<String, VariableSchema>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) properties: Map<String, ExposedThingProperty<VariableSchema>> = emptyMap(),
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) actions: Map<String, ExposedThingAction<VariableSchema, VariableSchema>> = emptyMap(),
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) events: Map<String, ExposedThingEvent<VariableSchema>> = emptyMap()
-) : Thing(
-    id,
-    objectType,
-    objectContext,
-    title,
-    titles,
-    description,
-    descriptions,
-    properties,
-    actions,
-    events,
-    forms,
-    security,
-    securityDefinitions,
-    base,
-    metadata
-) {
+class ExposedThing(thing: Thing) : ThingDescription by thing {
 
+    private val _properties : MutableMap<String, ExposedThingProperty<Any>> = mutableMapOf()
+    private val _actions : MutableMap<String, ExposedThingAction<Any, Any>> = mutableMapOf()
+    private val _events : MutableMap<String, ExposedThingEvent<Any>> = mutableMapOf()
 
-    // Constructor accepting a Thing instance
-    constructor(thing: Thing) :
-            this(
-                thing.objectType,
-                thing.objectContext,
-                thing.id,
-                thing.title,
-                thing.titles,
-                thing.description,
-                thing.descriptions,
-                thing.forms,
-                thing.security,
-                thing.securityDefinitions,
-                thing.base,
-                thing.metadata,
-                // Create properties, actions, and events from the given Thing instance
-                thing.properties.mapValues { (name, property) -> ExposedThingProperty(name, property, thing) },
-                thing.actions.mapValues { (name, action) -> ExposedThingAction(name, action, thing) },
-                thing.events.mapValues { (name, event) -> ExposedThingEvent(name, event) }
-            )
+    init {
+        thing.properties.forEach { (name, property) ->
+            _properties[name] = ExposedThingProperty(property, thing)
+        }
 
+        thing.actions.forEach { (name, action) ->
+            _actions[name] = ExposedThingAction(action, thing)
+        }
+
+        thing.events.forEach { (name, event) ->
+            _events[name] = ExposedThingEvent(event)
+        }
+    }
 
     /**
      * Returns a [Map] with property names as map key and property values as map value.
      *
      * @return
      */
-    suspend fun readProperties(): CompletableFuture<Map<String, Any>> {
-        val futures: MutableList<CompletableFuture<*>> = ArrayList()
-        val values: MutableMap<String, VariableSchema> = HashMap()
-        properties.forEach { (name, property) ->
-            property as ExposedThingProperty
-            val readFuture: CompletableFuture<VariableSchema> = property.read()
-            val putValuesFuture = readFuture.thenApply { value: Any? -> values[name] = value as VariableSchema }
-            futures.add(putValuesFuture)
+    suspend fun readProperties(): Map<String, Any> {
+        val values: MutableMap<String, Any> = HashMap()
+        _properties.forEach { (name, property) ->
+            values[name] = property.read() as Any
         }
-
-        // wait until all properties have been read
-        return CompletableFuture.allOf(*futures.toTypedArray())
-            .thenApply { values }
+        return values
     }
 
     /**
@@ -103,52 +63,14 @@ class ExposedThing(
      * @param values
      * @return
      */
-    suspend fun writeProperties(values: Map<String, VariableSchema>): CompletableFuture<Map<String, VariableSchema>> {
-        val futures: MutableList<CompletableFuture<*>> = ArrayList()
-        val returnValues: MutableMap<String, VariableSchema> = HashMap()
+    suspend fun writeProperties(values: Map<String, Any>): Map<String, Any> {
+        val returnValues: MutableMap<String, Any> = HashMap()
         values.forEach { (name, value) ->
-            val property: ExposedThingProperty<VariableSchema>? = properties[name] as ExposedThingProperty
-            if (property != null) {
-                val future: CompletableFuture<VariableSchema> = property.write(value)
-                futures.add(future)
-                future.whenComplete { _, _ -> returnValues[name] = value }
-            }
+            val property: ExposedThingProperty<Any>? = _properties[name]
+            returnValues[name] = property?.write(value) as Any
         }
-
         // wait until all properties have been written
-        return CompletableFuture.allOf(*futures.toTypedArray())
-            .thenApply { returnValues }
-    }
-
-    override fun hashCode(): Int {
-        return Objects.hash(super.hashCode())
-    }
-
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        if (!super.equals(o)) return false
-        val that = o as ExposedThing
-        return id == that.id
-    }
-
-    override fun toString(): String {
-        return "ExposedThing{" +
-                "objectType='$objectType'" +
-                ", objectContext=$objectContext" +
-                ", id='$id'" +
-                ", title='$title'" +
-                ", titles=$titles" +
-                ", description='$description'" +
-                ", descriptions=$descriptions" +
-                ", properties=$properties" +
-                ", actions=$actions" +
-                ", events=$events" +
-                ", forms=$forms" +
-                ", security=$security" +
-                ", securityDefinitions=$securityDefinitions" +
-                ", base='$base'" +
-                '}'
+        return returnValues
     }
 
     companion object {
@@ -157,23 +79,30 @@ class ExposedThing(
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-open class Thing (
-    val id: String,
-    @JsonProperty("@type") @JsonInclude(JsonInclude.Include.NON_NULL) val objectType: Type? = null,
-    @JsonProperty("@context") @JsonInclude(JsonInclude.Include.NON_NULL) val objectContext: Context? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val title: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val titles: Map<String, String>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val description: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val descriptions: Map<String, String>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val properties: Map<String, ThingProperty<VariableSchema>> = emptyMap(),
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val actions: Map<String, ThingAction<VariableSchema, VariableSchema>> = emptyMap(),
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val events: Map<String, ThingEvent<VariableSchema>> = emptyMap(),
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val forms: List<Form>? = emptyList(),
-    @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(JsonInclude.Include.NON_EMPTY) val security: List<String>? = emptyList(),
-    @JsonProperty("securityDefinitions") @JsonInclude(JsonInclude.Include.NON_EMPTY) val securityDefinitions: Map<String, SecurityScheme>? = emptyMap(),
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) val base: String? = null,
-    @get:JsonAnyGetter @JsonAnySetter val metadata: Map<String, VariableSchema>? = emptyMap()
-) {
+data class Thing (
+    override val id: String = "urn:uuid:" + UUID.randomUUID().toString(),
+    @JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = null,
+    @JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = null,
+    @JsonInclude(NON_EMPTY) override var title: String? = null,
+    @JsonInclude(NON_EMPTY) override var titles: MutableMap<String, String>? = null,
+    @JsonInclude(NON_EMPTY) override var description: String? = null,
+    @JsonInclude(NON_EMPTY) override var descriptions: MutableMap<String, String>? = null,
+    @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<Any, Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var forms: List<Form>? = null,
+    @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(NON_EMPTY) override var security: List<String> = emptyList(),
+    @JsonInclude(NON_EMPTY) override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var base: String? = null,
+    @JsonInclude(NON_EMPTY) override var version: VersionInfo? = null,
+    @JsonInclude(NON_EMPTY) override var created: String? = null,
+    @JsonInclude(NON_EMPTY) override var modified: String? = null,
+    @JsonInclude(NON_EMPTY) override var support: String? = null,
+    @JsonInclude(NON_EMPTY) override var links: List<String>? = null,
+    @JsonInclude(NON_EMPTY) override var profile: List<String>? = null,
+    @JsonInclude(NON_EMPTY) override var schemaDefinitions: MutableMap<String, DataSchema<Any>>? = null,
+    @JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<Any>>? = null
+) : ThingDescription {
     override fun hashCode(): Int {
         return id.hashCode()
     }
@@ -186,26 +115,16 @@ open class Thing (
         }
     }
 
-    @JvmOverloads
-    fun toJson(prettyPrint: Boolean = false): String? {
-        return try {
-            if (prettyPrint) {
-                JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(this)
-            } else {
-                JSON_MAPPER.writeValueAsString(this)
-            }
-        } catch (e: JsonMappingException) {
-            log.warn("Unable to create json", e)
-            null
-        }
+    fun Thing.property(name: String, configure: ThingProperty<Any>.() -> Unit) {
+        this.properties[name] = ThingProperty<Any>().apply(configure)
     }
 
-    fun getPropertiesByObjectType(objectType: String?): Map<String, ThingProperty<VariableSchema>> {
+    fun getPropertiesByObjectType(objectType: String?): Map<String, ThingProperty<Any>> {
         return getPropertiesByExpandedObjectType(getExpandedObjectType(objectType))
     }
 
-    fun getPropertiesByExpandedObjectType(objectType: String?): Map<String, ThingProperty<VariableSchema>> {
-        return properties.filter { (key, property) ->
+    fun getPropertiesByExpandedObjectType(objectType: String?): Map<String, ThingProperty<Any>> {
+        return properties.filter { (_, property) ->
             getExpandedObjectType(property.objectType) == objectType
         }.toMap()
     }
@@ -218,11 +137,7 @@ open class Thing (
         val prefix = if (parts.size == 2) parts[0] else null
         val suffix = parts.last()
 
-        return objectContext.getUrl(prefix)?.let { "$it$suffix" } ?: objectType
-    }
-
-    override fun toString(): String {
-        return "Thing(objectType=$objectType, objectContext=$objectContext, id='$id', title=$title, titles=$titles, description=$description, descriptions=$descriptions, properties=$properties, actions=$actions, events=$events, forms=$forms, security=$security, securityDefinitions=$securityDefinitions, base='$base', metadata=$metadata)"
+        return objectContext?.getUrl(prefix)?.let { "$it$suffix" } ?: objectType
     }
 
     companion object {
@@ -256,3 +171,174 @@ open class Thing (
         }
     }
 }
+
+/**
+ * Interface representing a Thing Description (TD) in a Web of Things context.
+ */
+interface ThingDescription {
+
+    /**
+     * JSON-LD keyword to define short-hand names called terms that are used throughout a TD document.
+     *
+     * @return a URI or an array of URIs representing the context.
+     */
+    var objectContext: Context? // Optional: anyURI or Array
+
+    /**
+     * JSON-LD keyword to label the object with semantic tags (or types).
+     *
+     * @return a string or an array of strings representing the types.
+     */
+    var objectType: Type? // Optional: string or Array of string
+
+    /**
+     * Identifier of the Thing in form of a URI RFC3986.
+     *
+     * @return an optional URI identifier.
+     */
+    val id: String // Optional: anyURI
+
+    /**
+     * Provides a human-readable title based on a default language.
+     *
+     * @return the title of the Thing, which is mandatory.
+     */
+    var title: String? // Mandatory: string
+
+    /**
+     * Provides multi-language human-readable titles.
+     *
+     * @return a map of multi-language titles.
+     */
+    var titles: MutableMap<String, String>? // Optional: Map of MultiLanguage
+
+    /**
+     * Provides additional (human-readable) information based on a default language.
+     *
+     * @return an optional description.
+     */
+    var description: String? // Optional: string
+
+    /**
+     * Can be used to support (human-readable) information in different languages.
+     *
+     * @return a map of descriptions in different languages.
+     */
+    var descriptions: MutableMap<String, String>? // Optional: Map of MultiLanguage
+
+    /**
+     * Provides version information.
+     *
+     * @return optional version information.
+     */
+    var version: VersionInfo? // Optional: VersionInfo
+
+    /**
+     * Provides information when the TD instance was created.
+     *
+     * @return the creation date and time.
+     */
+    var created: String? // Optional: dateTime
+
+    /**
+     * Provides information when the TD instance was last modified.
+     *
+     * @return the last modified date and time.
+     */
+    var modified: String? // Optional: dateTime
+
+    /**
+     * Provides information about the TD maintainer as URI scheme (e.g., mailto, tel, https).
+     *
+     * @return an optional support URI.
+     */
+    var support: String? // Optional: anyURI
+
+    /**
+     * Define the base URI that is used for all relative URI references throughout a TD document.
+     *
+     * @return an optional base URI.
+     */
+    var base: String? // Optional: anyURI
+
+    /**
+     * All Property-based Interaction Affordances of the Thing.
+     *
+     * @return a map of property affordances.
+     */
+    var properties: MutableMap<String, ThingProperty<Any>> // Optional: Map of PropertyAffordance
+
+    /**
+     * All Action-based Interaction Affordances of the Thing.
+     *
+     * @return a map of action affordances.
+     */
+    var actions: MutableMap<String, ThingAction<Any, Any>> // Optional: Map of ActionAffordance
+
+    /**
+     * All Event-based Interaction Affordances of the Thing.
+     *
+     * @return a map of event affordances.
+     */
+    var events: MutableMap<String, ThingEvent<Any>> // Optional: Map of EventAffordance
+
+    /**
+     * Provides Web links to arbitrary resources that relate to the specified Thing Description.
+     *
+     * @return an array of links.
+     */
+    var links: List<String>? // Optional: Array of Link
+
+    /**
+     * Set of form hypermedia controls that describe how an operation can be performed.
+     *
+     * @return an array of forms.
+     */
+    var forms: List<Form>? // Optional: Array of Form
+
+    /**
+     * Set of security definition names, chosen from those defined in securityDefinitions.
+     *
+     * @return a string or an array of strings representing security definitions, mandatory.
+     */
+    var security: List<String> // Mandatory: string or Array of string
+
+    /**
+     * Set of named security configurations (definitions only).
+     *
+     * @return a map of security schemes, mandatory.
+     */
+    var securityDefinitions: MutableMap<String, SecurityScheme> // Mandatory: Map of SecurityScheme
+
+    /**
+     * Indicates the WoT Profile mechanisms followed by this Thing Description and the corresponding Thing implementation.
+     *
+     * @return an optional profile URI or an array of URIs.
+     */
+    var profile: List<String>? // Optional: anyURI or Array of anyURI
+
+    /**
+     * Set of named data schemas to be used in a schema name-value pair.
+     *
+     * @return a map of data schemas, optional.
+     */
+    var schemaDefinitions: MutableMap<String, DataSchema<Any>>? // Optional: Map of DataSchema
+
+    /**
+     * Define URI template variables according to RFC6570 as collection based on DataSchema declarations.
+     *
+     * @return a map of URI variables.
+     */
+    var uriVariables: MutableMap<String, DataSchema<Any>>? // Optional: Map of DataSchema
+}
+
+/**
+ * Data class representing version information of a Thing Description (TD) and its underlying Thing Model (TM).
+ *
+ * @property instance Provides a version indicator of this TD. This field is mandatory.
+ * @property model Provides a version indicator of the underlying TM. This field is optional.
+ */
+data class VersionInfo(
+    val instance: String, // Mandatory: string
+    val model: String? = null // Optional: string
+)

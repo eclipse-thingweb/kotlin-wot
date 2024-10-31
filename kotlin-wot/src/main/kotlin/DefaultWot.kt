@@ -29,13 +29,18 @@ class DefaultWot(private val servient: Servient) : Wot {
         return discover(ThingFilter(method = DiscoveryMethod.ANY))
     }
 
-    override suspend fun produce(thing: Thing): ExposedThing {
+    override fun produce(thing: Thing): ExposedThing {
         val exposedThing = ExposedThing(thing)
         return if (servient.addThing(exposedThing)) {
             exposedThing
         } else {
             throw WotException("Thing already exists: " + thing.id)
         }
+    }
+
+    override fun produce(configure: Thing.() -> Unit): ExposedThing {
+        val thing = Thing().apply(configure)
+        return produce(thing)
     }
 
     override suspend fun fetch(url: URI): Thing {

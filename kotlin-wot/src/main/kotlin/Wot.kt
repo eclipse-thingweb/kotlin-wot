@@ -37,8 +37,9 @@ interface Wot {
      * @return
      * @throws WotException If thing with same id is already exposed
      */
-    suspend fun produce(thing: Thing): ExposedThing
+    fun produce(thing: Thing): ExposedThing
 
+    fun produce(configure: Thing.() -> Unit): ExposedThing
 
     /**
      * Accepts an [java.net.URL] (e.g. "file:..." or "http://...") to a resource that serves a
