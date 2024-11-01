@@ -14,4 +14,27 @@ class ThingEventTest {
         )
         assertEquals("string", event.data?.type)
     }
+
+    @Test
+    fun testEquals() {
+        val eventA = ThingEvent(
+            data = StringSchema()
+        )
+        val eventB = ThingEvent(
+            data = StringSchema()
+        )
+        assertEquals(eventA, eventB)
+    }
+
+    @Test
+    fun testHashCode() {
+        val eventA = ThingEvent(
+            data = StringSchema()
+        ).hashCode()
+        val eventB = ThingEvent(
+            data = StringSchema()
+        ).hashCode()
+        assertEquals(eventA, eventB)
+    }
+
 }

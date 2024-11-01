@@ -2,6 +2,7 @@ package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.Thing
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -9,12 +10,13 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.*
 import io.ktor.server.testing.*
 import io.mockk.*
-import kotlinx.coroutines.runTest
+import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
 class HttpProtocolServerTest {
@@ -22,7 +24,7 @@ class HttpProtocolServerTest {
     private lateinit var server: HttpProtocolServer
     private val servient: Servient = mockk()
     private val mockServer: EmbeddedServer<*, *> = mockk()
-    private val exposedThing: ExposedThing = ExposedThing(id = "testThing")
+    private val exposedThing: ExposedThing = ExposedThing(Thing(id = "test"))
 
     @BeforeTest
     fun setUp() {
@@ -110,6 +112,8 @@ class HttpProtocolServerTest {
 
         // Perform GET request on "/"
         val response = client.get("/")
+
+        println(response.bodyAsText())
 
         val things : List<ExposedThing> = response.body()
 

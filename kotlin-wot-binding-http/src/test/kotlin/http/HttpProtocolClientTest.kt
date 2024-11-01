@@ -3,7 +3,7 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.form.Form
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.runTest
+import kotlinx.coroutines.test.runTest
 import org.apache.http.StatusLine
 import kotlin.test.BeforeTest
 import kotlin.test.Test

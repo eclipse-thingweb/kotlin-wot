@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.thing
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.action.ExposedThingAction
 import ai.ancf.lmos.wot.thing.action.ThingAction
@@ -15,15 +16,26 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.fasterxml.jackson.core.JsonProcessingException
+import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.util.*
 
+/**
+ * Represents an "Exposed Thing" in the Web of Things (WoT) architecture, which extends a base [Thing] instance
+ * to add interactive capabilities. This class enables interaction with the [Thing]'s properties, actions, and events
+ * by exposing methods to read and write property values, invoke actions, and subscribe to events.
+ *
+ * @constructor Creates an [ExposedThing] based on an existing [Thing]. Initializes internal maps for properties,
+ * actions, and events based on the provided [thing] and allows access to them through additional functionality.
+ *
+ * @param thing A base [Thing] instance to be exposed with interactive capabilities.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
-class ExposedThing(thing: Thing) : ThingDescription by thing {
+@Serializable
+data class ExposedThing(private val thing: Thing) : ThingDescription by thing {
 
     private val _properties : MutableMap<String, ExposedThingProperty<Any>> = mutableMapOf()
     private val _actions : MutableMap<String, ExposedThingAction<Any, Any>> = mutableMapOf()
@@ -44,9 +56,9 @@ class ExposedThing(thing: Thing) : ThingDescription by thing {
     }
 
     /**
-     * Returns a [Map] with property names as map key and property values as map value.
+     * Reads the current values of all properties exposed by the Thing.
      *
-     * @return
+     * @return A [Map] of all properties and their values.
      */
     suspend fun readProperties(): Map<String, Any> {
         val values: MutableMap<String, Any> = HashMap()
@@ -57,11 +69,11 @@ class ExposedThing(thing: Thing) : ThingDescription by thing {
     }
 
     /**
-     * Writes the transferred `values` to the respective properties and returns the new
-     * value of the respective properties.
+     * Writes the specified values to the respective properties of the Thing. If successful, returns the new
+     * values of the properties.
      *
-     * @param values
-     * @return
+     * @param values A [Map] of properties which need to be written.
+     * @return A [Map] of all properties which have been written.
      */
     suspend fun writeProperties(values: Map<String, Any>): Map<String, Any> {
         val returnValues: MutableMap<String, Any> = HashMap()
@@ -73,16 +85,95 @@ class ExposedThing(thing: Thing) : ThingDescription by thing {
         return returnValues
     }
 
+    fun toJson() : String?{
+        return try {
+            JsonMapper.instance.writeValueAsString(this)
+        } catch (e: JsonProcessingException) {
+            log.warn("Unable to write json", e)
+            null
+        }
+    }
+
     companion object {
         private val log = LoggerFactory.getLogger(ExposedThing::class.java)
+
+        /**
+         * Parses a JSON string into a Thing object.
+         *
+         * @param json JSON string to parse.
+         * @return A Thing instance if parsing is successful, otherwise null.
+         */
+        fun fromJson(json: String?): ExposedThing? {
+            return try {
+                JsonMapper.instance.readValue(json, ExposedThing::class.java)
+            } catch (e: IOException) {
+                log.warn("Unable to read json", e)
+                null
+            }
+        }
+
+        /**
+         * Parses a JSON file into a Thing object.
+         *
+         * @param file JSON file to parse.
+         * @return A Thing instance if parsing is successful, otherwise null.
+         */
+        fun fromJson(file: File?): ExposedThing? {
+            return try {
+                JsonMapper.instance.readValue(file, ExposedThing::class.java)
+            } catch (e: IOException) {
+                log.warn("Unable to read json", e)
+                null
+            }
+        }
+
+        /**
+         * Converts a Map into a Thing object.
+         *
+         * @param map Map representing the Thing structure.
+         * @return A Thing instance converted from the map.
+         */
+        fun fromMap(map: Map<*, *>): ExposedThing {
+            return JsonMapper.instance.convertValue(map, ExposedThing::class.java)
+        }
     }
 }
 
+/**
+ * Represents a Thing entity in the Web of Things (WoT) model.
+ *
+ * A `Thing` is a digital representation of a physical or abstract entity, containing metadata, capabilities,
+ * and affordances such as properties, actions, and events.
+ *
+ * @property id Unique identifier for the Thing, typically a UUID URI.
+ * @property objectType Specifies the type of the Thing using a URI.
+ * @property objectContext Defines the JSON-LD context to expand terms within the Thing's description.
+ * @property title Human-readable title of the Thing.
+ * @property titles Multilingual titles of the Thing, with language codes as keys.
+ * @property description Human-readable description of the Thing.
+ * @property descriptions Multilingual descriptions of the Thing, with language codes as keys.
+ * @property properties A map of properties that describe the state of the Thing.
+ * @property actions A map of actions that the Thing can perform.
+ * @property events A map of events that the Thing can emit.
+ * @property forms List of interaction patterns that specify how to interact with the Thing.
+ * @property security Security mechanisms used by the Thing, represented by identifiers defined in securityDefinitions.
+ * @property securityDefinitions Definitions of security schemes, specifying how security is applied to interactions.
+ * @property base Base URI to resolve relative URIs within the Thing description.
+ * @property version Version information for the Thing description.
+ * @property created Creation timestamp for the Thing in ISO 8601 format.
+ * @property modified Last modification timestamp for the Thing in ISO 8601 format.
+ * @property support URL to obtain support for the Thing.
+ * @property links List of additional links to resources related to the Thing.
+ * @property profile List of profiles that describe the capabilities and interactions of the Thing.
+ * @property schemaDefinitions Definitions for data schemas used by the Thing’s properties, actions, or events.
+ * @property uriVariables URI variables for dynamic references within forms.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Serializable
 data class Thing (
     override val id: String = "urn:uuid:" + UUID.randomUUID().toString(),
-    @JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = null,
-    @JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = null,
+    @get:JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = null,
+    @get:JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = null,
     @JsonInclude(NON_EMPTY) override var title: String? = null,
     @JsonInclude(NON_EMPTY) override var titles: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY) override var description: String? = null,
@@ -98,10 +189,10 @@ data class Thing (
     @JsonInclude(NON_EMPTY) override var created: String? = null,
     @JsonInclude(NON_EMPTY) override var modified: String? = null,
     @JsonInclude(NON_EMPTY) override var support: String? = null,
-    @JsonInclude(NON_EMPTY) override var links: List<String>? = null,
-    @JsonInclude(NON_EMPTY) override var profile: List<String>? = null,
+    @JsonInclude(NON_EMPTY) override var links: List<Link>? = null,
+    @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(NON_EMPTY) override var profile: List<String>? = null,
     @JsonInclude(NON_EMPTY) override var schemaDefinitions: MutableMap<String, DataSchema<Any>>? = null,
-    @JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<Any>>? = null
+    @get:JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<Any>>? = null
 ) : ThingDescription {
     override fun hashCode(): Int {
         return id.hashCode()
@@ -117,6 +208,14 @@ data class Thing (
 
     fun Thing.property(name: String, configure: ThingProperty<Any>.() -> Unit) {
         this.properties[name] = ThingProperty<Any>().apply(configure)
+    }
+
+    fun Thing.action(name: String, configure: ThingAction<Any, Any>.() -> Unit) {
+        this.actions[name] = ThingAction<Any, Any>().apply(configure)
+    }
+
+    fun Thing.event(name: String, configure: ThingEvent<Any>.() -> Unit) {
+        this.events[name] = ThingEvent<Any>().apply(configure)
     }
 
     fun getPropertiesByObjectType(objectType: String?): Map<String, ThingProperty<Any>> {
@@ -140,34 +239,56 @@ data class Thing (
         return objectContext?.getUrl(prefix)?.let { "$it$suffix" } ?: objectType
     }
 
+    fun toJson() : String?{
+        return try {
+            JsonMapper.instance.writeValueAsString(this)
+        } catch (e: JsonProcessingException) {
+            log.warn("Unable to write json", e)
+            null
+        }
+    }
+
     companion object {
         private val log = LoggerFactory.getLogger(Thing::class.java)
-        private val JSON_MAPPER = ObjectMapper().registerKotlinModule()
 
-        fun randomId(): String {
-            return "urn:uuid:${UUID.randomUUID()}"
-        }
-
+        /**
+         * Parses a JSON string into a Thing object.
+         *
+         * @param json JSON string to parse.
+         * @return A Thing instance if parsing is successful, otherwise null.
+         */
         fun fromJson(json: String?): Thing? {
             return try {
-                JSON_MAPPER.readValue(json, Thing::class.java)
+                JsonMapper.instance.readValue(json, Thing::class.java)
             } catch (e: IOException) {
                 log.warn("Unable to read json", e)
                 null
             }
         }
 
+        /**
+         * Parses a JSON file into a Thing object.
+         *
+         * @param file JSON file to parse.
+         * @return A Thing instance if parsing is successful, otherwise null.
+         */
         fun fromJson(file: File?): Thing? {
             return try {
-                JSON_MAPPER.readValue(file, Thing::class.java)
+                JsonMapper.instance.readValue(file, Thing::class.java)
             } catch (e: IOException) {
                 log.warn("Unable to read json", e)
                 null
             }
         }
 
+        /**
+         * Converts a Map into a Thing object.
+         *
+         * @param map Map representing the Thing structure.
+         * @return A Thing instance converted from the map.
+         */
         fun fromMap(map: Map<*, *>): Thing {
-            return JSON_MAPPER.convertValue(map, Thing::class.java)
+            return JsonMapper.instance.convertValue(map, Thing::class.java)
         }
     }
 }
@@ -287,7 +408,7 @@ interface ThingDescription {
      *
      * @return an array of links.
      */
-    var links: List<String>? // Optional: Array of Link
+    var links: List<Link>? // Optional: Array of Link
 
     /**
      * Set of form hypermedia controls that describe how an operation can be performed.
@@ -342,3 +463,15 @@ data class VersionInfo(
     val instance: String, // Mandatory: string
     val model: String? = null // Optional: string
 )
+
+/**
+ * DSL function to create and configure a [Thing] instance.
+ *
+ * @param id The unique identifier for the Thing. Defaults to a random UUID.
+ * @param configure Lambda expression to configure the Thing properties.
+ * @return Configured [Thing] instance.
+ */
+fun thing(id: String = "urn:uuid:" + UUID.randomUUID().toString(), configure: Thing.() -> Unit): Thing {
+    return Thing(id = id).apply(configure)
+}
+

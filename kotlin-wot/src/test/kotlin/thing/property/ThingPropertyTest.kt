@@ -9,8 +9,15 @@ import kotlin.test.assertTrue
 class ThingPropertyTest {
     @Test
     fun testEquals() {
-        val property1 = ThingProperty<Any>()
-        val property2 = ThingProperty<Any>()
+        val property1 = ThingProperty<Any>(title = "title")
+        val property2 = ThingProperty<Any>(title = "title")
+        assertEquals(property1, property2)
+    }
+
+    @Test
+    fun testHashCode() {
+        val property1 = ThingProperty<Any>(title = "title").hashCode()
+        val property2 = ThingProperty<Any>(title = "title").hashCode()
         assertEquals(property1, property2)
     }
 

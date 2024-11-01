@@ -5,22 +5,32 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class ExposedThingActionTest {
     private lateinit var thing: Thing
     private lateinit var thingAction: ThingAction<String, String>
     private lateinit var state: ExposedThingAction.ActionState<String, String>
 
-    @BeforeEach
+    @BeforeTest
     fun setUp() {
         thing = Thing(id = "test")
         thingAction = ThingAction(title = "title")
         state = mockk()
+    }
+
+    @Test
+    fun testEquals() {
+        val action1 = ExposedThingAction(thingAction, thing)
+        val action2 = ExposedThingAction(thingAction, thing)
+        assertEquals(action1, action2)
+    }
+
+    @Test
+    fun testHashCode() {
+        val action1 = ExposedThingAction(thingAction, thing).hashCode()
+        val action2 = ExposedThingAction(thingAction, thing).hashCode()
+        assertEquals(action1, action2)
     }
 
     @Test

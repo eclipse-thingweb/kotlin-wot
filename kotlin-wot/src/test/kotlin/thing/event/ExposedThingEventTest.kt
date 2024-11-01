@@ -5,8 +5,8 @@ import ai.ancf.lmos.wot.thing.schema.StringSchema
 import app.cash.turbine.test
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
 import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ExposedThingEventTest {
@@ -17,6 +17,28 @@ class ExposedThingEventTest {
     fun setUp() {
         name = "change"
         state = mockk()
+    }
+
+    @Test
+    fun testEquals() {
+        val eventA = ExposedThingEvent(ThingEvent(
+            data = StringSchema()
+        ))
+        val eventB = ExposedThingEvent(ThingEvent(
+            data = StringSchema()
+        ))
+        assertEquals(eventA, eventB)
+    }
+
+    @Test
+    fun testHashCode() {
+        val eventA = ExposedThingEvent(ThingEvent(
+            data = StringSchema()
+        )).hashCode()
+        val eventB = ExposedThingEvent(ThingEvent(
+            data = StringSchema()
+        )).hashCode()
+        assertEquals(eventA, eventB)
     }
 
     @Test

@@ -8,14 +8,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.slf4j.LoggerFactory
 
-
-class ExposedThingAction<I, O>(
-    action: ThingAction<I, O>,
+@Serializable
+data class ExposedThingAction<I, O>(
+    private val action: ThingAction<I, O>,
     @JsonIgnore
     private val thing: Thing,
-    private val state: ActionState<I, O> = ActionState()
+    @Transient private val state: ActionState<I, O> = ActionState()
 ) : ActionAffordance<I, O> by action {
 
     /**
@@ -61,9 +63,10 @@ class ExposedThingAction<I, O>(
         private val log: org.slf4j.Logger = LoggerFactory.getLogger(ExposedThingAction::class.java)
     }
 
-    class ActionState<I, O>(val handler: (suspend (input: I, options: Map<String, Map<String, Any>>) -> O?)? = null)
+    data class ActionState<I, O>(val handler: (suspend (input: I, options: Map<String, Map<String, Any>>) -> O?)? = null)
 }
 
+@Serializable
 data class ThingAction<I, O>(
     @JsonInclude(NON_EMPTY)
     override var title: String? = null,

@@ -12,12 +12,26 @@ import kotlin.test.assertEquals
 class ExposedThingPropertyTest {
 
     private lateinit var thing: Thing
-    private lateinit var state: PropertyState<String>
+    private lateinit var state: ExposedThingProperty.PropertyState<String>
 
     @BeforeEach
     fun setUp() {
         thing = Thing(id = "testThing")
         state = mockk()
+    }
+
+    @Test
+    fun testEquals() {
+        val property1 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
+        val property2 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
+        assertEquals(property1, property2)
+    }
+
+    @Test
+    fun testHashCode() {
+        val property1 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
+        val property2 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
+        assertEquals(property1, property2)
     }
 
     @Test

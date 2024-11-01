@@ -1,6 +1,5 @@
 package ai.ancf.lmos.wot.thing
 
-import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.action.ThingAction
@@ -12,6 +11,7 @@ import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ThingTest {
     private lateinit var objectType: Type
@@ -48,6 +48,32 @@ class ThingTest {
     }
 
     @Test
+    fun `test default ID generation`() {
+        val newThing = Thing()
+        assertTrue(newThing.id.startsWith("urn:uuid:"))
+    }
+
+    @Test
+    fun `test dsl`() {
+        val thing = thing {
+            objectType = Type("Thing")
+            objectContext = Context("http://www.w3.org/ns/td")
+            title = "Test Thing"
+            description = "A test thing for unit testing"
+            property("propertyA"){
+                title = "propertyTitle"
+            }
+            action("action"){
+                title = "actionTitle"
+            }
+            event("event"){
+                title = "eventTitle"
+            }
+        }
+
+    }
+
+    @Test
     fun toJson() {
         val thing = Thing(
             objectType = objectType,
@@ -61,7 +87,7 @@ class ThingTest {
             securityDefinitions = securityDefinitions
         )
 
-        val thingAsJson = JsonMapper.instance.writeValueAsString(thing)
+        val thingAsJson = thing.toJson()
         assertThatJson(thingAsJson)
             .`when`(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo(
@@ -136,6 +162,13 @@ class ThingTest {
     }
 
     @Test
+    fun testHashCode() {
+        val thingA = Thing(id = "id").hashCode()
+        val thingB = Thing(id = "id").hashCode()
+        assertEquals(thingA, thingB)
+    }
+
+    @Test
     fun getExpandedObjectType() {
         val thing = Thing(id = "foo",
             description = "Bar",
@@ -145,5 +178,24 @@ class ThingTest {
 
         assertEquals("https://w3id.org/saref#Temperature",
             thing.getExpandedObjectType("saref:Temperature"))
+    }
+
+    @Test
+    fun `test getPropertiesByObjectType filters properties by type`() {
+
+        val thing = thing {
+            title = "Test Thing"
+            description = "A test thing for unit testing"
+        }
+
+        val type = "Sensor"
+        val property = ThingProperty<Any>().apply {
+            objectType = type
+        }
+        thing.properties["sensorProperty"] = property
+
+        val result = thing.getPropertiesByObjectType(type)
+        assertEquals(1, result.size)
+        assertTrue(result.containsKey("sensorProperty"))
     }
 }

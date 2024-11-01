@@ -4,16 +4,23 @@ import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
 class ThingActionTest {
     @Test
     fun testEquals() {
-        val action = ThingAction(input = StringSchema(), output = StringSchema())
-        assertEquals(StringSchema(), action.input)
-        assertEquals(StringSchema(), action.output)
+        val action1 = ThingAction(input = StringSchema(), output = StringSchema())
+        val action2 = ThingAction(input = StringSchema(), output = StringSchema())
+        assertEquals(action1, action2)
+    }
+
+    @Test
+    fun testHashCode() {
+        val action1 = ThingAction(input = StringSchema(), output = StringSchema()).hashCode()
+        val action2 = ThingAction(input = StringSchema(), output = StringSchema()).hashCode()
+        assertEquals(action1, action2)
     }
 
     @Test

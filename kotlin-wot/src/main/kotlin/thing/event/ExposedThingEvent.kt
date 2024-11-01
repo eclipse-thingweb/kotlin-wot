@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import org.slf4j.LoggerFactory
 
 
-class ExposedThingEvent<T>(event: ThingEvent<T>) : EventAffordance<T, Any, Any> by event {
+data class ExposedThingEvent<T>(private val event: ThingEvent<T>) : EventAffordance<T, Any, Any> by event {
 
     private val state : EventState<T> = EventState()
 

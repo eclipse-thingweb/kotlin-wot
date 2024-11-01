@@ -145,7 +145,7 @@ class Servient(
      * @return
      */
     fun addThing(exposedThing: ExposedThing): Boolean {
-        val previous = things.putIfAbsent(exposedThing.id, exposedThing)
+        val previous = things.putIfAbsent(exposedThing.id!!, exposedThing)
         return previous == null
     }
 

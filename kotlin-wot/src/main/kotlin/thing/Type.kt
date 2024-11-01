@@ -9,7 +9,6 @@ import java.util.*
 @JsonSerialize(using = TypeSerializer::class)
 class Type {
     private val types: MutableSet<String> = HashSet()
-
     constructor()
     constructor(type: String) {
         addType(type)
