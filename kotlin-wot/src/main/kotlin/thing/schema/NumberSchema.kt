@@ -5,8 +5,6 @@ package ai.ancf.lmos.wot.thing.schema
  */
 
 abstract class NumberSchema : AbstractDataSchema<Number>() {
-    override val type: String
-        get() = TYPE
 
     override val classType: Class<Number>
         get() = Number::class.java

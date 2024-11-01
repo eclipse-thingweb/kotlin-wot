@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.slf4j.LoggerFactory
@@ -78,7 +79,7 @@ data class ThingAction<I, O>(
     override var descriptions: MutableMap<String, String>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var uriVariables: MutableMap<String, Map<String, Any>>? = null,
+    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null,
 
     @JsonInclude(NON_EMPTY)
     override var forms: MutableList<Form>? = null,
@@ -92,13 +93,16 @@ data class ThingAction<I, O>(
 
     @JsonInclude(NON_NULL)
     override var output: DataSchema<O>? = null,
+
     @JsonInclude(NON_DEFAULT)
-    override val safe: Boolean = false,
+    override var safe: Boolean = false,
+
     @JsonInclude(NON_DEFAULT)
-    override val idempotent: Boolean = false,
+    override var idempotent: Boolean = false,
+
     @JsonInclude(NON_NULL)
-    override val synchronous: Boolean? = null,
+    override var synchronous: Boolean? = null,
+
     @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null
-
 ) : ActionAffordance<I, O>

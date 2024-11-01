@@ -1,8 +1,11 @@
 package ai.ancf.lmos.wot.thing.property
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Thing
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
+import net.javacrumbs.jsonunit.assertj.JsonAssertions
+import net.javacrumbs.jsonunit.core.Option
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -32,6 +35,21 @@ class ExposedThingPropertyTest {
         val property1 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
         val property2 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
         assertEquals(property1, property2)
+    }
+
+    @Test
+    fun toJson() {
+        val property = ExposedThingProperty<Any>(ThingProperty(
+            objectType="saref:Temperature",
+            description = "bla bla",
+            type="integer",
+            observable=true,
+            readOnly=true), thing)
+
+        JsonAssertions.assertThatJson(JsonMapper.instance.writeValueAsString(property))
+            .`when`(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(
+                """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}""")
     }
 
     @Test

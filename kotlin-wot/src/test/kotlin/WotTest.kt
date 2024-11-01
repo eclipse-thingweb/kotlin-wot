@@ -115,12 +115,10 @@ class WotTest {
             property("propA") {
                 title = "some title"
                 type = "string"
-                readOnly = true
             }
             property("propB") {
                 title = "some title"
                 type = "integer"
-                readOnly = true
             }
         }
 

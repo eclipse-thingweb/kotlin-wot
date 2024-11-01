@@ -6,55 +6,55 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 
 /**
- * Data class representing a schema for string values, with optional constraints such as minLength, maxLength, etc.
+ * Data class representing a schema for string varues, with optional constraints such as minLength, maxLength, etc.
  *
  * @property minLength Specifies the minimum length of a string. Only applicable for associated string types.
  * @property maxLength Specifies the maximum length of a string. Only applicable for associated string types.
- * @property pattern Provides a regular expression to express constraints on the string value. Follows the ECMA-262 dialect.
+ * @property pattern Provides a regular expression to express constraints on the string varue. Follows the ECMA-262 dialect.
  * @property contentEncoding Specifies the encoding used to store the contents, as per RFC2045 and RFC4648.
  * @property contentMediaType Specifies the MIME type of the string contents, as described in RFC2046.
  */
 data class StringSchema(
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val contextType: String? = null,
+    override var objectType: String? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val title: String? = null,
+    override var type: String? = "string",
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val titles: Map<String, String>? = null,
+    override var title: String? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val description: String? = null,
+    override var titles: MutableMap<String, String>? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val descriptions: Map<String, String>? = null,
+    override var description: String? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val const: Any? = null,
+    override var descriptions: MutableMap<String, String>? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val default: Any? = null,
+    override var const: String? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val unit: String? = null,
+    override var default: String? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val oneOf: List<DataSchema<Any>>? = null,
+    override var unit: String? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override val enum: List<Any>? = null,
+    override var oneOf: List<DataSchema<Any>>? = null,
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    override var enum: List<Any>? = null,
     @JsonInclude(NON_DEFAULT)
-    override val readOnly: Boolean? = false,
+    override var readOnly: Boolean = false,
     @JsonInclude(NON_DEFAULT)
-    override val writeOnly: Boolean? = false,
+    override var writeOnly: Boolean = false,
     @JsonInclude(NON_NULL)
-    override val format: String? = null,
+    override var format: String? = null,
     @JsonInclude(NON_NULL)
-    val minLength: Int? = null,
+    var minLength: Int? = null,
     @JsonInclude(NON_NULL)
-    val maxLength: Int? = null,
+    var maxLength: Int? = null,
     @JsonInclude(NON_NULL)
-    val pattern: String? = null,
+    var pattern: String? = null,
     @JsonInclude(NON_NULL)
-    val contentEncoding: String? = null,
+    var contentEncoding: String? = null,
     @JsonInclude(NON_NULL)
-    val contentMediaType: String? = null
+    var contentMediaType: String? = null
 ) : AbstractDataSchema<String>() {
 
-    override val type: String
-        get() = TYPE
 
     @get:JsonIgnore
     override val classType: Class<String>
@@ -66,6 +66,6 @@ data class StringSchema(
 
     companion object {
         const val TYPE = "string"
-        val CLASS_TYPE: Class<String> = String::class.java
+        var CLASS_TYPE: Class<String> = String::class.java
     }
 }

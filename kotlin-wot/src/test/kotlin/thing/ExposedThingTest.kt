@@ -1,8 +1,6 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.Test
@@ -41,21 +39,23 @@ class ExposedThingTest {
     @Test
     fun toJson() {
         val thing = Thing(
+            id  = "foo",
             title = "foo",
+            description = "Bla bla",
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
         val exposedThing = ExposedThing(thing)
 
-        val string = Json.encodeToString(exposedThing)
-        println(string)
-
         val thingAsJson = exposedThing.toJson()
+        println(thingAsJson)
         JsonAssertions.assertThatJson(thingAsJson)
             .`when`(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo(
                 """{    
+                    "id": "foo",
                     "title":"foo",
+                    "description":"Bla bla",
                     "@type":"Thing",
                     "@context":"http://www.w3.org/ns/td"
                 }"""

@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot.thing
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import kotlinx.serialization.Serializable
 
 /**
  * Represents a link or submission target of a form with metadata that describes the link.
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
  * @property hreflang An optional attribute specifying the language of a linked document. The value should be a valid language tag as per [BCP47].
  *                    Can be a single string or an array of strings.
  */
+@Serializable
 data class Link(
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     val href: String, // anyURI, mandatory

@@ -2,11 +2,13 @@ package ai.ancf.lmos.wot.thing
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import kotlinx.serialization.Serializable
 import java.util.*
 
 
 @JsonDeserialize(using = TypeDeserializer::class)
 @JsonSerialize(using = TypeSerializer::class)
+@Serializable
 class Type {
     private val types: MutableSet<String> = HashSet()
     constructor()

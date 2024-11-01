@@ -17,6 +17,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonProcessingException
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -37,9 +39,9 @@ import java.util.*
 @Serializable
 data class ExposedThing(private val thing: Thing) : ThingDescription by thing {
 
-    private val _properties : MutableMap<String, ExposedThingProperty<Any>> = mutableMapOf()
-    private val _actions : MutableMap<String, ExposedThingAction<Any, Any>> = mutableMapOf()
-    private val _events : MutableMap<String, ExposedThingEvent<Any>> = mutableMapOf()
+    private val _properties : MutableMap<String, ExposedThingProperty<@Contextual Any>> = mutableMapOf()
+    private val _actions : MutableMap<String, ExposedThingAction<@Contextual Any, @Contextual Any>> = mutableMapOf()
+    private val _events : MutableMap<String, ExposedThingEvent<@Contextual Any>> = mutableMapOf()
 
     init {
         thing.properties.forEach { (name, property) ->
@@ -172,15 +174,15 @@ data class ExposedThing(private val thing: Thing) : ThingDescription by thing {
 @Serializable
 data class Thing (
     override val id: String = "urn:uuid:" + UUID.randomUUID().toString(),
-    @get:JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = null,
-    @get:JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = null,
+    @SerialName("@type") @JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = null,
+    @SerialName("@context") @JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = null,
     @JsonInclude(NON_EMPTY) override var title: String? = null,
     @JsonInclude(NON_EMPTY) override var titles: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY) override var description: String? = null,
     @JsonInclude(NON_EMPTY) override var descriptions: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<Any>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<Any, Any>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<@Contextual Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<@Contextual Any, @Contextual Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<@Contextual Any>> = mutableMapOf(),
     @JsonInclude(NON_EMPTY) override var forms: List<Form>? = null,
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(NON_EMPTY) override var security: List<String> = emptyList(),
     @JsonInclude(NON_EMPTY) override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
@@ -191,8 +193,8 @@ data class Thing (
     @JsonInclude(NON_EMPTY) override var support: String? = null,
     @JsonInclude(NON_EMPTY) override var links: List<Link>? = null,
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(NON_EMPTY) override var profile: List<String>? = null,
-    @JsonInclude(NON_EMPTY) override var schemaDefinitions: MutableMap<String, DataSchema<Any>>? = null,
-    @get:JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<Any>>? = null
+    @JsonInclude(NON_EMPTY) override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
+    @JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
 ) : ThingDescription {
     override fun hashCode(): Int {
         return id.hashCode()
@@ -303,6 +305,7 @@ interface ThingDescription {
      *
      * @return a URI or an array of URIs representing the context.
      */
+    @get:JsonProperty("@context")
     var objectContext: Context? // Optional: anyURI or Array
 
     /**
@@ -310,6 +313,7 @@ interface ThingDescription {
      *
      * @return a string or an array of strings representing the types.
      */
+    @get:JsonProperty("@type")
     var objectType: Type? // Optional: string or Array of string
 
     /**
@@ -317,6 +321,7 @@ interface ThingDescription {
      *
      * @return an optional URI identifier.
      */
+    @get:JsonInclude(NON_EMPTY)
     val id: String // Optional: anyURI
 
     /**
@@ -324,6 +329,7 @@ interface ThingDescription {
      *
      * @return the title of the Thing, which is mandatory.
      */
+    @get:JsonInclude(NON_EMPTY)
     var title: String? // Mandatory: string
 
     /**
@@ -331,6 +337,7 @@ interface ThingDescription {
      *
      * @return a map of multi-language titles.
      */
+    @get:JsonInclude(NON_EMPTY)
     var titles: MutableMap<String, String>? // Optional: Map of MultiLanguage
 
     /**
@@ -338,6 +345,7 @@ interface ThingDescription {
      *
      * @return an optional description.
      */
+    @get:JsonInclude(NON_EMPTY)
     var description: String? // Optional: string
 
     /**
@@ -345,6 +353,7 @@ interface ThingDescription {
      *
      * @return a map of descriptions in different languages.
      */
+    @get:JsonInclude(NON_EMPTY)
     var descriptions: MutableMap<String, String>? // Optional: Map of MultiLanguage
 
     /**
@@ -352,6 +361,7 @@ interface ThingDescription {
      *
      * @return optional version information.
      */
+    @get:JsonInclude(NON_NULL)
     var version: VersionInfo? // Optional: VersionInfo
 
     /**
@@ -359,6 +369,7 @@ interface ThingDescription {
      *
      * @return the creation date and time.
      */
+    @get:JsonInclude(NON_EMPTY)
     var created: String? // Optional: dateTime
 
     /**
@@ -366,6 +377,7 @@ interface ThingDescription {
      *
      * @return the last modified date and time.
      */
+    @get:JsonInclude(NON_EMPTY)
     var modified: String? // Optional: dateTime
 
     /**
@@ -373,6 +385,7 @@ interface ThingDescription {
      *
      * @return an optional support URI.
      */
+    @get:JsonInclude(NON_EMPTY)
     var support: String? // Optional: anyURI
 
     /**
@@ -380,6 +393,7 @@ interface ThingDescription {
      *
      * @return an optional base URI.
      */
+    @get:JsonInclude(NON_EMPTY)
     var base: String? // Optional: anyURI
 
     /**
@@ -387,6 +401,7 @@ interface ThingDescription {
      *
      * @return a map of property affordances.
      */
+    @get:JsonInclude(NON_EMPTY)
     var properties: MutableMap<String, ThingProperty<Any>> // Optional: Map of PropertyAffordance
 
     /**
@@ -394,6 +409,7 @@ interface ThingDescription {
      *
      * @return a map of action affordances.
      */
+    @get:JsonInclude(NON_EMPTY)
     var actions: MutableMap<String, ThingAction<Any, Any>> // Optional: Map of ActionAffordance
 
     /**
@@ -401,6 +417,7 @@ interface ThingDescription {
      *
      * @return a map of event affordances.
      */
+    @get:JsonInclude(NON_EMPTY)
     var events: MutableMap<String, ThingEvent<Any>> // Optional: Map of EventAffordance
 
     /**
@@ -408,6 +425,7 @@ interface ThingDescription {
      *
      * @return an array of links.
      */
+    @get:JsonInclude(NON_EMPTY)
     var links: List<Link>? // Optional: Array of Link
 
     /**
@@ -415,6 +433,7 @@ interface ThingDescription {
      *
      * @return an array of forms.
      */
+    @get:JsonInclude(NON_EMPTY)
     var forms: List<Form>? // Optional: Array of Form
 
     /**
@@ -422,6 +441,7 @@ interface ThingDescription {
      *
      * @return a string or an array of strings representing security definitions, mandatory.
      */
+    @get:JsonInclude(NON_EMPTY)
     var security: List<String> // Mandatory: string or Array of string
 
     /**
@@ -429,6 +449,7 @@ interface ThingDescription {
      *
      * @return a map of security schemes, mandatory.
      */
+    @get:JsonInclude(NON_EMPTY)
     var securityDefinitions: MutableMap<String, SecurityScheme> // Mandatory: Map of SecurityScheme
 
     /**
@@ -436,6 +457,7 @@ interface ThingDescription {
      *
      * @return an optional profile URI or an array of URIs.
      */
+    @get:JsonInclude(NON_EMPTY)
     var profile: List<String>? // Optional: anyURI or Array of anyURI
 
     /**
@@ -443,6 +465,7 @@ interface ThingDescription {
      *
      * @return a map of data schemas, optional.
      */
+    @get:JsonInclude(NON_EMPTY)
     var schemaDefinitions: MutableMap<String, DataSchema<Any>>? // Optional: Map of DataSchema
 
     /**
@@ -450,6 +473,7 @@ interface ThingDescription {
      *
      * @return a map of URI variables.
      */
+    @get:JsonInclude(NON_EMPTY)
     var uriVariables: MutableMap<String, DataSchema<Any>>? // Optional: Map of DataSchema
 }
 
@@ -459,6 +483,7 @@ interface ThingDescription {
  * @property instance Provides a version indicator of this TD. This field is mandatory.
  * @property model Provides a version indicator of the underlying TM. This field is optional.
  */
+@Serializable
 data class VersionInfo(
     val instance: String, // Mandatory: string
     val model: String? = null // Optional: string

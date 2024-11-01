@@ -4,9 +4,6 @@ package ai.ancf.lmos.wot.thing.schema
  */
 
 abstract class ArraySchema : AbstractDataSchema<List<Any>>() {
-    override val type: String
-        get() = TYPE
-
     override val classType: Class<List<*>>
         get() = List::class.java
 

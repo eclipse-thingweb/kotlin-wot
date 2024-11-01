@@ -1,51 +1,17 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.DataSchema
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.*
+import com.fasterxml.jackson.annotation.JsonInclude.Include.*
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * An interface representing an interaction affordance for a thing.
  * This interface defines properties and methods that provide metadata about the interaction affordance.
  */
-interface InteractionAffordance {
-
-    /**
-     * JSON-LD keyword to label the object with semantic tags (or types).
-     *
-     * Optional. Can be a string or an array of strings.
-     */
-    var objectType: String?
-
-    /**
-     * Provides a human-readable title (e.g., display a text for UI representation)
-     * based on a default language.
-     *
-     * Optional.
-     */
-    var title: String?
-
-    /**
-     * Provides multi-language human-readable titles (e.g., display a text for UI
-     * representation in different languages). Also see MultiLanguage.
-     *
-     * Optional.
-     */
-    var titles: MutableMap<String, String>?
-
-    /**
-     * Provides additional (human-readable) information based on a default
-     * language.
-     *
-     * Optional.
-     */
-    var description: String?
-
-    /**
-     * Can be used to support (human-readable) information in different languages.
-     * Also see MultiLanguage.
-     *
-     * Optional.
-     */
-    var descriptions: MutableMap<String, String>?
+interface InteractionAffordance : CommonSchema {
 
     /**
      * Set of form hypermedia controls that describe how an operation can be performed.
@@ -53,6 +19,7 @@ interface InteractionAffordance {
      *
      * Mandatory.
      */
+    @get:JsonInclude(NON_EMPTY)
     var forms: MutableList<Form>?
 
     /**
@@ -65,5 +32,6 @@ interface InteractionAffordance {
      *
      * Optional.
      */
-    var uriVariables: MutableMap<String, Map<String, Any>>?
+    @get:JsonInclude(NON_EMPTY)
+    var uriVariables: MutableMap<String, DataSchema<Any>>?
 }

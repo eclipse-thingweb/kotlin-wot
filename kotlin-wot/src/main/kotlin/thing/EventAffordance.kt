@@ -1,6 +1,8 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 
 /**
  * Interface representing the details of an Event in a Web of Things context.
@@ -12,6 +14,7 @@ interface EventAffordance<T, S, C> : InteractionAffordance {
      *
      * @return an optional data schema for subscription.
      */
+    @get:JsonInclude(NON_NULL)
     var subscription: DataSchema<S>? // Optional: DataSchema
 
     /**
@@ -19,6 +22,7 @@ interface EventAffordance<T, S, C> : InteractionAffordance {
      *
      * @return an optional data schema for event messages.
      */
+    @get:JsonInclude(NON_NULL)
     var data: DataSchema<T>? // Optional: DataSchema
 
     /**
@@ -26,5 +30,6 @@ interface EventAffordance<T, S, C> : InteractionAffordance {
      *
      * @return an optional data schema for cancellation.
      */
+    @get:JsonInclude(NON_NULL)
     var cancellation: DataSchema<C>? // Optional: DataSchema
 }

@@ -1,10 +1,14 @@
 package ai.ancf.lmos.wot.thing.action
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.schema.StringSchema
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import net.javacrumbs.jsonunit.assertj.JsonAssertions
+import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.*
 
 class ExposedThingActionTest {
@@ -31,6 +35,30 @@ class ExposedThingActionTest {
         val action1 = ExposedThingAction(thingAction, thing).hashCode()
         val action2 = ExposedThingAction(thingAction, thing).hashCode()
         assertEquals(action1, action2)
+    }
+
+    @Test
+    fun testToJson() {
+        val action = ThingAction(
+            title = "title",
+            description = "blabla",
+            input = StringSchema(),
+            output = StringSchema()
+        )
+
+        val json = JsonMapper.instance.writeValueAsString(ExposedThingAction(action, thing))
+
+        JsonAssertions.assertThatJson(json)
+            .`when`(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(
+                """{
+                    "title":"title",
+                    "description":"blabla",
+                    "input":{"type":"string"},
+                    "output":{"type":"string"}
+                    }
+                """
+            )
     }
 
     @Test

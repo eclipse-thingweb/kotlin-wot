@@ -11,9 +11,6 @@ abstract class ObjectSchema(
     @JsonInclude(JsonInclude.Include.NON_EMPTY) private val required: List<String?> = ArrayList()
 ) : AbstractDataSchema<Map<*, *>?>() {
 
-    override val type: String
-        get() = ObjectSchema.TYPE
-
     override val classType: Class<String>
         get() = String::class.java
 

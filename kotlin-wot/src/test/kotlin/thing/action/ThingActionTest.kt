@@ -25,7 +25,11 @@ class ThingActionTest {
 
     @Test
     fun testToJson() {
-        val action = ThingAction(title = "title", description = "blabla", input = StringSchema(), output = StringSchema())
+        val action = ThingAction(
+            title = "title",
+            description = "blabla",
+            input = StringSchema(),
+            output = StringSchema())
         val json = JsonMapper.instance.writeValueAsString(action)
 
         JsonAssertions.assertThatJson(json)

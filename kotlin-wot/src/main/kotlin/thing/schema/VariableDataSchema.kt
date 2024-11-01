@@ -4,7 +4,7 @@ package ai.ancf.lmos.wot.thing.schema
 /**
  * Describes data whose type is determined at runtime.
  */
-abstract class VariableDataSchema(override val type: String) : AbstractDataSchema<Any>() {
+abstract class VariableDataSchema(override var type: String?) : AbstractDataSchema<Any>() {
 
     override val classType: Class<*>
         get() = when (type) {

@@ -1,6 +1,9 @@
 package ai.ancf.lmos.wot.thing.event
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.schema.StringSchema
+import net.javacrumbs.jsonunit.assertj.JsonAssertions
+import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -13,6 +16,27 @@ class ThingEventTest {
             data = StringSchema()
         )
         assertEquals("string", event.data?.type)
+    }
+
+
+    @Test
+    fun testToJson() {
+        val event = ThingEvent(
+            title = "event",
+            data = StringSchema()
+        )
+        val json = JsonMapper.instance.writeValueAsString(event)
+
+        JsonAssertions.assertThatJson(json)
+            .`when`(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(
+                """{
+                    "title": "event", 
+                    "data":
+                        {"type":"string"}
+                    }
+                """
+            )
     }
 
     @Test

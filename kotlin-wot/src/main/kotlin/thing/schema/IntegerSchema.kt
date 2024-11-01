@@ -8,53 +8,52 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 /**
  * Data class representing an integer schema, with optional constraints such as minimum, maximum, etc.
  *
- * @property minimum Specifies a minimum numeric value, representing an inclusive lower limit.
- * @property exclusiveMinimum Specifies a minimum numeric value, representing an exclusive lower limit.
- * @property maximum Specifies a maximum numeric value, representing an inclusive upper limit.
- * @property exclusiveMaximum Specifies a maximum numeric value, representing an exclusive upper limit.
- * @property multipleOf Specifies the multipleOf value. The value must be strictly greater than 0.
+ * @property minimum Specifies a minimum numeric varue, representing an inclusive lower limit.
+ * @property exclusiveMinimum Specifies a minimum numeric varue, representing an exclusive lower limit.
+ * @property maximum Specifies a maximum numeric varue, representing an inclusive upper limit.
+ * @property exclusiveMaximum Specifies a maximum numeric varue, representing an exclusive upper limit.
+ * @property multipleOf Specifies the multipleOf varue. The varue must be strictly greater than 0.
  */
 data class IntegerSchema(
     @JsonInclude(NON_EMPTY)
-    override val contextType: String? = null,
+    override var objectType: String? = null,
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    override var type: String? = "integer",
     @JsonInclude(NON_EMPTY)
-    override val title: String? = null,
+    override var title: String? = null,
     @JsonInclude(NON_EMPTY)
-    override val titles: Map<String, String>? = null,
+    override var titles: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY)
-    override val description: String? = null,
+    override var description: String? = null,
     @JsonInclude(NON_EMPTY)
-    override val descriptions: Map<String, String>? = null,
+    override var descriptions: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY)
-    override val const: Any? = null,
+    override var const: Int? = null,
     @JsonInclude(NON_EMPTY)
-    override val default: Any? = null,
+    override var default: Int? = null,
     @JsonInclude(NON_EMPTY)
-    override val unit: String? = null,
+    override var unit: String? = null,
     @JsonInclude(NON_EMPTY)
-    override val oneOf: List<DataSchema<Any>>? = null,
+    override var oneOf: List<DataSchema<Any>>? = null,
     @JsonInclude(NON_EMPTY)
-    override val enum: List<Any>? = null,
+    override var enum: List<Any>? = null,
     @JsonInclude(NON_NULL)
-    override val readOnly: Boolean? = false,
+    override var readOnly: Boolean = false,
     @JsonInclude(NON_NULL)
-    override val writeOnly: Boolean? = false,
+    override var writeOnly: Boolean = false,
     @JsonInclude(NON_NULL)
-    override val format: String? = null,
+    override var format: String? = null,
     @JsonInclude(NON_NULL)
-    val minimum: Int? = null,
+    var minimum: Int? = null,
     @JsonInclude(NON_NULL)
-    val exclusiveMinimum: Int? = null,
+    var exclusiveMinimum: Int? = null,
     @JsonInclude(NON_NULL)
-    val maximum: Int? = null,
+    var maximum: Int? = null,
     @JsonInclude(NON_NULL)
-    val exclusiveMaximum: Int? = null,
+    var exclusiveMaximum: Int? = null,
     @JsonInclude(NON_NULL)
-    val multipleOf: Int? = null
+    var multipleOf: Int? = null
 ) : AbstractDataSchema<Int>() {
-
-    override val type: String
-        get() = TYPE
 
     @get:JsonIgnore
     override val classType: Class<Number>
@@ -66,6 +65,6 @@ data class IntegerSchema(
 
     companion object {
         const val TYPE = "integer"
-        val CLASS_TYPE: Class<Int> = Int::class.java
+        var CLASS_TYPE: Class<Int> = Int::class.java
     }
 }

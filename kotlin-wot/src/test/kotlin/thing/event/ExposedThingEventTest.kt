@@ -1,10 +1,13 @@
 package ai.ancf.lmos.wot.thing.event
 
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import app.cash.turbine.test
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import net.javacrumbs.jsonunit.assertj.JsonAssertions
+import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -40,11 +43,32 @@ class ExposedThingEventTest {
         )).hashCode()
         assertEquals(eventA, eventB)
     }
+    @Test
+    fun testToJson() {
+        val event = ThingEvent(
+            title = "event",
+            data = StringSchema()
+        )
+        val exposedThingEvent = ExposedThingEvent(event)
+        val json = JsonMapper.instance.writeValueAsString(exposedThingEvent)
+
+        JsonAssertions.assertThatJson(json)
+            .`when`(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(
+                """{
+                    "title": "event", 
+                    "data":
+                        {"type":"string"}
+                    }
+                """
+            )
+    }
+
 
     @Test
     fun emitWithoutDataShouldEmitNullAsNextValueToEventState(): Unit = runTest {
-        val thing = ThingEvent(data = StringSchema())
-        val exposedThingEvent = ExposedThingEvent(thing)
+        val event = ThingEvent(data = StringSchema())
+        val exposedThingEvent = ExposedThingEvent(event)
 
         // Collect emissions and check expected value
         exposedThingEvent.getState().flow.test {

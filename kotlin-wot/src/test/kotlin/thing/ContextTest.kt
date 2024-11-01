@@ -11,6 +11,37 @@ class ContextTest {
 
     private val jsonMapper = ObjectMapper()
 
+    /*
+    @Test
+    @Throws(JsonProcessingException::class)
+    fun `test default url`() {
+        val jsonString = Json.encodeToString(ContextSerializer, Context("http://www.w3.org/ns/td"))
+        // single value
+        assertEquals("\"http://www.w3.org/ns/td\"", jsonString)
+
+        val deserializedContext = Json.decodeFromString(ContextSerializer, jsonString)
+    }
+
+    @Test
+    fun `test with multiple context` () {
+        val context = Context("http://www.w3.org/ns/td")
+            .addContext("saref", "https://w3id.org/saref#")
+
+        // Serialization
+        val jsonString = Json.encodeToString(ContextSerializer, context)
+        println(jsonString)
+
+        assertEquals(
+            "[\"http://www.w3.org/ns/td\",{\"saref\":\"https://w3id.org/saref#\"}]",
+            jsonString
+        )
+
+        // Deserialization
+        val deserializedContext = Json.decodeFromString(ContextSerializer, jsonString)
+
+    }
+    */
+
     @Test
     @Throws(IOException::class)
     fun fromJson() {

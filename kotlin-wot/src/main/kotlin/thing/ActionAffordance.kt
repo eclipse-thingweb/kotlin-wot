@@ -1,6 +1,9 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 
 
 /**
@@ -13,14 +16,16 @@ interface ActionAffordance<I, O> : InteractionAffordance {
      *
      * @return an optional data schema for input.
      */
-    val input: DataSchema<I>? // Optional: DataSchema
+    @get:JsonInclude(NON_NULL)
+    var input: DataSchema<I>? // Optional: DataSchema
 
     /**
      * Used to define the output data schema of the Action.
      *
      * @return an optional data schema for output.
      */
-    val output: DataSchema<O>? // Optional: DataSchema
+    @get:JsonInclude(NON_NULL)
+    var output: DataSchema<O>? // Optional: DataSchema
 
     /**
      * Signals if the Action is safe (true) or not.
@@ -30,7 +35,8 @@ interface ActionAffordance<I, O> : InteractionAffordance {
      *
      * @return true if the Action is safe; false otherwise.
      */
-    val safe: Boolean // Default: true
+    @get:JsonInclude(NON_DEFAULT)
+    var safe: Boolean // Default: true
 
     /**
      * Indicates whether the Action is idempotent (true) or not.
@@ -39,7 +45,8 @@ interface ActionAffordance<I, O> : InteractionAffordance {
      *
      * @return true if the Action is idempotent; false otherwise.
      */
-    val idempotent: Boolean // Default: true
+    @get:JsonInclude(NON_DEFAULT)
+    var idempotent: Boolean // Default: true
 
     /**
      * Indicates whether the action is synchronous (true) or not.
@@ -50,5 +57,6 @@ interface ActionAffordance<I, O> : InteractionAffordance {
      *
      * @return true if the Action is synchronous; false otherwise.
      */
-    val synchronous: Boolean? // Optional: boolean
+    @get:JsonInclude(NON_NULL)
+    var synchronous: Boolean? // Optional: boolean
 }
