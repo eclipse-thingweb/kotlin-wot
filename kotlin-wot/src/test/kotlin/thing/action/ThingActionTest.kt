@@ -2,6 +2,7 @@ package ai.ancf.lmos.wot.thing.action
 
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.schema.StringSchema
+import com.fasterxml.jackson.module.kotlin.readValue
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.Test
@@ -44,5 +45,25 @@ class ThingActionTest {
                 """
             )
     }
+
+    @Test
+    fun fromJson() {
+        val json =  """{
+                    "title":"title",
+                    "description":"blabla",
+                    "input":{"type":"string"},
+                    "output":{"type":"string"}
+                    }
+                """
+
+        val parsedAction = JsonMapper.instance.readValue<ThingAction<String, String>>(json)
+        val action = ThingAction(
+            title = "title",
+            description = "blabla",
+            input = StringSchema(),
+            output = StringSchema())
+        assertEquals(action, parsedAction)
+    }
+
 
 }

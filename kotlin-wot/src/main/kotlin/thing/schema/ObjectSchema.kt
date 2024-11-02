@@ -1,43 +1,44 @@
 package ai.ancf.lmos.wot.thing.schema
 
+import ai.ancf.lmos.wot.thing.Type
 import com.fasterxml.jackson.annotation.JsonInclude
-import java.util.*
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Describes data of type [object](https://www.w3.org/TR/wot-thing-description/#objectschema).
  */
-abstract class ObjectSchema(
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) private val properties: Map<String?, DataSchema<*>?> = HashMap(),
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) private val required: List<String?> = ArrayList()
-) : AbstractDataSchema<Map<*, *>?>() {
-
-    override val classType: Class<String>
-        get() = String::class.java
-
-    override fun toString(): String {
-        return "ObjectSchema{}"
-    }
-
-    override fun hashCode(): Int {
-        return Objects.hash(super.hashCode(), properties, required)
-    }
-
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
-            return true
-        }
-        if (obj !is ObjectSchema) {
-            return false
-        }
-        if (!super.equals(obj)) {
-            return false
-        }
-        val that = obj
-        return properties == that.properties && required == that.required
-    }
-
-    companion object {
-        const val TYPE = "object"
-        val CLASS_TYPE: Class<Map<*, *>> = Map::class.java
-    }
-}
+@JsonTypeName("object")
+data class ObjectSchema(
+    @JsonInclude(NON_EMPTY) val properties: Map<String?, DataSchema<Any>?> = HashMap(),
+    @JsonInclude(NON_EMPTY) val required: List<String?> = ArrayList(),
+    @JsonInclude(NON_EMPTY)
+    override var objectType: Type? = null,
+    @JsonInclude(NON_EMPTY)
+    override var type: String? = "object",
+    @JsonInclude(NON_EMPTY)
+    override var title: String? = null,
+    @JsonInclude(NON_EMPTY)
+    override var titles: MutableMap<String, String>? = null,
+    @JsonInclude(NON_EMPTY)
+    override var description: String? = null,
+    @JsonInclude(NON_EMPTY)
+    override var descriptions: MutableMap<String, String>? = null,
+    @JsonInclude(NON_EMPTY)
+    override var const: Map<Any, Any>? = null,
+    @JsonInclude(NON_EMPTY)
+    override var default: Map<Any, Any>? = null,
+    @JsonInclude(NON_EMPTY)
+    override var unit: String? = null,
+    @JsonInclude(NON_EMPTY)
+    override var oneOf: List<DataSchema<Any>>? = null,
+    @JsonInclude(NON_EMPTY)
+    override var enum: List<Any>? = null,
+    @JsonInclude(NON_NULL)
+    override var readOnly: Boolean = false,
+    @JsonInclude(NON_NULL)
+    override var writeOnly: Boolean = false,
+    @JsonInclude(NON_NULL)
+    override var format: String? = null
+) : DataSchema<Map<Any, Any>>

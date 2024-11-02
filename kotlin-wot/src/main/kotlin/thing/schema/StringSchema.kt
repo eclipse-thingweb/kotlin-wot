@@ -1,9 +1,10 @@
 package ai.ancf.lmos.wot.thing.schema
 
-import com.fasterxml.jackson.annotation.JsonIgnore
+import ai.ancf.lmos.wot.thing.Type
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Data class representing a schema for string varues, with optional constraints such as minLength, maxLength, etc.
@@ -14,9 +15,10 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
  * @property contentEncoding Specifies the encoding used to store the contents, as per RFC2045 and RFC4648.
  * @property contentMediaType Specifies the MIME type of the string contents, as described in RFC2046.
  */
+@JsonTypeName("string")
 data class StringSchema(
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    override var objectType: String? = null,
+    override var objectType: Type? = null,
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     override var type: String? = "string",
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -53,12 +55,8 @@ data class StringSchema(
     var contentEncoding: String? = null,
     @JsonInclude(NON_NULL)
     var contentMediaType: String? = null
-) : AbstractDataSchema<String>() {
+) : DataSchema<String> {
 
-
-    @get:JsonIgnore
-    override val classType: Class<String>
-        get() = String::class.java
 
     override fun toString(): String {
         return "StringSchema{}"

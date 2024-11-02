@@ -29,7 +29,7 @@ data class Form(
     val href: String, // Target IRI of a link or submission target of a form. Mandatory
 
     @JsonInclude(NON_EMPTY)
-    val contentType: String? = "text/plain", // Assign a content type. Default is "text/plain"
+    val contentType: String = "text/plain", // Assign a content type. Default is "text/plain"
 
     @JsonInclude(NON_EMPTY)
     val contentCoding: String? = null, // Optional content coding values

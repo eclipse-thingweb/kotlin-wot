@@ -2,6 +2,8 @@ package ai.ancf.lmos.wot.thing.property
 
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.Type
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
@@ -40,7 +42,7 @@ class ExposedThingPropertyTest {
     @Test
     fun toJson() {
         val property = ExposedThingProperty<Any>(ThingProperty(
-            objectType="saref:Temperature",
+            objectType=Type("saref:Temperature"),
             description = "bla bla",
             type="integer",
             observable=true,
@@ -50,6 +52,20 @@ class ExposedThingPropertyTest {
             .`when`(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo(
                 """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}""")
+    }
+
+    @Test
+    fun fromJson() {
+        val json = """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}"""
+
+        val parsedProperty = JsonMapper.instance.readValue<ExposedThingProperty<Int>>(json)
+        val property = ExposedThingProperty<Int>(ThingProperty(
+            objectType=Type("saref:Temperature"),
+            description = "bla bla",
+            type="integer",
+            observable=true,
+            readOnly=true), thing)
+        assertEquals(property, parsedProperty)
     }
 
     @Test

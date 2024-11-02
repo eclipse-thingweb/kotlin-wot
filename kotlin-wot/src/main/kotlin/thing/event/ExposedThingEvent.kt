@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot.thing.event
 
 import ai.ancf.lmos.wot.thing.EventAffordance
+import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -18,7 +19,7 @@ import kotlinx.serialization.Transient
 import org.slf4j.LoggerFactory
 
 @Serializable
-data class ExposedThingEvent<T>(private val event: ThingEvent<T>) : EventAffordance<T, Any, Any> by event {
+data class ExposedThingEvent<T, S, C>(private val event: ThingEvent<T, S, C>) : EventAffordance<T, S, C> by event {
 
     @Transient @JsonIgnore private val state : EventState<T> = EventState()
 
@@ -49,14 +50,14 @@ data class ExposedThingEvent<T>(private val event: ThingEvent<T>) : EventAfforda
 }
 @Serializable
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ThingEvent<T>(
+data class ThingEvent<T, S, C>(
     @JsonInclude(NON_EMPTY)
     override var title: String? = null,
 
     @SerialName("@type")
     @JsonProperty("@type")
     @JsonInclude(NON_NULL)
-    override var objectType: String? = null,
+    override var objectType: Type? = null,
 
     @JsonInclude(NON_NULL)
     override var data: DataSchema<T>? = null,
@@ -74,12 +75,12 @@ data class ThingEvent<T>(
     override var forms: MutableList<Form>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var subscription: DataSchema<@Contextual Any>? = null,
+    override var subscription: DataSchema<@Contextual S>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var cancellation: DataSchema<@Contextual Any>? = null,
+    override var cancellation: DataSchema<@Contextual C>? = null,
 
     @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null
 
-) : EventAffordance<T, Any, Any>
+) : EventAffordance<T, S, C>

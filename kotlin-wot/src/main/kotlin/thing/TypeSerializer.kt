@@ -10,7 +10,7 @@ class TypeSerializer : JsonSerializer<Type>() {
 
     @Throws(IOException::class)
     override fun serialize(type: Type, gen: JsonGenerator, serializers: SerializerProvider) {
-        val types = type.getTypes()
+        val types = type.types
         if (types.size == 1) {
                 gen.writeString(types.iterator().next())
             } else if (types.size > 1) {

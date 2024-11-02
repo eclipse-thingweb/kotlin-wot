@@ -1,9 +1,10 @@
 package ai.ancf.lmos.wot.thing.schema
 
-import com.fasterxml.jackson.annotation.JsonIgnore
+import ai.ancf.lmos.wot.thing.Type
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Data class representing an integer schema, with optional constraints such as minimum, maximum, etc.
@@ -14,10 +15,11 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
  * @property exclusiveMaximum Specifies a maximum numeric varue, representing an exclusive upper limit.
  * @property multipleOf Specifies the multipleOf varue. The varue must be strictly greater than 0.
  */
+@JsonTypeName("integer")
 data class IntegerSchema(
     @JsonInclude(NON_EMPTY)
-    override var objectType: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    override var objectType: Type? = null,
+    @JsonInclude(NON_EMPTY)
     override var type: String? = "integer",
     @JsonInclude(NON_EMPTY)
     override var title: String? = null,
@@ -44,20 +46,16 @@ data class IntegerSchema(
     @JsonInclude(NON_NULL)
     override var format: String? = null,
     @JsonInclude(NON_NULL)
-    var minimum: Int? = null,
+    override var minimum: Int? = null,
     @JsonInclude(NON_NULL)
-    var exclusiveMinimum: Int? = null,
+    override var exclusiveMinimum: Int? = null,
     @JsonInclude(NON_NULL)
-    var maximum: Int? = null,
+    override var maximum: Int? = null,
     @JsonInclude(NON_NULL)
-    var exclusiveMaximum: Int? = null,
+    override var exclusiveMaximum: Int? = null,
     @JsonInclude(NON_NULL)
-    var multipleOf: Int? = null
-) : AbstractDataSchema<Int>() {
-
-    @get:JsonIgnore
-    override val classType: Class<Number>
-        get() = Number::class.java
+    override var multipleOf: Int? = null
+) : CommonNumberSchema<Int> {
 
     override fun toString(): String {
         return "NumberSchema{}"

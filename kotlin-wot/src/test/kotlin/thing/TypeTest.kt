@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing
 
+import ai.ancf.lmos.wot.JsonMapper
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.ObjectMapper
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
 import java.io.IOException
@@ -9,20 +9,19 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class TypeTest {
-    private val jsonMapper = ObjectMapper()
     @Test
     @Throws(IOException::class)
     fun fromJson() {
         // single value
         assertEquals(
             Type("Thing"),
-            jsonMapper.readValue("\"Thing\"", Type::class.java)
+            JsonMapper.instance.readValue("\"Thing\"", Type::class.java)
         )
 
         // array
         assertEquals(
             Type("Thing").addType("saref:LightSwitch"),
-            jsonMapper.readValue("[\"Thing\",\"saref:LightSwitch\"]", Type::class.java)
+            JsonMapper.instance.readValue("[\"Thing\",\"saref:LightSwitch\"]", Type::class.java)
         )
     }
 
@@ -32,11 +31,11 @@ internal class TypeTest {
         // single value
         assertEquals(
             "\"Thing\"",
-            jsonMapper.writeValueAsString(Type("Thing"))
+            JsonMapper.instance.writeValueAsString(Type("Thing"))
         )
 
         // multi type array
-        JsonAssertions.assertThatJson(jsonMapper.writeValueAsString(Type("Thing").addType("saref:LightSwitch")))
+        JsonAssertions.assertThatJson(JsonMapper.instance.writeValueAsString(Type("Thing").addType("saref:LightSwitch")))
             .`when`(Option.IGNORING_ARRAY_ORDER)
             .isArray()
             .contains("Thing", "saref:LightSwitch")

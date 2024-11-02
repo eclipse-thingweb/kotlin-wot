@@ -2,8 +2,10 @@ package ai.ancf.lmos.wot.thing.action
 
 import ai.ancf.lmos.wot.thing.ActionAffordance
 import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
@@ -14,10 +16,10 @@ import kotlinx.serialization.Transient
 import org.slf4j.LoggerFactory
 
 @Serializable
-data class ExposedThingAction<I, O>(
-    private val action: ThingAction<I, O>,
+data class ExposedThingAction<I, O> @JsonCreator constructor(
+    private val action: ThingAction<I, O> = ThingAction(),
     @JsonIgnore
-    private val thing: Thing,
+    private val thing: Thing = Thing(),
     @Transient private val state: ActionState<I, O> = ActionState()
 ) : ActionAffordance<I, O> by action {
 
@@ -30,7 +32,7 @@ data class ExposedThingAction<I, O>(
      * @param options
      * @return
      */
-    suspend fun invoke(
+    suspend fun invokeAction(
         input: I,
         options: Map<String, Map<String, Any>> = emptyMap()
     ): O? {
@@ -86,7 +88,7 @@ data class ThingAction<I, O>(
 
     @JsonProperty("@type")
     @JsonInclude(NON_EMPTY)
-    override var objectType: String? = null,
+    override var objectType: Type? = null,
 
     @JsonInclude(NON_NULL)
     override var input: DataSchema<I>? = null,

@@ -32,7 +32,7 @@ import java.util.concurrent.CompletableFuture
  */
 class Servient(
     private val servers: List<ProtocolServer> = emptyList(),
-    private val clients: List<ProtocolClient> = emptyList(),
+    val clients: List<ProtocolClient> = emptyList(),
     val things: MutableMap<String, ExposedThing> = mutableMapOf()
 ) {
     override fun toString(): String {
@@ -198,6 +198,11 @@ class Servient(
         }
     }
 
+    fun getCredentials(id: String?): Any {
+        log.debug("Servient looking up credentials for '{}'", id)
+        return "credentialStore.get(id)"
+    }
+
     /**
      * Calls `url` and expects a Thing Directory there. Returns a list with all found
      * [Thing].
@@ -253,7 +258,7 @@ class Servient(
         }
     }
 
-    private fun getClientFor(scheme: String) = clients.firstOrNull { client -> client.supports(scheme) }
+    fun getClientFor(scheme: String) = clients.first{ client -> client.supports(scheme) }
 
     /**
      * Adds `thing` to the Thing Directory `directory`.
@@ -263,7 +268,7 @@ class Servient(
      * @return
      * @throws URISyntaxException
      */
-    @Throws(URISyntaxException::class)
+
     fun register(
         directory: String,
         thing: ExposedThing
@@ -291,7 +296,7 @@ class Servient(
      * @return
      * @throws URISyntaxException
      */
-    @Throws(URISyntaxException::class)
+
     fun unregister(
         directory: String,
         thing: ExposedThing
@@ -318,9 +323,15 @@ class Servient(
      *
      * @return
      */
-    @Throws(ServientException::class)
+
     suspend fun discover(): Flow<Thing> {
         return discover(ThingFilter(method = ANY))
+    }
+
+    fun getClientSchemes(): List<String> {
+
+        //return ArrayList<String>(clientFactories.keys)
+        return listOf()
     }
 
     /**
@@ -331,7 +342,7 @@ class Servient(
      * @param filter
      * @return
      */
-    @Throws(ServientException::class)
+
     suspend fun discover(filter: ThingFilter): Flow<Thing> {
         return when (filter.method) {
             DIRECTORY -> discoverDirectory(filter)
@@ -381,6 +392,10 @@ class Servient(
         // Apply the filter query if available
         val filteredThings: List<Thing> = filter.query?.filter(myThings) ?: myThings
         filteredThings.forEach { emit(it) } // Emit each thing one by one
+    }
+
+    fun hasClientFor(scheme: String): Boolean {
+        TODO("Not yet implemented")
     }
 
     companion object {

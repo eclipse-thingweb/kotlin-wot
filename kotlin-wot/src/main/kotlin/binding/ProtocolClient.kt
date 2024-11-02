@@ -45,7 +45,7 @@ interface ProtocolClient {
      * @param credentials
      * @return
      */
-    fun setSecurity(metadata: List<SecurityScheme>, credentials: Map<String, String>): Boolean {
+    fun setSecurity(metadata: List<SecurityScheme>, credentials: Any): Boolean {
         return false
     }
 

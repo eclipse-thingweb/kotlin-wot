@@ -2,6 +2,8 @@ package ai.ancf.lmos.wot.thing.property
 
 
 import ai.ancf.lmos.wot.JsonMapper
+import ai.ancf.lmos.wot.thing.Type
+import com.fasterxml.jackson.module.kotlin.readValue
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -26,7 +28,7 @@ class ThingPropertyTest {
 
     @Test
     fun toJson() {
-        val property: ThingProperty<Any> = ThingProperty(objectType="saref:Temperature",
+        val property = ThingProperty<Int>(objectType=Type("saref:Temperature"),
             description = "bla bla",
             type="integer",
             observable=true,
@@ -40,13 +42,26 @@ class ThingPropertyTest {
     }
 
     @Test
+    fun fromJson() {
+        val json = """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}"""
+
+        val parsedProperty = JsonMapper.instance.readValue<ThingProperty<Int>>(json)
+        val property = ThingProperty<Int>(objectType=Type("saref:Temperature"),
+            description = "bla bla",
+            type="integer",
+            observable=true,
+            readOnly=true)
+        assertEquals(property, parsedProperty)
+    }
+
+    @Test
     fun testConstructor() {
-        val property: ThingProperty<Any> = ThingProperty(objectType="saref:Temperature",
+        val property: ThingProperty<Any> = ThingProperty(objectType=Type("saref:Temperature"),
             type="integer",
             observable=true,
             readOnly=true,
             writeOnly=false)
-        assertEquals("saref:Temperature", property.objectType)
+        assertEquals("saref:Temperature", property.objectType?.types?.first())
         assertEquals("integer", property.type)
         assertTrue(property.observable)
         assertTrue(property.readOnly)

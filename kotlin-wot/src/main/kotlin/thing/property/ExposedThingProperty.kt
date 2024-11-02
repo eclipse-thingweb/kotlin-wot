@@ -3,8 +3,10 @@ package ai.ancf.lmos.wot.thing.property
 
 import ai.ancf.lmos.wot.thing.PropertyAffordance
 import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.ancf.lmos.wot.thing.schema.StringSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
@@ -17,9 +19,9 @@ import kotlinx.serialization.Transient
 
 @Serializable
 data class ExposedThingProperty<T>(
-    private val property: ThingProperty<T>,
+    private val property: ThingProperty<T> = ThingProperty(),
     @JsonIgnore
-    private val thing: Thing,
+    private val thing: Thing = Thing(),
     @Transient private val state: PropertyState<T> = PropertyState()
 ) : PropertyAffordance<T> by property {
 
@@ -37,7 +39,7 @@ data class ExposedThingProperty<T>(
         log.debug("'{}' calls registered writeHandler for Property '{}'", thing.id, title)
         return try {
             if (state.writeHandler != null) {
-                val customValue = state.writeHandler?.invoke(value)
+                val customValue = state.writeHandler.invoke(value)
                 state.setValue(customValue)
                 log.debug(
                     "'{}' write handler for Property '{}' sets custom value '{}'",
@@ -57,8 +59,8 @@ data class ExposedThingProperty<T>(
 
     data class PropertyState<T>(
         private val _flow: MutableStateFlow<T?> = MutableStateFlow(null),
-        var readHandler: (suspend () -> T?)? = null,
-        var writeHandler: (suspend (T) -> T?)? = null
+        val readHandler: (suspend () -> T?)? = null,
+        val writeHandler: (suspend (T) -> T?)? = null
     ) {
 
         // Getter for the current value
@@ -81,18 +83,20 @@ data class ExposedThingProperty<T>(
     }
 }
 @Serializable
-
 data class ThingProperty<T>(
+
+    val data : DataSchema<T>,
+
     @JsonInclude(NON_EMPTY)
     override var title: String? = null,
 
     @SerialName("@type")
     @JsonProperty("@type")
     @JsonInclude(NON_NULL)
-    override var objectType: String? = null,
+    override var objectType: Type? = null,
 
     @JsonInclude(NON_NULL)
-    override var type: String? = "string",
+    override var type: String? = null,
 
     @JsonInclude(NON_DEFAULT)
     override var observable: Boolean = false,
@@ -135,13 +139,5 @@ data class ThingProperty<T>(
 
     @JsonInclude(NON_EMPTY)
     override var format: String? = null,
-    ) : PropertyAffordance<T> {
-
-        /*
-    override val classType: Class<*>
-        get() = VariableDataSchema(type).classType
-
-         */
-
-}
+    ) : PropertyAffordance<T>, DataSchema<T> by data
 

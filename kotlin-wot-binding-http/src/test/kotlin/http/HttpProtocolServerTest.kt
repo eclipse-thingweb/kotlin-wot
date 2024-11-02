@@ -2,7 +2,7 @@ package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.thing
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -24,7 +24,15 @@ class HttpProtocolServerTest {
     private lateinit var server: HttpProtocolServer
     private val servient: Servient = mockk()
     private val mockServer: EmbeddedServer<*, *> = mockk()
-    private val exposedThing: ExposedThing = ExposedThing(Thing(id = "test"))
+    private val exposedThing: ExposedThing = ExposedThing(
+        thing("test") {
+            property("property1"){
+                type = "integer"
+            }
+            action("action1"){
+
+            }
+    })
 
     @BeforeTest
     fun setUp() {
@@ -130,8 +138,11 @@ class HttpProtocolServerTest {
         // Setup mock thing data
         every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
-        // Perform GET request on "/testThing"
+        // Perform GET request on "/test"
         val response = client.get("/${exposedThing.id}")
+
+        println(response.bodyAsText())
+
         val thing : ExposedThing = response.body()
 
         assertEquals(HttpStatusCode.OK, response.status)
@@ -164,7 +175,7 @@ class HttpProtocolServerTest {
         every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform PUT request on property endpoint
-        val response = client.put("/testThing/properties/$propertyName") {
+        val response = client.put("/test/properties/$propertyName") {
             contentType(ContentType.Application.Json)
             setBody("""{ "value": "newValue" }""") // JSON payload to update the property
         }
@@ -193,7 +204,7 @@ class HttpProtocolServerTest {
         every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform POST request on action endpoint
-        val response = client.post("/testThing/actions/action1") {
+        val response = client.post("/test/actions/action1") {
             contentType(ContentType.Application.Json)
             setBody("""{ "input": "someValue" }""") // JSON payload for action input
         }

@@ -7,9 +7,11 @@ import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ExposedThingEvent
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
 import ai.ancf.lmos.wot.thing.property.ThingProperty
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.anfc.lmos.wot.binding.ProtocolClient
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -37,11 +39,11 @@ import java.util.*
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Serializable
-data class ExposedThing(private val thing: Thing) : ThingDescription by thing {
+data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription by thing {
 
-    private val _properties : MutableMap<String, ExposedThingProperty<@Contextual Any>> = mutableMapOf()
-    private val _actions : MutableMap<String, ExposedThingAction<@Contextual Any, @Contextual Any>> = mutableMapOf()
-    private val _events : MutableMap<String, ExposedThingEvent<@Contextual Any>> = mutableMapOf()
+    private val _properties : MutableMap<String, ExposedThingProperty<Any>> = mutableMapOf()
+    private val _actions : MutableMap<String, ExposedThingAction<Any, Any>> = mutableMapOf()
+    private val _events : MutableMap<String, ExposedThingEvent<Any, Any, Any>> = mutableMapOf()
 
     init {
         thing.properties.forEach { (name, property) ->
@@ -80,7 +82,7 @@ data class ExposedThing(private val thing: Thing) : ThingDescription by thing {
     suspend fun writeProperties(values: Map<String, Any>): Map<String, Any> {
         val returnValues: MutableMap<String, Any> = HashMap()
         values.forEach { (name, value) ->
-            val property: ExposedThingProperty<Any>? = _properties[name]
+            val property = _properties[name]
             returnValues[name] = property?.write(value) as Any
         }
         // wait until all properties have been written
@@ -141,6 +143,8 @@ data class ExposedThing(private val thing: Thing) : ThingDescription by thing {
     }
 }
 
+private const val s = "https://www.w3.org/2022/wot/td/v1.1"
+
 /**
  * Represents a Thing entity in the Web of Things (WoT) model.
  *
@@ -173,17 +177,17 @@ data class ExposedThing(private val thing: Thing) : ThingDescription by thing {
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Serializable
 data class Thing (
-    override val id: String = "urn:uuid:" + UUID.randomUUID().toString(),
-    @SerialName("@type") @JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = null,
-    @SerialName("@context") @JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = null,
+    @JsonProperty("id") override var id: String = "urn:uuid:" + UUID.randomUUID().toString(),
+    @SerialName("@type") @JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = Type("Thing"),
+    @SerialName("@context") @JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = Context("https://www.w3.org/2022/wot/td/v1.1"),
     @JsonInclude(NON_EMPTY) override var title: String? = null,
     @JsonInclude(NON_EMPTY) override var titles: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY) override var description: String? = null,
     @JsonInclude(NON_EMPTY) override var descriptions: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<@Contextual Any>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<@Contextual Any, @Contextual Any>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<@Contextual Any>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) override var forms: List<Form>? = null,
+    @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<Any, Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<Any, Any, Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var forms: List<Form> = emptyList(),
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(NON_EMPTY) override var security: List<String> = emptyList(),
     @JsonInclude(NON_EMPTY) override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
     @JsonInclude(NON_EMPTY) override var base: String? = null,
@@ -216,30 +220,31 @@ data class Thing (
         this.actions[name] = ThingAction<Any, Any>().apply(configure)
     }
 
-    fun Thing.event(name: String, configure: ThingEvent<Any>.() -> Unit) {
-        this.events[name] = ThingEvent<Any>().apply(configure)
+    fun Thing.event(name: String, configure: ThingEvent<Any, Any, Any>.() -> Unit) {
+        this.events[name] = ThingEvent<Any, Any, Any>().apply(configure)
     }
 
-    fun getPropertiesByObjectType(objectType: String?): Map<String, ThingProperty<Any>> {
+    /*
+
+    fun getPropertiesByObjectType(objectType: String): Map<String, ThingProperty<Any>> {
         return getPropertiesByExpandedObjectType(getExpandedObjectType(objectType))
     }
 
-    fun getPropertiesByExpandedObjectType(objectType: String?): Map<String, ThingProperty<Any>> {
+    private fun getPropertiesByExpandedObjectType(objectType: String): Map<String, ThingProperty<Any>> {
         return properties.filter { (_, property) ->
-            getExpandedObjectType(property.objectType) == objectType
+            getExpandedObjectType(property.objectType?.defaultType) == objectType
         }.toMap()
     }
 
-    fun getExpandedObjectType(objectType: String?): String? {
-        if (objectType == null || objectContext == null) {
-            return null
-        }
+    fun getExpandedObjectType(objectType: String?): String {
+
         val parts = objectType.split(":", limit = 2)
         val prefix = if (parts.size == 2) parts[0] else null
         val suffix = parts.last()
 
-        return objectContext?.getUrl(prefix)?.let { "$it$suffix" } ?: objectType
+        return objectContext?.getUrl(prefix)?.let { "$it#$suffix" } ?: objectType
     }
+    */
 
     fun toJson() : String?{
         return try {
@@ -248,6 +253,10 @@ data class Thing (
             log.warn("Unable to write json", e)
             null
         }
+    }
+
+    fun getClientFor(forms: MutableList<Form>?, invokeAction: Operation): Pair<ProtocolClient, Form> {
+        TODO("Not yet implemented")
     }
 
     companion object {
@@ -298,7 +307,7 @@ data class Thing (
 /**
  * Interface representing a Thing Description (TD) in a Web of Things context.
  */
-interface ThingDescription {
+interface ThingDescription : CommonSchema {
 
     /**
      * JSON-LD keyword to define short-hand names called terms that are used throughout a TD document.
@@ -309,52 +318,12 @@ interface ThingDescription {
     var objectContext: Context? // Optional: anyURI or Array
 
     /**
-     * JSON-LD keyword to label the object with semantic tags (or types).
-     *
-     * @return a string or an array of strings representing the types.
-     */
-    @get:JsonProperty("@type")
-    var objectType: Type? // Optional: string or Array of string
-
-    /**
      * Identifier of the Thing in form of a URI RFC3986.
      *
      * @return an optional URI identifier.
      */
     @get:JsonInclude(NON_EMPTY)
-    val id: String // Optional: anyURI
-
-    /**
-     * Provides a human-readable title based on a default language.
-     *
-     * @return the title of the Thing, which is mandatory.
-     */
-    @get:JsonInclude(NON_EMPTY)
-    var title: String? // Mandatory: string
-
-    /**
-     * Provides multi-language human-readable titles.
-     *
-     * @return a map of multi-language titles.
-     */
-    @get:JsonInclude(NON_EMPTY)
-    var titles: MutableMap<String, String>? // Optional: Map of MultiLanguage
-
-    /**
-     * Provides additional (human-readable) information based on a default language.
-     *
-     * @return an optional description.
-     */
-    @get:JsonInclude(NON_EMPTY)
-    var description: String? // Optional: string
-
-    /**
-     * Can be used to support (human-readable) information in different languages.
-     *
-     * @return a map of descriptions in different languages.
-     */
-    @get:JsonInclude(NON_EMPTY)
-    var descriptions: MutableMap<String, String>? // Optional: Map of MultiLanguage
+    var id: String // Optional: anyURI
 
     /**
      * Provides version information.
@@ -418,7 +387,7 @@ interface ThingDescription {
      * @return a map of event affordances.
      */
     @get:JsonInclude(NON_EMPTY)
-    var events: MutableMap<String, ThingEvent<Any>> // Optional: Map of EventAffordance
+    var events: MutableMap<String, ThingEvent<Any, Any, Any>> // Optional: Map of EventAffordance
 
     /**
      * Provides Web links to arbitrary resources that relate to the specified Thing Description.
@@ -434,7 +403,7 @@ interface ThingDescription {
      * @return an array of forms.
      */
     @get:JsonInclude(NON_EMPTY)
-    var forms: List<Form>? // Optional: Array of Form
+    var forms: List<Form> // Optional: Array of Form
 
     /**
      * Set of security definition names, chosen from those defined in securityDefinitions.

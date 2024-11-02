@@ -3,6 +3,7 @@ package ai.ancf.lmos.wot.thing.action
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.schema.StringSchema
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -62,6 +63,26 @@ class ExposedThingActionTest {
     }
 
     @Test
+    fun fromJson() {
+        val json = """{
+                    "title":"title",
+                    "description":"blabla",
+                    "input":{"type":"string"},
+                    "output":{"type":"string"}
+                    }"""
+
+        val parsedThingAction = JsonMapper.instance.readValue<ExposedThingAction<String, String>>(json)
+        val action = ThingAction(
+            title = "title",
+            description = "blabla",
+            input = StringSchema(),
+            output = StringSchema()
+        )
+        val exposedThingAction = ExposedThingAction(action, thing)
+        assertEquals(exposedThingAction, parsedThingAction)
+    }
+
+    @Test
     fun invokeWithoutHandlerShouldReturnNull() = runTest {
         every { state.handler } returns null
 
@@ -72,7 +93,7 @@ class ExposedThingActionTest {
         )
 
         // Invoke the action without a handler
-        assertNull(exposedThingAction.invoke("test"))
+        assertNull(exposedThingAction.invokeAction("test"))
     }
 
     @Test
@@ -89,7 +110,7 @@ class ExposedThingActionTest {
 
         coEvery { handler("test", any()) } returns "Result"
 
-        val result = exposedThingAction.invoke("test")
+        val result = exposedThingAction.invokeAction("test")
         assertEquals("Result", result)
     }
 
@@ -108,7 +129,7 @@ class ExposedThingActionTest {
         coEvery { handler("test", any()) } throws RuntimeException()
 
         assertFailsWith<RuntimeException> {
-            exposedThingAction.invoke("test")
+            exposedThingAction.invokeAction("test")
         }
     }
 
