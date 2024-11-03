@@ -5,6 +5,7 @@ import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.ExposedStringProperty
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.PropertyState
+import ai.ancf.lmos.wot.thing.schema.stringProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -29,8 +30,8 @@ class ExposedThingPropertyTest {
 
     @Test
     fun testEquals() {
-        val property1 = exposedStringProperty { title = "title" }
-        val property2 = exposedStringProperty { title = "title" }
+        val property1 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" })
+        val property2 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" })
         assertEquals(property1, property2)
     }
 
@@ -38,12 +39,8 @@ class ExposedThingPropertyTest {
     fun testHashCode() {
         val thing = Thing(id = "Foo")
 
-        val property1 = exposedStringProperty {
-            title = "title"
-        }.hashCode()
-        val property2 = exposedStringProperty {
-            title = "title"
-        }.hashCode()
+        val property1 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" }).hashCode()
+        val property2 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" }).hashCode()
         assertEquals(property1, property2)
     }
 
