@@ -47,8 +47,9 @@ sealed interface ThingProperty<T> : PropertyAffordance<T>{
     data class ArrayProperty<I>(
         override var forms: MutableList<Form>? = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
-        override var observable: Boolean = false
-    ) : ThingProperty<List<Any>>, ArraySchema<I>()
+        override var observable: Boolean = false,
+        override var items: List<DataSchema<I>>
+    ) : ThingProperty<List<I>>, ArraySchema<I>(items = items)
 
     data class NullProperty(
         override var forms: MutableList<Form>? = mutableListOf(),
@@ -72,4 +73,20 @@ fun intProperty(initializer: IntProperty.() -> Unit): IntProperty {
 }
 fun booleanProperty(initializer: BooleanProperty.() -> Unit): BooleanProperty {
     return BooleanProperty().apply(initializer)
+}
+
+fun numberProperty(initializer: NumberProperty.() -> Unit): NumberProperty {
+    return NumberProperty().apply(initializer)
+}
+
+fun nullProperty(initializer: NullProperty.() -> Unit): NullProperty {
+    return NullProperty().apply(initializer)
+}
+
+fun objectProperty(initializer: ObjectProperty.() -> Unit): ObjectProperty {
+    return ObjectProperty().apply(initializer)
+}
+
+fun <I> arrayProperty(items: List<DataSchema<I>>, initializer: ArrayProperty<I>.() -> Unit): ArrayProperty<I> {
+    return ArrayProperty(items = items).apply { initializer() }
 }

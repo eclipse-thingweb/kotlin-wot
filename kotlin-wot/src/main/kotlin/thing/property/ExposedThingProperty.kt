@@ -2,14 +2,32 @@ package ai.ancf.lmos.wot.thing.property
 
 
 import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
 import ai.ancf.lmos.wot.thing.schema.PropertyAffordance
 import ai.ancf.lmos.wot.thing.schema.ThingProperty
+import ai.ancf.lmos.wot.thing.schema.ThingProperty.*
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ExposedThingProperty<T>(
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = ExposedStringProperty::class, name = "string") ,
+    JsonSubTypes.Type(value = ExposedIntProperty::class, name = "integer"),
+    JsonSubTypes.Type(value = ExposedBooleanProperty::class, name = "boolean"),
+    JsonSubTypes.Type(value = ExposedNumberProperty::class, name = "number"),
+    JsonSubTypes.Type(value = ExposedArrayProperty::class, name = "array"),
+    JsonSubTypes.Type(value = ExposedObjectProperty::class, name = "object"),
+    JsonSubTypes.Type(value = ExposedNullProperty::class, name = "null")
+)
+sealed class ExposedThingProperty<T>(
     private val property: ThingProperty<T>,
     @JsonIgnore
     private val thing: Thing = Thing(),
@@ -87,11 +105,39 @@ data class ExposedThingProperty<T>(
         }
     }
 
-
+    class ExposedStringProperty(property: StringProperty = StringProperty(), thing : Thing = Thing(), state: PropertyState<String> = PropertyState()) : ExposedThingProperty<String>(property = property, thing = thing, state = state)
+    class ExposedIntProperty(property: IntProperty = IntProperty(), thing : Thing = Thing(), state: PropertyState<Int> = PropertyState()) : ExposedThingProperty<Int>(property = property, thing = thing, state = state)
+    class ExposedBooleanProperty(property: BooleanProperty = BooleanProperty(), thing : Thing = Thing(), state: PropertyState<Boolean> = PropertyState()) : ExposedThingProperty<Boolean>(property = property, thing = thing, state = state)
+    class ExposedNumberProperty(property: NumberProperty = NumberProperty(), thing : Thing = Thing(), state: PropertyState<Number> = PropertyState()) : ExposedThingProperty<Number>(property = property, thing = thing, state = state)
+    class ExposedNullProperty(property: NullProperty = NullProperty(), thing : Thing = Thing(), state: PropertyState<Any> = PropertyState()) : ExposedThingProperty<Any>(property = property, thing = thing, state = state)
+    class ExposedArrayProperty<I>(property: ArrayProperty<I> = ArrayProperty(items = mutableListOf()), thing : Thing = Thing(), state: PropertyState<List<I>> = PropertyState()) : ExposedThingProperty<List<I>>(property = property, thing = thing, state = state)
+    class ExposedObjectProperty(property: ObjectProperty = ObjectProperty(), thing : Thing = Thing(), state: PropertyState<Map<Any, Any>> = PropertyState()) : ExposedThingProperty<Map<Any, Any>>(property = property, thing = thing, state = state)
 
     companion object {
         private val log: org.slf4j.Logger = org.slf4j.LoggerFactory.getLogger(ExposedThingProperty::class.java)
     }
+}
+
+fun exposedStringProperty(initializer: ExposedStringProperty.() -> Unit): ExposedStringProperty {
+    return ExposedStringProperty().apply(initializer)
+}
+fun exposedIntProperty(initializer: ExposedIntProperty.() -> Unit): ExposedIntProperty {
+    return ExposedIntProperty().apply(initializer)
+}
+fun exposedBooleanProperty(initializer: ExposedBooleanProperty.() -> Unit): ExposedBooleanProperty {
+    return ExposedBooleanProperty().apply(initializer)
+}
+
+fun exposedNumberProperty(initializer: ExposedNumberProperty.() -> Unit): ExposedNumberProperty {
+    return ExposedNumberProperty().apply(initializer)
+}
+
+fun exposedNullProperty(initializer: ExposedNullProperty.() -> Unit): ExposedNullProperty {
+    return ExposedNullProperty().apply(initializer)
+}
+
+fun exposedObjectProperty(initializer: ExposedObjectProperty.() -> Unit): ExposedObjectProperty {
+    return ExposedObjectProperty().apply(initializer)
 }
 
 

@@ -9,6 +9,7 @@ import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import ai.ancf.lmos.wot.thing.schema.ThingDescription
 import ai.ancf.lmos.wot.thing.schema.ThingProperty
@@ -43,13 +44,22 @@ import java.util.*
 @Serializable
 data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription by thing {
 
-    private val _properties : MutableMap<String, ExposedThingProperty<Any>> = mutableMapOf()
+    private val _properties : MutableMap<String, ExposedThingProperty<*>> = mutableMapOf()
     private val _actions : MutableMap<String, ExposedThingAction<Any, Any>> = mutableMapOf()
     private val _events : MutableMap<String, ExposedThingEvent<Any, Any, Any>> = mutableMapOf()
 
     init {
         thing.properties.forEach { (name, property) ->
-            _properties[name] = ExposedThingProperty(property, thing)
+            val exposedProperty = when (property) {
+                is StringProperty -> ExposedStringProperty(thing = thing, property = property)
+                is IntProperty -> ExposedIntProperty(thing = thing, property = property)
+                is BooleanProperty -> ExposedBooleanProperty(thing = thing, property = property)
+                is NumberProperty -> ExposedNumberProperty(thing = thing, property = property)
+                is NullProperty -> ExposedNullProperty(thing = thing, property = property)
+                is ArrayProperty<*> -> ExposedArrayProperty(thing = thing, property = property)
+                is ObjectProperty -> ExposedObjectProperty(thing = thing, property = property)
+            }
+            _properties[name] = exposedProperty
         }
 
         thing.actions.forEach { (name, action) ->
@@ -85,7 +95,32 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
         val returnValues: MutableMap<String, Any> = HashMap()
         values.forEach { (name, value) ->
             val property = _properties[name]
-            returnValues[name] = property?.write(value) as Any
+            if (property != null) {
+                // Check if the property's type matches the value's type
+                when (property) {
+                    is ExposedStringProperty -> if (value is String) {
+                        returnValues[name] = property.write(value) as Any
+                    }
+                    is ExposedIntProperty -> if (value is Int) {
+                        returnValues[name] = property.write(value) as Any
+                    }
+                    is ExposedBooleanProperty -> if (value is Boolean) {
+                        returnValues[name] = property.write(value) as Any
+                    }
+                    is ExposedNumberProperty -> if (value is Number) {
+                        returnValues[name] = property.write(value) as Any
+                    }
+                    is ExposedObjectProperty -> if (value is Map<*, *>) {
+                        returnValues[name] = property.write(value as Map<Any, Any>) as Any
+                    }
+                    is ExposedNullProperty -> {
+                        returnValues[name] = property.write(value) as Any
+                    }
+                    is ExposedArrayProperty<*> -> if (value is List<*>) {
+                        //returnValues[name] = property.write(value as List<Any>) as Any
+                    }
+                }
+            }
         }
         // wait until all properties have been written
         return returnValues
@@ -186,7 +221,7 @@ data class Thing (
     @JsonInclude(NON_EMPTY) override var titles: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY) override var description: String? = null,
     @JsonInclude(NON_EMPTY) override var descriptions: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<*>> = mutableMapOf(),
     @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<Any, Any>> = mutableMapOf(),
     @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<Any, Any, Any>> = mutableMapOf(),
     @JsonInclude(NON_EMPTY) override var forms: List<Form> = emptyList(),
@@ -202,17 +237,9 @@ data class Thing (
     @JsonInclude(NON_EMPTY) override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
     @JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
 ) : ThingDescription {
-    override fun hashCode(): Int {
-        return id.hashCode()
-    }
 
-    override fun equals(other: Any?): Boolean {
-        return when {
-            this === other -> true
-            other !is Thing -> false
-            else -> id == other.id
-        }
-    }
+
+
 
     /*
     fun Thing.property(name: String, configure: ThingProperty<Any>.() -> Unit) {

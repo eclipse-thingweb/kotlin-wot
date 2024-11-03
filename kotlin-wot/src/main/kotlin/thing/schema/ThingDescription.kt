@@ -77,7 +77,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of property affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var properties: MutableMap<String, ThingProperty<Any>> // Optional: Map of PropertyAffordance
+    var properties: MutableMap<String, ThingProperty<*>> // Optional: Map of PropertyAffordance
 
     /**
      * All Action-based Interaction Affordances of the Thing.

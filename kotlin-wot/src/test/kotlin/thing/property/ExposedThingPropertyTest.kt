@@ -3,8 +3,8 @@ package ai.ancf.lmos.wot.thing.property
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.Type
-import ai.ancf.lmos.wot.thing.schema.intProperty
-import ai.ancf.lmos.wot.thing.schema.stringProperty
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.ExposedStringProperty
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.PropertyState
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -19,7 +19,7 @@ import kotlin.test.assertEquals
 class ExposedThingPropertyTest {
 
     private lateinit var thing: Thing
-    private lateinit var state: ExposedThingProperty.PropertyState<String>
+    private lateinit var state: PropertyState<String>
 
     @BeforeEach
     fun setUp() {
@@ -29,27 +29,32 @@ class ExposedThingPropertyTest {
 
     @Test
     fun testEquals() {
-        val property1 = ExposedThingProperty(stringProperty { title = "title" }, thing)
-        val property2 = ExposedThingProperty(stringProperty { title = "title" }, thing)
+        val property1 = exposedStringProperty { title = "title" }
+        val property2 = exposedStringProperty { title = "title" }
         assertEquals(property1, property2)
     }
 
     @Test
     fun testHashCode() {
-        val property1 = ExposedThingProperty(stringProperty { title = "title" }, thing)
-        val property2 = ExposedThingProperty(stringProperty { title = "title" }, thing)
+        val thing = Thing(id = "Foo")
+
+        val property1 = exposedStringProperty {
+            title = "title"
+        }.hashCode()
+        val property2 = exposedStringProperty {
+            title = "title"
+        }.hashCode()
         assertEquals(property1, property2)
     }
 
     @Test
     fun toJson() {
-        val property = ExposedThingProperty(
-            intProperty {
-                objectType=Type("saref:Temperature")
-                description = "bla bla"
-                observable=true
-                readOnly=true
-            }, thing)
+        val property = exposedIntProperty {
+            objectType=Type("saref:Temperature")
+            description = "bla bla"
+            observable=true
+            readOnly=true
+        }
 
         JsonAssertions.assertThatJson(JsonMapper.instance.writeValueAsString(property))
             .`when`(Option.IGNORING_ARRAY_ORDER)
@@ -62,14 +67,12 @@ class ExposedThingPropertyTest {
         val json = """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}"""
 
         val parsedProperty = JsonMapper.instance.readValue<ExposedThingProperty<Int>>(json)
-        val property = ExposedThingProperty(
-            intProperty {
-                objectType=Type("saref:Temperature")
-                description = "bla bla"
-                type="integer"
-                observable=true
-                readOnly=true
-            }, thing)
+        val property = exposedIntProperty {
+            objectType=Type("saref:Temperature")
+            description = "bla bla"
+            observable=true
+            readOnly=true
+        }
         assertEquals(property, parsedProperty)
     }
 
@@ -78,11 +81,7 @@ class ExposedThingPropertyTest {
         every { state.readHandler } returns null
         coEvery { state.value } returns "test"
 
-        val exposedProperty = ExposedThingProperty(
-            mockk(relaxed = true),
-            thing,
-            state
-        )
+        val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
         val value = exposedProperty.read()
 
@@ -97,11 +96,7 @@ class ExposedThingPropertyTest {
         coEvery { readHandler() } returns "test"
         coEvery { state.setValue(any()) } just Runs
 
-        val exposedProperty = ExposedThingProperty(
-            mockk(relaxed = true),
-            thing,
-            state
-        )
+        val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
         val value = exposedProperty.read()
 
@@ -116,11 +111,7 @@ class ExposedThingPropertyTest {
         coEvery { readHandler() } throws IOException()
         every { state.readHandler } returns readHandler
 
-        val exposedProperty = ExposedThingProperty(
-            mockk(relaxed = true),
-            thing,
-            state
-        )
+        val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
         assertThrows<IOException> { exposedProperty.read() }
     }
@@ -133,11 +124,7 @@ class ExposedThingPropertyTest {
         coEvery { writeHandler(any()) } returns "test"
         coEvery { state.setValue(any()) } just Runs
 
-        val exposedProperty = ExposedThingProperty(
-            mockk(relaxed = true),
-            thing,
-            state
-        )
+        val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
         val value = exposedProperty.write("test")
 
@@ -152,11 +139,7 @@ class ExposedThingPropertyTest {
         coEvery { writeHandler(any()) } returns "test"
         coEvery { state.setValue(any()) } just Runs
 
-        val exposedProperty = ExposedThingProperty(
-            mockk(relaxed = true),
-            thing,
-            state
-        )
+        val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
         val value = exposedProperty.write("test")
 
@@ -170,11 +153,7 @@ class ExposedThingPropertyTest {
         coEvery { writeHandler(any()) } throws IOException()
         every { state.writeHandler } returns writeHandler
 
-        val exposedProperty = ExposedThingProperty(
-            mockk(relaxed = true),
-            thing,
-            state
-        )
+        val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
         assertThrows<IOException> { exposedProperty.write("test") }
     }

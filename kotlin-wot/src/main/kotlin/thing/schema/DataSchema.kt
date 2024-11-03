@@ -79,15 +79,15 @@ sealed interface DataSchema<T> : BaseSchema {
     /**
      * Assignment of JSON-based data types.
      */
-    @get:JsonInclude(NON_EMPTY)
-    var type: String? // Optional: JSON-based data types (one of object, array, string, number, integer, boolean, or null)
+    //@get:JsonInclude(NON_EMPTY)
+    //var type: String? // Optional: JSON-based data types (one of object, array, string, number, integer, boolean, or null)
 
     //@get:JsonIgnore
     //val classType: Class<*>
 
 }
 
-interface BaseNumberSchema<T> : DataSchema<T>{
+sealed interface BaseNumberSchema<T> : DataSchema<T>{
 
     @get:JsonInclude(JsonInclude.Include.NON_NULL)
     var minimum: Int?

@@ -42,7 +42,6 @@ class ThingPropertyTest {
         val property = intProperty{
             objectType=Type("saref:Temperature")
             description = "bla bla"
-            type="integer"
             observable=true
             readOnly=true
         }
@@ -62,7 +61,6 @@ class ThingPropertyTest {
         val property = stringProperty{
             objectType = Type("saref:Temperature")
             description = "bla bla"
-            type = "string"
             observable = true
             readOnly = true
             minLength = 10
@@ -74,13 +72,11 @@ class ThingPropertyTest {
     fun testConstructor() {
         val property = intProperty{
             objectType=Type("saref:Temperature")
-            type="integer"
             observable=true
             readOnly=true
             writeOnly=false
         }
         assertEquals("saref:Temperature", property.objectType?.types?.first())
-        assertEquals("integer", property.type)
         assertTrue(property.observable)
         assertTrue(property.readOnly)
         assertFalse(property.writeOnly)

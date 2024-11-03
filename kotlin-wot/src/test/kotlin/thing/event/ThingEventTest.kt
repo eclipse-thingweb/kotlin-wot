@@ -14,9 +14,9 @@ class ThingEventTest {
     fun testThingEvent() {
         // Assuming ThingEvent can be directly constructed instead of using Builder
         val event = ThingEvent<String, String, String>(
-            data = StringSchema()
+            data = StringSchema(title = "title")
         )
-        assertEquals("string", event.data?.type)
+        assertEquals("title", event.data?.title)
     }
 
 
