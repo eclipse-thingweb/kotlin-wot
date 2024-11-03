@@ -25,22 +25,26 @@ class ExposedThingEventTest {
 
     @Test
     fun testEquals() {
+        val data = StringSchema()
+
         val eventA = ExposedThingEvent<String, String, String>(ThingEvent(
-            data = StringSchema()
+            data = data
         ))
         val eventB = ExposedThingEvent<String, String, String>(ThingEvent(
-            data = StringSchema()
+            data = data
         ))
         assertEquals(eventA, eventB)
     }
 
     @Test
     fun testHashCode() {
+        val data = StringSchema()
+
         val eventA = ExposedThingEvent<String, String, String>(ThingEvent(
-            data = StringSchema()
+            data = data
         )).hashCode()
         val eventB = ExposedThingEvent<String, String, String>(ThingEvent(
-            data = StringSchema()
+            data = data
         )).hashCode()
         assertEquals(eventA, eventB)
     }

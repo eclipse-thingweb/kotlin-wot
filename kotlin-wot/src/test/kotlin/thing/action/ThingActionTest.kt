@@ -12,15 +12,21 @@ import kotlin.test.assertEquals
 class ThingActionTest {
     @Test
     fun testEquals() {
-        val action1 = ThingAction(input = StringSchema(), output = StringSchema())
-        val action2 = ThingAction(input = StringSchema(), output = StringSchema())
+        val input= StringSchema()
+        val output= StringSchema()
+
+        val action1 = ThingAction(input = input, output = output)
+        val action2 = ThingAction(input = input, output = output)
         assertEquals(action1, action2)
     }
 
     @Test
     fun testHashCode() {
-        val action1 = ThingAction(input = StringSchema(), output = StringSchema()).hashCode()
-        val action2 = ThingAction(input = StringSchema(), output = StringSchema()).hashCode()
+        val input= StringSchema()
+        val output= StringSchema()
+
+        val action1 = ThingAction(input = input, output = output).hashCode()
+        val action2 = ThingAction(input = input, output = output).hashCode()
         assertEquals(action1, action2)
     }
 

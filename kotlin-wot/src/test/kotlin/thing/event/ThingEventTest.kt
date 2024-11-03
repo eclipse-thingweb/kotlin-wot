@@ -58,22 +58,26 @@ class ThingEventTest {
 
     @Test
     fun testEquals() {
+        val data = StringSchema()
+
         val eventA = ThingEvent<String, String, String>(
-            data = StringSchema()
+            data = data
         )
         val eventB = ThingEvent<String, String, String>(
-            data = StringSchema()
+            data = data
         )
         assertEquals(eventA, eventB)
     }
 
     @Test
     fun testHashCode() {
+        val data = StringSchema()
+
         val eventA = ThingEvent<String, String, String>(
-            data = StringSchema()
+            data = data
         ).hashCode()
         val eventB = ThingEvent<String, String, String>(
-            data = StringSchema()
+            data = data
         ).hashCode()
         assertEquals(eventA, eventB)
     }

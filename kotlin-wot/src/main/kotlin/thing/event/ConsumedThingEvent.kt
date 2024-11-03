@@ -1,6 +1,6 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.thing.EventAffordance
+import ai.ancf.lmos.wot.thing.schema.EventAffordance
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import java.util.*
 

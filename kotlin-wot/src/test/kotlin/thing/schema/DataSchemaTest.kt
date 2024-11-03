@@ -56,23 +56,23 @@ class DataSchemaTest {
     @Test
     fun `should deserialize to ObjectSchema`() {
         val json = """"{
-                "type": "object",
-                "properties": {
-                    "from": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 100
-                    },
-                    "to": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 100
-                    },
-                    "duration": {
-                        "type": "number"
-                    }
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
                 },
-                "required": ["to","duration"]
+                "to": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "duration": {
+                    "type": "number"
+                }
+            },
+            "required": ["to","duration"]
             }"""
         val schema: ObjectSchema = mapper.readValue(json)
         assertEquals(3, schema.properties.size)

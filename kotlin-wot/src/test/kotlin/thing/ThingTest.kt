@@ -5,7 +5,7 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.property.ThingProperty
+import ai.ancf.lmos.wot.thing.schema.ThingProperty
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.BeforeTest
@@ -60,7 +60,7 @@ class ThingTest {
             objectContext = Context("http://www.w3.org/ns/td")
             title = "Test Thing"
             description = "A test thing for unit testing"
-            property("propertyA"){
+            stringProperty("propertyA"){
                 title = "propertyTitle"
             }
             action("action"){

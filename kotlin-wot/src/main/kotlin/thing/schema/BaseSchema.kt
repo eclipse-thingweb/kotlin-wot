@@ -1,10 +1,11 @@
-package ai.ancf.lmos.wot.thing
+package ai.ancf.lmos.wot.thing.schema
 
+import ai.ancf.lmos.wot.thing.Type
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
 import com.fasterxml.jackson.annotation.JsonProperty
 
-interface CommonSchema {
+sealed interface BaseSchema {
 
     /**
      * A keyword to label the object with semantic tags (or types).

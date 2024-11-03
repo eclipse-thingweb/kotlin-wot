@@ -1,9 +1,9 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.thing.ActionAffordance
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.ActionAffordance
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -61,6 +61,25 @@ data class ExposedThingAction<I, O> @JsonCreator constructor(
             null
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ExposedThingAction<*, *>
+
+        if (action != other.action) return false
+        if (thing != other.thing) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = action.hashCode()
+        result = 31 * result + thing.hashCode()
+        return result
+    }
+
 
     companion object {
         private val log: org.slf4j.Logger = LoggerFactory.getLogger(ExposedThingAction::class.java)

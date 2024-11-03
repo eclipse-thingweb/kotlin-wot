@@ -2,15 +2,14 @@ package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.thing.Type
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
-import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Describes data of type [number](https://www.w3.org/TR/wot-thing-description/#numberschema).
  */
 @JsonTypeName("null")
-data class NumberSchema(
+open class NumberSchema(
     @JsonInclude(NON_EMPTY)
     override var objectType: Type? = null,
     @JsonInclude(NON_EMPTY)
@@ -33,9 +32,9 @@ data class NumberSchema(
     override var oneOf: List<DataSchema<Any>>? = null,
     @JsonInclude(NON_EMPTY)
     override var enum: List<Any>? = null,
-    @JsonInclude(NON_NULL)
+    @JsonInclude(NON_DEFAULT)
     override var readOnly: Boolean = false,
-    @JsonInclude(NON_NULL)
+    @JsonInclude(NON_DEFAULT)
     override var writeOnly: Boolean = false,
     @JsonInclude(NON_NULL)
     override var format: String? = null,
@@ -49,4 +48,6 @@ data class NumberSchema(
     override var exclusiveMaximum: Int? = null,
     @JsonInclude(NON_NULL)
     override var multipleOf: Int? = null
-) : CommonNumberSchema<Number>
+) : BaseNumberSchema<Number>{
+
+}

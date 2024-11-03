@@ -1,17 +1,15 @@
-package ai.ancf.lmos.wot.thing
+package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.DataSchema
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.*
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
-import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * An interface representing an interaction affordance for a thing.
  * This interface defines properties and methods that provide metadata about the interaction affordance.
  */
-interface InteractionAffordance : CommonSchema {
+interface InteractionAffordance : BaseSchema {
 
     /**
      * Set of form hypermedia controls that describe how an operation can be performed.

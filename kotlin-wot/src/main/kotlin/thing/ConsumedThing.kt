@@ -8,6 +8,7 @@ import ai.ancf.lmos.wot.thing.action.ConsumedThingException
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.ObjectSchema
+import ai.ancf.lmos.wot.thing.schema.ThingDescription
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import org.slf4j.LoggerFactory

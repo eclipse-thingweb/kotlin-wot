@@ -1,6 +1,5 @@
 package ai.ancf.lmos.wot.thing.schema
 
-import ai.ancf.lmos.wot.thing.CommonSchema
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT
@@ -27,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = ObjectSchema::class, name = "object"),
     JsonSubTypes.Type(value = NullSchema::class, name = "null")
 )
-interface DataSchema<T> : CommonSchema {
+sealed interface DataSchema<T> : BaseSchema {
 
     /**
      * Constant value.
@@ -83,9 +82,12 @@ interface DataSchema<T> : CommonSchema {
     @get:JsonInclude(NON_EMPTY)
     var type: String? // Optional: JSON-based data types (one of object, array, string, number, integer, boolean, or null)
 
+    //@get:JsonIgnore
+    //val classType: Class<*>
+
 }
 
-interface CommonNumberSchema<T> : DataSchema<T>{
+interface BaseNumberSchema<T> : DataSchema<T>{
 
     @get:JsonInclude(JsonInclude.Include.NON_NULL)
     var minimum: Int?

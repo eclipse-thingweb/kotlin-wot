@@ -1,9 +1,9 @@
 package ai.ancf.lmos.wot.thing.event
 
-import ai.ancf.lmos.wot.thing.EventAffordance
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.ancf.lmos.wot.thing.schema.EventAffordance
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -31,6 +31,20 @@ data class ExposedThingEvent<T, S, C>(private val event: ThingEvent<T, S, C>) : 
         log.debug("Event '{}' has been emitted", title)
         state.emit(data)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ExposedThingEvent<*, *, *>
+
+        return event == other.event
+    }
+
+    override fun hashCode(): Int {
+        return event.hashCode()
+    }
+
 
     companion object {
         private val log = LoggerFactory.getLogger(ExposedThingEvent::class.java)

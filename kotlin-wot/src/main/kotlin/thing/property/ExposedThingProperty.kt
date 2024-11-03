@@ -1,25 +1,16 @@
 package ai.ancf.lmos.wot.thing.property
 
 
-import ai.ancf.lmos.wot.thing.PropertyAffordance
 import ai.ancf.lmos.wot.thing.Thing
-import ai.ancf.lmos.wot.thing.Type
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.DataSchema
-import ai.ancf.lmos.wot.thing.schema.StringSchema
+import ai.ancf.lmos.wot.thing.schema.PropertyAffordance
+import ai.ancf.lmos.wot.thing.schema.ThingProperty
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include.*
-import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 @Serializable
 data class ExposedThingProperty<T>(
-    private val property: ThingProperty<T> = ThingProperty(),
+    private val property: ThingProperty<T>,
     @JsonIgnore
     private val thing: Thing = Thing(),
     @Transient private val state: PropertyState<T> = PropertyState()
@@ -57,6 +48,24 @@ data class ExposedThingProperty<T>(
         }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ExposedThingProperty<*>
+
+        if (property != other.property) return false
+        if (thing != other.thing) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = property.hashCode()
+        result = 31 * result + thing.hashCode()
+        return result
+    }
+
     data class PropertyState<T>(
         private val _flow: MutableStateFlow<T?> = MutableStateFlow(null),
         val readHandler: (suspend () -> T?)? = null,
@@ -78,66 +87,11 @@ data class ExposedThingProperty<T>(
         }
     }
 
+
+
     companion object {
         private val log: org.slf4j.Logger = org.slf4j.LoggerFactory.getLogger(ExposedThingProperty::class.java)
     }
 }
-@Serializable
-data class ThingProperty<T>(
 
-    val data : DataSchema<T>,
-
-    @JsonInclude(NON_EMPTY)
-    override var title: String? = null,
-
-    @SerialName("@type")
-    @JsonProperty("@type")
-    @JsonInclude(NON_NULL)
-    override var objectType: Type? = null,
-
-    @JsonInclude(NON_NULL)
-    override var type: String? = null,
-
-    @JsonInclude(NON_DEFAULT)
-    override var observable: Boolean = false,
-
-    @JsonInclude(NON_DEFAULT)
-    override var readOnly: Boolean = false,
-
-    @JsonInclude(NON_DEFAULT)
-    override var writeOnly: Boolean = false,
-
-    @JsonInclude(NON_EMPTY)
-    override var description: String? = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var descriptions: MutableMap<String, String>? = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var forms: MutableList<Form>? = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var titles: MutableMap<String, String>? = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var const: T?  = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var default: T?  = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var unit: String?  = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var oneOf: List<DataSchema<@Contextual Any>>?  = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var enum: List<@Contextual Any>? = null,
-
-    @JsonInclude(NON_EMPTY)
-    override var format: String? = null,
-    ) : PropertyAffordance<T>, DataSchema<T> by data
 

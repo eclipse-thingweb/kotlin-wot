@@ -2,8 +2,7 @@ package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.thing.Type
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT
-import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -16,28 +15,28 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  * @property contentMediaType Specifies the MIME type of the string contents, as described in RFC2046.
  */
 @JsonTypeName("string")
-data class StringSchema(
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+open class StringSchema(
+    @JsonInclude(NON_EMPTY)
     override var objectType: Type? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var type: String? = "string",
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var title: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var description: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var descriptions: MutableMap<String, String>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var const: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var default: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var unit: String? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var oneOf: List<DataSchema<Any>>? = null,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
     override var enum: List<Any>? = null,
     @JsonInclude(NON_DEFAULT)
     override var readOnly: Boolean = false,
@@ -55,15 +54,5 @@ data class StringSchema(
     var contentEncoding: String? = null,
     @JsonInclude(NON_NULL)
     var contentMediaType: String? = null
-) : DataSchema<String> {
 
-
-    override fun toString(): String {
-        return "StringSchema{}"
-    }
-
-    companion object {
-        const val TYPE = "string"
-        var CLASS_TYPE: Class<String> = String::class.java
-    }
-}
+) : DataSchema<String>

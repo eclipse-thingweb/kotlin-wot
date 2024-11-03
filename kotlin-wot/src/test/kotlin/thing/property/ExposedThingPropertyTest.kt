@@ -3,6 +3,8 @@ package ai.ancf.lmos.wot.thing.property
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.Type
+import ai.ancf.lmos.wot.thing.schema.intProperty
+import ai.ancf.lmos.wot.thing.schema.stringProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -27,26 +29,27 @@ class ExposedThingPropertyTest {
 
     @Test
     fun testEquals() {
-        val property1 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
-        val property2 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
+        val property1 = ExposedThingProperty(stringProperty { title = "title" }, thing)
+        val property2 = ExposedThingProperty(stringProperty { title = "title" }, thing)
         assertEquals(property1, property2)
     }
 
     @Test
     fun testHashCode() {
-        val property1 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
-        val property2 = ExposedThingProperty(ThingProperty<Any>(title = "title"), thing)
+        val property1 = ExposedThingProperty(stringProperty { title = "title" }, thing)
+        val property2 = ExposedThingProperty(stringProperty { title = "title" }, thing)
         assertEquals(property1, property2)
     }
 
     @Test
     fun toJson() {
-        val property = ExposedThingProperty<Any>(ThingProperty(
-            objectType=Type("saref:Temperature"),
-            description = "bla bla",
-            type="integer",
-            observable=true,
-            readOnly=true), thing)
+        val property = ExposedThingProperty(
+            intProperty {
+                objectType=Type("saref:Temperature")
+                description = "bla bla"
+                observable=true
+                readOnly=true
+            }, thing)
 
         JsonAssertions.assertThatJson(JsonMapper.instance.writeValueAsString(property))
             .`when`(Option.IGNORING_ARRAY_ORDER)
@@ -59,12 +62,14 @@ class ExposedThingPropertyTest {
         val json = """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}"""
 
         val parsedProperty = JsonMapper.instance.readValue<ExposedThingProperty<Int>>(json)
-        val property = ExposedThingProperty<Int>(ThingProperty(
-            objectType=Type("saref:Temperature"),
-            description = "bla bla",
-            type="integer",
-            observable=true,
-            readOnly=true), thing)
+        val property = ExposedThingProperty(
+            intProperty {
+                objectType=Type("saref:Temperature")
+                description = "bla bla"
+                type="integer"
+                observable=true
+                readOnly=true
+            }, thing)
         assertEquals(property, parsedProperty)
     }
 

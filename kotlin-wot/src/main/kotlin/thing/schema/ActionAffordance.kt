@@ -1,6 +1,5 @@
-package ai.ancf.lmos.wot.thing
+package ai.ancf.lmos.wot.thing.schema
 
-import ai.ancf.lmos.wot.thing.schema.DataSchema
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL

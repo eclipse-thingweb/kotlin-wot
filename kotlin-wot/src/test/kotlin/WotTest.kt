@@ -112,13 +112,11 @@ class WotTest {
         // Act
         val exposedThing = defaultWot.produce{
             title = "testTitle"
-            property("propA") {
+            stringProperty("propA") {
                 title = "some title"
-                type = "string"
             }
-            property("propB") {
+            intProperty("propB") {
                 title = "some title"
-                type = "integer"
             }
         }
 
