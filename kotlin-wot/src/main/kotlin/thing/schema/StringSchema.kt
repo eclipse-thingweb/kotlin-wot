@@ -48,15 +48,12 @@ open class StringSchema(
     var minLength: Int? = null,
     @JsonInclude(NON_NULL)
     var maxLength: Int? = null,
-    @JsonInclude(NON_NULL)
+    @JsonInclude(NON_EMPTY)
     var pattern: String? = null,
-    @JsonInclude(NON_NULL)
+    @JsonInclude(NON_EMPTY)
     var contentEncoding: String? = null,
-    @JsonInclude(NON_NULL)
+    @JsonInclude(NON_EMPTY)
     var contentMediaType: String? = null
-
-
-
 ) : DataSchema<String> {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

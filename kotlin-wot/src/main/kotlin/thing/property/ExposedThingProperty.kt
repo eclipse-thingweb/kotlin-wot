@@ -31,7 +31,8 @@ sealed class ExposedThingProperty<T>(
     private val property: ThingProperty<T>,
     @JsonIgnore
     private val thing: Thing = Thing(),
-    @Transient private val state: PropertyState<T> = PropertyState()
+    @JsonIgnore
+    private val state: PropertyState<T> = PropertyState()
 ) : PropertyAffordance<T> by property {
 
     suspend fun read(): T? {
@@ -84,10 +85,11 @@ sealed class ExposedThingProperty<T>(
         return result
     }
 
+
     data class PropertyState<T>(
         private val _flow: MutableStateFlow<T?> = MutableStateFlow(null),
-        val readHandler: (suspend () -> T?)? = null,
-        val writeHandler: (suspend (T) -> T?)? = null
+        val readHandler: ReadHandler<T>? = null,
+        val writeHandler: WriteHandler<T>? = null
     ) {
 
         // Getter for the current value
@@ -105,13 +107,14 @@ sealed class ExposedThingProperty<T>(
         }
     }
 
-    class ExposedStringProperty(property: StringProperty = StringProperty(), thing : Thing = Thing(), state: PropertyState<String> = PropertyState()) : ExposedThingProperty<String>(property = property, thing = thing, state = state)
-    class ExposedIntProperty(property: IntProperty = IntProperty(), thing : Thing = Thing(), state: PropertyState<Int> = PropertyState()) : ExposedThingProperty<Int>(property = property, thing = thing, state = state)
-    class ExposedBooleanProperty(property: BooleanProperty = BooleanProperty(), thing : Thing = Thing(), state: PropertyState<Boolean> = PropertyState()) : ExposedThingProperty<Boolean>(property = property, thing = thing, state = state)
-    class ExposedNumberProperty(property: NumberProperty = NumberProperty(), thing : Thing = Thing(), state: PropertyState<Number> = PropertyState()) : ExposedThingProperty<Number>(property = property, thing = thing, state = state)
-    class ExposedNullProperty(property: NullProperty = NullProperty(), thing : Thing = Thing(), state: PropertyState<Any> = PropertyState()) : ExposedThingProperty<Any>(property = property, thing = thing, state = state)
-    class ExposedArrayProperty<I>(property: ArrayProperty<I> = ArrayProperty(items = mutableListOf()), thing : Thing = Thing(), state: PropertyState<List<I>> = PropertyState()) : ExposedThingProperty<List<I>>(property = property, thing = thing, state = state)
-    class ExposedObjectProperty(property: ObjectProperty = ObjectProperty(), thing : Thing = Thing(), state: PropertyState<Map<Any, Any>> = PropertyState()) : ExposedThingProperty<Map<Any, Any>>(property = property, thing = thing, state = state)
+
+    class ExposedStringProperty(property: StringProperty = StringProperty(), thing : Thing = Thing(), state: PropertyState<String> = PropertyState()) : ExposedThingProperty<String>(property, thing, state)
+    class ExposedIntProperty(property: IntProperty = IntProperty(), thing : Thing = Thing(), state: PropertyState<Int> = PropertyState()) : ExposedThingProperty<Int>(property, thing, state)
+    class ExposedBooleanProperty(property: BooleanProperty = BooleanProperty(), thing : Thing = Thing(), state: PropertyState<Boolean> = PropertyState()) : ExposedThingProperty<Boolean>(property, thing, state)
+    class ExposedNumberProperty(property: NumberProperty = NumberProperty(), thing : Thing = Thing(), state: PropertyState<Number> = PropertyState()) : ExposedThingProperty<Number>(property, thing, state)
+    class ExposedNullProperty(property: NullProperty = NullProperty(), thing : Thing = Thing(), state: PropertyState<Any> = PropertyState()) : ExposedThingProperty<Any>(property, thing, state)
+    class ExposedArrayProperty<I>(property: ArrayProperty<I> = ArrayProperty(items = mutableListOf()), thing : Thing = Thing(), state: PropertyState<List<I>> = PropertyState()) : ExposedThingProperty<List<I>>(property, thing, state)
+    class ExposedObjectProperty(property: ObjectProperty = ObjectProperty(), thing : Thing = Thing(), state: PropertyState<Map<Any, Any>> = PropertyState()) : ExposedThingProperty<Map<Any, Any>>(property, thing, state)
 
     companion object {
         private val log: org.slf4j.Logger = org.slf4j.LoggerFactory.getLogger(ExposedThingProperty::class.java)
@@ -140,4 +143,5 @@ fun exposedObjectProperty(initializer: ExposedObjectProperty.() -> Unit): Expose
     return ExposedObjectProperty().apply(initializer)
 }
 
-
+typealias ReadHandler<T> = suspend () -> T?
+typealias WriteHandler<T> = suspend (T) -> T?

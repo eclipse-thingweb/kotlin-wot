@@ -3,8 +3,7 @@ package ai.ancf.lmos.wot.thing.property
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.Type
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.ExposedStringProperty
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.PropertyState
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
 import ai.ancf.lmos.wot.thing.schema.stringProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.*
@@ -63,7 +62,7 @@ class ExposedThingPropertyTest {
     fun fromJson() {
         val json = """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}"""
 
-        val parsedProperty = JsonMapper.instance.readValue<ExposedThingProperty<Int>>(json)
+        val parsedProperty = JsonMapper.instance.readValue<ExposedIntProperty>(json)
         val property = exposedIntProperty {
             objectType=Type("saref:Temperature")
             description = "bla bla"

@@ -15,7 +15,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
+    property = "type",
+    defaultImpl = StringSchema::class
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = StringSchema::class, name = "string") ,

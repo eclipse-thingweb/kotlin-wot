@@ -85,7 +85,7 @@ data class ExposedThingAction<I, O> @JsonCreator constructor(
         private val log: org.slf4j.Logger = LoggerFactory.getLogger(ExposedThingAction::class.java)
     }
 
-    data class ActionState<I, O>(val handler: (suspend (input: I, options: Map<String, Map<String, Any>>) -> O?)? = null)
+    data class ActionState<I, O>(val handler: ActionHandler<I, O>? = null)
 }
 
 @Serializable
@@ -127,3 +127,5 @@ data class ThingAction<I, O>(
     @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null
 ) : ActionAffordance<I, O>
+
+typealias ActionHandler<I, O> = suspend (input: I, options: Map<String, Map<String, Any>>) -> O?
