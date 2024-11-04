@@ -1,9 +1,6 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.ai.ancf.lmos.wot.thing.ContentCodecException
-import ai.ancf.lmos.wot.ai.ancf.lmos.wot.thing.ContentManager
-import ai.ancf.lmos.wot.ai.ancf.lmos.wot.thing.UriTemplate
 import ai.ancf.lmos.wot.thing.action.ConsumedThingException
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation

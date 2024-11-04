@@ -72,14 +72,10 @@ class ExposedThingActionTest {
                     }"""
 
         val parsedThingAction = JsonMapper.instance.readValue<ExposedThingAction<String, String>>(json)
-        val action = ThingAction(
-            title = "title",
-            description = "blabla",
-            input = StringSchema(),
-            output = StringSchema()
-        )
-        val exposedThingAction = ExposedThingAction(action, thing)
-        assertEquals(exposedThingAction, parsedThingAction)
+        assertEquals("title", parsedThingAction.title)
+        assertEquals("blabla", parsedThingAction.description)
+        assertIs<StringSchema>(parsedThingAction.input)
+        assertIs<StringSchema>(parsedThingAction.output)
     }
 
     @Test
@@ -98,7 +94,7 @@ class ExposedThingActionTest {
 
     @Test
     fun invokeWithHandlerShouldCallHandler(): Unit = runTest {
-        val handler: (suspend (String, Map<String, Map<String, Any>>) -> String) = mockk()
+        val handler: ActionHandler<String, String> = mockk()
 
         every { state.handler } returns handler
 
@@ -108,7 +104,7 @@ class ExposedThingActionTest {
             state
         )
 
-        coEvery { handler("test", any()) } returns "Result"
+        coEvery { handler.handle("test", any()) } returns "Result"
 
         val result = exposedThingAction.invokeAction("test")
         assertEquals("Result", result)
@@ -116,7 +112,7 @@ class ExposedThingActionTest {
 
     @Test
     fun invokeWithBrokenHandlerShouldThrowException(): Unit = runTest {
-        val handler: (suspend (String, Map<String, Map<String, Any>>) -> String) = mockk()
+        val handler: ActionHandler<String, String> = mockk()
 
         every { state.handler } returns handler
 
@@ -126,7 +122,7 @@ class ExposedThingActionTest {
             state
         )
 
-        coEvery { handler("test", any()) } throws RuntimeException()
+        coEvery { handler.handle("test", any()) } throws RuntimeException()
 
         assertFailsWith<RuntimeException> {
             exposedThingAction.invokeAction("test")

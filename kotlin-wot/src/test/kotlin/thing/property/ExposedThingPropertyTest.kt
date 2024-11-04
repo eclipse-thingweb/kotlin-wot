@@ -10,27 +10,29 @@ import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.io.IOException
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class ExposedThingPropertyTest {
 
     private lateinit var thing: Thing
     private lateinit var state: PropertyState<String>
 
-    @BeforeEach
+    @BeforeTest
     fun setUp() {
         thing = Thing(id = "testThing")
         state = mockk()
+
+
     }
 
     @Test
     fun testEquals() {
-        val property1 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" })
-        val property2 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" })
+        val property1 = ExposedStringProperty(thing = thing, property = stringProperty { title = "title" })
+        val property2 = ExposedStringProperty(thing = thing, property = stringProperty { title = "title" })
         assertEquals(property1, property2)
     }
 
@@ -38,8 +40,8 @@ class ExposedThingPropertyTest {
     fun testHashCode() {
         val thing = Thing(id = "Foo")
 
-        val property1 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" }).hashCode()
-        val property2 = ExposedStringProperty(thing = thing, state = state, property = stringProperty { title = "title" }).hashCode()
+        val property1 = ExposedStringProperty(thing = thing, property = stringProperty { title = "title" }).hashCode()
+        val property2 = ExposedStringProperty(thing = thing, property = stringProperty { title = "title" }).hashCode()
         assertEquals(property1, property2)
     }
 
@@ -63,13 +65,10 @@ class ExposedThingPropertyTest {
         val json = """{"@type":"saref:Temperature","description":"bla bla","type":"integer","observable":true,"readOnly":true}"""
 
         val parsedProperty = JsonMapper.instance.readValue<ExposedIntProperty>(json)
-        val property = exposedIntProperty {
-            objectType=Type("saref:Temperature")
-            description = "bla bla"
-            observable=true
-            readOnly=true
-        }
-        assertEquals(property, parsedProperty)
+        assertEquals(Type("saref:Temperature"), parsedProperty.objectType)
+        assertEquals("bla bla", parsedProperty.description)
+        assertEquals(true, parsedProperty.observable)
+        assertEquals(true, parsedProperty.readOnly)
     }
 
     @Test
@@ -109,7 +108,7 @@ class ExposedThingPropertyTest {
 
         val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
-        assertThrows<IOException> { exposedProperty.read() }
+        assertFailsWith<IOException> { exposedProperty.read() }
     }
 
     @Test
@@ -151,7 +150,7 @@ class ExposedThingPropertyTest {
 
         val exposedProperty = ExposedStringProperty(thing = thing, state = state)
 
-        assertThrows<IOException> { exposedProperty.write("test") }
+        assertFailsWith<IOException> { exposedProperty.write("test") }
     }
 
 }

@@ -1,4 +1,4 @@
-package ai.ancf.lmos.wot.ai.ancf.lmos.wot.thing
+package ai.ancf.lmos.wot.thing
 
 class UriTemplate {
     fun expand(parameters: Map<String, Any>): String {

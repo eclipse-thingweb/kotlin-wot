@@ -31,14 +31,13 @@ sealed class ExposedThingProperty<T>(
     private val property: ThingProperty<T>,
     @JsonIgnore
     private val thing: Thing = Thing(),
-    @JsonIgnore
     private val state: PropertyState<T> = PropertyState()
 ) : PropertyAffordance<T> by property {
 
     suspend fun read(): T? {
         log.debug("'{}' calls registered readHandler for Property '{}'", thing.id, title)
         return try {
-            state.readHandler?.invoke()?.also { state.setValue(it) } ?: state.value
+            state.readHandler?.handle()?.also { state.setValue(it) } ?: state.value
         } catch (e: Exception) {
             log.error("Error while reading property '{}': {}", title, e.message)
             throw e
@@ -49,7 +48,7 @@ sealed class ExposedThingProperty<T>(
         log.debug("'{}' calls registered writeHandler for Property '{}'", thing.id, title)
         return try {
             if (state.writeHandler != null) {
-                val customValue = state.writeHandler.invoke(value)
+                val customValue = state.writeHandler.handle(value)
                 state.setValue(customValue)
                 log.debug(
                     "'{}' write handler for Property '{}' sets custom value '{}'",
@@ -143,5 +142,11 @@ fun exposedObjectProperty(initializer: ExposedObjectProperty.() -> Unit): Expose
     return ExposedObjectProperty().apply(initializer)
 }
 
-typealias ReadHandler<T> = suspend () -> T?
-typealias WriteHandler<T> = suspend (T) -> T?
+
+fun interface ReadHandler<T> {
+    suspend fun handle(): T?
+}
+
+fun interface WriteHandler<T> {
+    suspend fun handle(input: T): T?
+}

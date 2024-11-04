@@ -12,7 +12,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import org.slf4j.LoggerFactory
 
 @Serializable
@@ -20,8 +19,10 @@ data class ExposedThingAction<I, O> @JsonCreator constructor(
     private val action: ThingAction<I, O> = ThingAction(),
     @JsonIgnore
     private val thing: Thing = Thing(),
-    @Transient private val state: ActionState<I, O> = ActionState()
+    private val state: ActionState<I, O> = ActionState()
 ) : ActionAffordance<I, O> by action {
+
+
 
     /**
      * Invokes the method and executes the handler defined in [.state]. `input`
@@ -44,7 +45,7 @@ data class ExposedThingAction<I, O> @JsonCreator constructor(
             )
             try {
                 // Use the handler as a suspending function directly
-                state.handler.invoke(input, options).also { output ->
+                state.handler.handle(input, options).also { output ->
                     if (output == null) {
                         log.warn(
                             "'{}': Called registered handler for Action '{}' returned null. This can cause problems.",
@@ -128,4 +129,6 @@ data class ThingAction<I, O>(
     override var titles: MutableMap<String, String>? = null
 ) : ActionAffordance<I, O>
 
-typealias ActionHandler<I, O> = suspend (input: I, options: Map<String, Map<String, Any>>) -> O?
+fun interface ActionHandler<I, O> {
+    suspend fun handle(input: I, options: Map<String, Map<String, Any>>): O?
+}

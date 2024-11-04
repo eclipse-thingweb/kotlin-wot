@@ -1,13 +1,13 @@
 package ai.ancf.lmos.wot.thing.action
 
 import ai.ancf.lmos.wot.ServientException
-import ai.ancf.lmos.wot.ai.ancf.lmos.wot.thing.ContentCodecException
-import ai.ancf.lmos.wot.ai.ancf.lmos.wot.thing.ContentManager
-import ai.ancf.lmos.wot.thing.schema.ActionAffordance
 import ai.ancf.lmos.wot.thing.ConsumedThing
+import ai.ancf.lmos.wot.thing.ContentCodecException
+import ai.ancf.lmos.wot.thing.ContentManager
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
+import ai.ancf.lmos.wot.thing.schema.ActionAffordance
 import ai.anfc.lmos.wot.binding.Content
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import com.fasterxml.jackson.annotation.JsonIgnore
