@@ -106,3 +106,7 @@ open class IntegerSchema(
         return result
     }
 }
+
+fun integerSchema(initializer: IntegerSchema.() -> Unit): IntegerSchema {
+    return IntegerSchema().apply(initializer)
+}

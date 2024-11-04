@@ -85,7 +85,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of action affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var actions: MutableMap<String, ThingAction<Any, Any>> // Optional: Map of ActionAffordance
+    var actions: MutableMap<String, ThingAction<*, *>> // Optional: Map of ActionAffordance
 
     /**
      * All Event-based Interaction Affordances of the Thing.
@@ -93,7 +93,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of event affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var events: MutableMap<String, ThingEvent<Any, Any, Any>> // Optional: Map of EventAffordance
+    var events: MutableMap<String, ThingEvent<*, *, *>> // Optional: Map of EventAffordance
 
     /**
      * Provides Web links to arbitrary resources that relate to the specified Thing Description.

@@ -5,7 +5,10 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.IntegerSchema
+import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.schema.ThingProperty
+import ai.ancf.lmos.wot.thing.schema.stringSchema
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.BeforeTest
@@ -63,11 +66,21 @@ class ThingTest {
             stringProperty("propertyA"){
                 title = "propertyTitle"
             }
-            action("action"){
+            action<String, Int>("action"){
                 title = "actionTitle"
+                input = stringSchema {
+                    minLength = 10
+                    default = "test"
+                }
+                output = IntegerSchema()
             }
-            event("event"){
+            action<String, Nothing>("action2"){
+                title = "actionTitle"
+                input = StringSchema()
+            }
+            event<String, Nothing, Nothing>("event"){
                 title = "eventTitle"
+                data = StringSchema()
             }
         }
 

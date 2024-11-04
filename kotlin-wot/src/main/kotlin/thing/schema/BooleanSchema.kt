@@ -80,3 +80,7 @@ open class BooleanSchema(
         return result
     }
 }
+
+fun booleanSchema(initializer: BooleanSchema.() -> Unit): BooleanSchema {
+    return BooleanSchema().apply(initializer)
+}

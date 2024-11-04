@@ -44,9 +44,9 @@ import java.util.*
 @Serializable
 data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription by thing {
 
-    private val _properties : MutableMap<String, ExposedThingProperty<*>> = mutableMapOf()
-    private val _actions : MutableMap<String, ExposedThingAction<Any, Any>> = mutableMapOf()
-    private val _events : MutableMap<String, ExposedThingEvent<Any, Any, Any>> = mutableMapOf()
+    val exposedProperties : MutableMap<String, ExposedThingProperty<*>> = mutableMapOf()
+    val exposedActions : MutableMap<String, ExposedThingAction<*, *>> = mutableMapOf()
+    val exposedEvents : MutableMap<String, ExposedThingEvent<*, *, *>> = mutableMapOf()
 
     init {
         thing.properties.forEach { (name, property) ->
@@ -59,15 +59,15 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
                 is ArrayProperty<*> -> ExposedArrayProperty(thing = thing, property = property)
                 is ObjectProperty -> ExposedObjectProperty(thing = thing, property = property)
             }
-            _properties[name] = exposedProperty
+            exposedProperties[name] = exposedProperty
         }
 
         thing.actions.forEach { (name, action) ->
-            _actions[name] = ExposedThingAction(action, thing)
+            exposedActions[name] = ExposedThingAction(action, thing)
         }
 
         thing.events.forEach { (name, event) ->
-            _events[name] = ExposedThingEvent(event)
+            exposedEvents[name] = ExposedThingEvent(event)
         }
     }
 
@@ -78,7 +78,7 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
      */
     suspend fun readProperties(): Map<String, Any> {
         val values: MutableMap<String, Any> = HashMap()
-        _properties.forEach { (name, property) ->
+        exposedProperties.forEach { (name, property) ->
             values[name] = property.read() as Any
         }
         return values
@@ -94,7 +94,7 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
     suspend fun writeProperties(values: Map<String, Any>): Map<String, Any> {
         val returnValues: MutableMap<String, Any> = HashMap()
         values.forEach { (name, value) ->
-            val property = _properties[name]
+            val property = exposedProperties[name]
             if (property != null) {
                 // Check if the property's type matches the value's type
                 when (property) {
@@ -222,8 +222,8 @@ data class Thing (
     @JsonInclude(NON_EMPTY) override var description: String? = null,
     @JsonInclude(NON_EMPTY) override var descriptions: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY) override var properties: MutableMap<String, ThingProperty<*>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<Any, Any>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<Any, Any, Any>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var actions: MutableMap<String, ThingAction<*, *>> = mutableMapOf(),
+    @JsonInclude(NON_EMPTY) override var events: MutableMap<String, ThingEvent<*, *, *>> = mutableMapOf(),
     @JsonInclude(NON_EMPTY) override var forms: List<Form> = emptyList(),
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(NON_EMPTY) override var security: List<String> = emptyList(),
     @JsonInclude(NON_EMPTY) override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
@@ -238,6 +238,17 @@ data class Thing (
     @JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
 ) : ThingDescription {
 
+    inline fun <reified T> property(name: String, configure: ThingProperty<T>.() -> Unit) {
+        val property: ThingProperty<T> = when (T::class) {
+            String::class -> StringProperty() as ThingProperty<T>
+            Int::class -> IntProperty() as ThingProperty<T>
+            Boolean::class -> BooleanProperty() as ThingProperty<T>
+            else -> throw IllegalArgumentException("Unsupported property type")
+        }
+        property.configure()
+        properties[name] = property
+    }
+
     fun Thing.stringProperty(name: String, configure: StringProperty.() -> Unit) {
         this.properties[name] = StringProperty().apply(configure)
     }
@@ -247,15 +258,15 @@ data class Thing (
     fun Thing.booleanProperty(name: String, configure: BooleanProperty.() -> Unit) {
         this.properties[name] = BooleanProperty().apply(configure)
     }
-
-    fun Thing.action(name: String, configure: ThingAction<Any, Any>.() -> Unit) {
-        this.actions[name] = ThingAction<Any, Any>().apply(configure)
+    fun <I : Any, O : Any> Thing.action(name: String, configure: ThingAction<I, O>.() -> Unit) {
+        val action = ThingAction<I, O>().apply(configure)
+        actions[name] = action
     }
 
-    fun Thing.event(name: String, configure: ThingEvent<Any, Any, Any>.() -> Unit) {
-        this.events[name] = ThingEvent<Any, Any, Any>().apply(configure)
+    fun <T, S, C> Thing.event(name: String, configure: ThingEvent<T, S, C>.() -> Unit) {
+        val event = ThingEvent<T, S, C>().apply(configure)
+        events[name] = event
     }
-
     /*
 
     fun getPropertiesByObjectType(objectType: String): Map<String, ThingProperty<Any>> {

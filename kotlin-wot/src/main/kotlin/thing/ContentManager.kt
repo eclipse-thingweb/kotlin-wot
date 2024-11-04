@@ -13,6 +13,10 @@ interface ContentManager {
         fun valueToContent(parameters: Map<String, Any>, contentType: String): Content {
             TODO("Not yet implemented")
         }
+
+        fun getOfferedMediaTypes(): List<String> {
+            TODO("Not yet implemented")
+        }
     }
 
 }

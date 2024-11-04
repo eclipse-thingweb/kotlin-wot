@@ -100,3 +100,7 @@ open class NumberSchema(
         return result
     }
 }
+
+fun numberSchema(initializer: NumberSchema.() -> Unit): NumberSchema {
+    return NumberSchema().apply(initializer)
+}

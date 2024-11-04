@@ -105,3 +105,7 @@ open class StringSchema(
         return result
     }
 }
+
+fun stringSchema(initializer: StringSchema.() -> Unit): StringSchema {
+    return StringSchema().apply(initializer)
+}

@@ -62,7 +62,6 @@ sealed interface ThingProperty<T> : PropertyAffordance<T>{
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false
     ) : ThingProperty<Map<Any, Any>>, ObjectSchema()
-
 }
 
 fun stringProperty(initializer: StringProperty.() -> Unit): StringProperty {

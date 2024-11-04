@@ -1,7 +1,13 @@
 package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
+import ai.ancf.lmos.wot.thing.ContentManager
 import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.action.ExposedThingAction
+import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.form.Operation
+import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
+import ai.anfc.lmos.wot.binding.Content
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -30,6 +36,7 @@ class HttpProtocolServer(
     val things: MutableMap<String, ExposedThing> = mutableMapOf()
     var started = false
     private var server: EmbeddedServer<*, *>? = null
+    private val actualAddresses: List<String> = listOf()
 
     companion object {
         private val log = LoggerFactory.getLogger(HttpProtocolServer::class.java)
@@ -56,7 +63,106 @@ class HttpProtocolServer(
         log.info("Exposing thing '{}'", thing.id)
         things[thing.id] = thing
 
-        // Add logic to expose the thing's properties, actions, and events via routes
+        for (address in actualAddresses) {
+            for (contentType in ContentManager.getOfferedMediaTypes()) {
+                // make reporting of all properties optional?
+                val href = (address + "/" + thing.id).toString() + "/all/properties"
+                val form = Form(href = href, contentType = contentType, op =  listOf( Operation.READ_ALL_PROPERTIES,
+                    Operation.READ_MULTIPLE_PROPERTIES))
+
+                thing.forms += form
+                log.debug("Assign '{}' for reading all properties", href)
+
+                exposeProperties(thing, address, contentType)
+                exposeActions(thing, address, contentType)
+                exposeEvents(thing, address, contentType)
+            }
+        }
+    }
+
+    fun exposeProperties(thing: ExposedThing, address: String, contentType: String) {
+        val properties = thing.exposedProperties
+
+        properties.forEach { (name, property) ->
+
+            val href = getHrefWithVariablePattern(address, thing, "properties", name, property)
+
+            // Determine the operations based on readOnly/writeOnly status
+            val operations = when {
+                property.readOnly -> listOf(Operation.READ_PROPERTY)
+                property.writeOnly -> listOf(Operation.WRITE_PROPERTY)
+                else -> listOf(Operation.READ_PROPERTY, Operation.WRITE_PROPERTY)
+            }
+
+            // Create the main form and add it to the property
+            val form = Form(href = href, contentType = contentType, op = operations)
+            property.forms?.plusAssign(form)
+            log.debug("Assign '{}' to Property '{}'", href, name)
+
+            // If the property is observable, add an additional form with an observable href
+            if (property.observable) {
+                val observableHref = "$href/observable"
+                val observableForm = Form(
+                    href = observableHref,
+                    contentType = contentType,
+                    op = listOf(Operation.OBSERVE_PROPERTY),
+                    subprotocol = "longpoll"
+                )
+                property.forms?.plusAssign(observableForm)
+                log.debug("Assign '{}' to observe Property '{}'", observableHref, name)
+            }
+        }
+    }
+
+    fun exposeActions(thing: ExposedThing, address: String, contentType: String) {
+        val actions: Map<String, ExposedThingAction<*, *>> = thing.exposedActions
+        actions.forEach { (name, action) ->
+            val href: String = getHrefWithVariablePattern(address, thing, "actions", name, action)
+            // Initialize the form using named parameters
+            val form = Form(
+                href = href,
+                contentType = contentType,
+                op = listOf(Operation.INVOKE_ACTION)
+            )
+
+            // Add the form to the action
+            action.forms?.plusAssign(form)
+            log.debug("Assign '{}' to Action '{}'", href, name)
+        }
+    }
+
+    fun exposeEvents(thing: ExposedThing, address: String, contentType: String) {
+        val events = thing.exposedEvents
+        events.forEach { (name, event) ->
+            val href = getHrefWithVariablePattern(address, thing, "events", name, event)
+
+            // Create the form using named parameters directly
+            val form = Form(
+                href = href,
+                contentType = contentType,
+                subprotocol = "longpoll",
+                op = listOf(Operation.SUBSCRIBE_EVENT)
+            )
+
+            // Add the form to the event
+            event.forms?.plusAssign(form)
+            log.debug("Assign '{}' to Event '{}'", href, name)
+        }
+    }
+
+    private fun getHrefWithVariablePattern(
+        address: String,
+        thing: ExposedThing,
+        type: String,
+        interactionName: String,
+        interaction: InteractionAffordance
+    ): String {
+        var variables = ""
+        val uriVariables = interaction.uriVariables?.keys
+        if (uriVariables != null) {
+            variables = "{?" + java.lang.String.join(",", uriVariables) + "}"
+        }
+        return "$address/${thing.id}/$type/$interactionName$variables"
     }
 
     // Destroy a thing
@@ -102,9 +208,9 @@ fun Application.setupRouting(servient: Servient) {
                     val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
                     val propertyName = call.parameters["name"]
                     val thing = servient.things[id] ?: return@get call.response.status(HttpStatusCode.NotFound)
-                    val property = thing.properties[propertyName]
+                    val property = thing.exposedProperties[propertyName]
                     if (property != null) {
-                        call.respond("TODO Return property value", typeInfo<String>())
+                       // call.respond(property.read())
                     } else {
                         call.response.status(HttpStatusCode.NotFound)
                     }
@@ -113,13 +219,15 @@ fun Application.setupRouting(servient: Servient) {
                     val id = call.parameters["id"] ?: return@put call.response.status(HttpStatusCode.BadRequest)
                     val propertyName = call.parameters["name"]
                     val thing = servient.things[id] ?: return@put call.response.status(HttpStatusCode.NotFound)
-                    val property = thing.properties[propertyName]
+                    val property = thing.exposedProperties[propertyName]
                     if (property != null) {
                         if (!property.readOnly) {
-                            val newValue = call.receive<Any>()
-                            // TODO handle write logic
+                            val contentType = getOrDefaultRequestContentType(call.request)
+                            val content = Content(contentType.toString(), call.receiveText())
+                            val input = ContentManager.contentToValue(content, property)
 
-                            call.response.status(HttpStatusCode.OK)
+                            //val newValue = property.write(input)
+                            //call.respond(newValue)
                         } else {
                             call.response.status(HttpStatusCode.BadRequest)
                         }
@@ -132,7 +240,7 @@ fun Application.setupRouting(servient: Servient) {
                 val id = call.parameters["id"] ?: return@post call.response.status(HttpStatusCode.BadRequest)
                 val actionName = call.parameters["name"]
                 val thing = servient.things[id] ?: return@post call.response.status(HttpStatusCode.NotFound)
-                val action = thing.actions[actionName]
+                val action = thing.exposedActions[actionName]
                 if (action != null) {
                     val input = call.receive<Any>()
                     call.respond("TODO Return action response", typeInfo<String>())
@@ -153,5 +261,15 @@ private fun Application.setupJackson() {
             enable(SerializationFeature.INDENT_OUTPUT)
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
+    }
+}
+
+private fun getOrDefaultRequestContentType(request: RoutingRequest): ContentType {
+    val contentType = request.contentType()
+    // Check if the content type is of type `Any` and return the default
+    return if (contentType == ContentType.Any) {
+        ContentType.Application.Json
+    } else {
+        contentType
     }
 }

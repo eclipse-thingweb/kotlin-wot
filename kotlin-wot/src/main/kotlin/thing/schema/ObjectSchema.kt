@@ -86,3 +86,7 @@ open class ObjectSchema(
         return result
     }
 }
+
+fun objectSchema(initializer: ObjectSchema.() -> Unit): ObjectSchema {
+    return ObjectSchema().apply(initializer)
+}
