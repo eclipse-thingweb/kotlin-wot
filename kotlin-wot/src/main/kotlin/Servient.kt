@@ -198,7 +198,7 @@ class Servient(
         }
     }
 
-    fun getCredentials(id: String?): Any {
+    fun getCredentials(id: String?): String {
         log.debug("Servient looking up credentials for '{}'", id)
         return "credentialStore.get(id)"
     }

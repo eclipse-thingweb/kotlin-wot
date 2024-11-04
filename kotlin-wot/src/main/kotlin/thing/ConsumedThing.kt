@@ -77,7 +77,7 @@ class ConsumedThing(private val servient: Servient, private val thing: Thing) : 
                         log.debug("'{}' setting credentials for '{}'", id, client)
 
                         val metadata = security.mapNotNull { key -> securityDefinitions[key] }
-                        client.setSecurity(metadata, servient.getCredentials(id))
+                        client.setSecurity(metadata, mapOf( "credentials" to servient.getCredentials(id)))
                     }
                     return scheme to client
                 }

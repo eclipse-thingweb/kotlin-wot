@@ -10,7 +10,6 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.*
@@ -26,8 +25,8 @@ class HttpProtocolServerTest {
     private val mockServer: EmbeddedServer<*, *> = mockk()
     private val exposedThing: ExposedThing = ExposedThing(
         thing("test") {
-            property("property1"){
-                type = "integer"
+            intProperty("property1"){
+                title = "title"
             }
             action("action1"){
 
@@ -121,9 +120,9 @@ class HttpProtocolServerTest {
         // Perform GET request on "/"
         val response = client.get("/")
 
-        println(response.bodyAsText())
-
         val things : List<ExposedThing> = response.body()
+
+        assertEquals(1, things.size)
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertContains(things, exposedThing)
@@ -140,8 +139,6 @@ class HttpProtocolServerTest {
 
         // Perform GET request on "/test"
         val response = client.get("/${exposedThing.id}")
-
-        println(response.bodyAsText())
 
         val thing : ExposedThing = response.body()
 
@@ -181,6 +178,7 @@ class HttpProtocolServerTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
+
     }
 
     private fun ApplicationTestBuilder.httpClient(): HttpClient {

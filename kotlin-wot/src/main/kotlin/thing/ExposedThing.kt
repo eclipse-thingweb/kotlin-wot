@@ -238,23 +238,14 @@ data class Thing (
     @JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
 ) : ThingDescription {
 
-
-
-
-    /*
-    fun Thing.property(name: String, configure: ThingProperty<Any>.() -> Unit) {
-        this.properties[name] = ThingProperty<Any>().apply(configure)
-    }
-     */
-
     fun Thing.stringProperty(name: String, configure: StringProperty.() -> Unit) {
-        this.properties[name] = StringProperty().apply(configure) as ThingProperty<Any>
+        this.properties[name] = StringProperty().apply(configure)
     }
     fun Thing.intProperty(name: String, configure: IntProperty.() -> Unit) {
-        this.properties[name] = IntProperty().apply(configure) as ThingProperty<Any>
+        this.properties[name] = IntProperty().apply(configure)
     }
     fun Thing.booleanProperty(name: String, configure: BooleanProperty.() -> Unit) {
-        this.properties[name] = BooleanProperty().apply(configure) as ThingProperty<Any>
+        this.properties[name] = BooleanProperty().apply(configure)
     }
 
     fun Thing.action(name: String, configure: ThingAction<Any, Any>.() -> Unit) {

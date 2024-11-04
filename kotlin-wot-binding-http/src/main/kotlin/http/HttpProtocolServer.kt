@@ -93,9 +93,11 @@ fun Application.setupRouting(servient: Servient) {
                 }
             }
             route("/properties/{name}") {
+                /*
                 get("/observable") {
                     call.respond("Observing property", typeInfo<String>())
                 }
+                */
                 get {
                     val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
                     val propertyName = call.parameters["name"]
@@ -116,6 +118,7 @@ fun Application.setupRouting(servient: Servient) {
                         if (!property.readOnly) {
                             val newValue = call.receive<Any>()
                             // TODO handle write logic
+
                             call.response.status(HttpStatusCode.OK)
                         } else {
                             call.response.status(HttpStatusCode.BadRequest)

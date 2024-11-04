@@ -19,7 +19,7 @@ import kotlinx.serialization.Transient
 import org.slf4j.LoggerFactory
 
 @Serializable
-data class ExposedThingEvent<T, S, C>(private val event: ThingEvent<T, S, C> = ThingEvent()) : EventAffordance<T, S, C> by event {
+data class ExposedThingEvent<T, S, C>(private val event: EventAffordance<T, S, C> = ThingEvent()) : EventAffordance<T, S, C> by event {
 
     @Transient @JsonIgnore private val state : EventState<T> = EventState()
 
