@@ -4,8 +4,6 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.Context
 import ai.ancf.lmos.wot.thing.Link
 import ai.ancf.lmos.wot.thing.VersionInfo
-import ai.ancf.lmos.wot.thing.action.ThingAction
-import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -13,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 /**
  * Interface representing a Thing Description (TD) in a Web of Things context.
  */
-interface ThingDescription : BaseSchema {
+interface ThingDescription<P : PropertyAffordance<*>, A : ActionAffordance<*, *>, E : EventAffordance<*, *, *>> : BaseSchema {
 
     /**
      * JSON-LD keyword to define short-hand names called terms that are used throughout a TD document.
@@ -77,7 +75,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of property affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var properties: MutableMap<String, ThingProperty<*>> // Optional: Map of PropertyAffordance
+    var properties: MutableMap<String, P> // Optional: Map of PropertyAffordance
 
     /**
      * All Action-based Interaction Affordances of the Thing.
@@ -85,7 +83,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of action affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var actions: MutableMap<String, ThingAction<*, *>> // Optional: Map of ActionAffordance
+    var actions: MutableMap<String, A> // Optional: Map of ActionAffordance
 
     /**
      * All Event-based Interaction Affordances of the Thing.
@@ -93,7 +91,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of event affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var events: MutableMap<String, ThingEvent<*, *, *>> // Optional: Map of EventAffordance
+    var events: MutableMap<String, E> // Optional: Map of EventAffordance
 
     /**
      * Provides Web links to arbitrary resources that relate to the specified Thing Description.

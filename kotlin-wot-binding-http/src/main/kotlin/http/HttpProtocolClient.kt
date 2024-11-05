@@ -1,12 +1,11 @@
 package ai.ancf.lmos.wot.binding.http
 
-import ai.ancf.lmos.wot.Servient
+import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
 import ai.ancf.lmos.wot.security.BearerSecurityScheme
 import ai.ancf.lmos.wot.security.NoSecurityScheme
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.anfc.lmos.wot.binding.Content
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import io.ktor.client.*
@@ -57,15 +56,6 @@ class HttpProtocolClient(
             }
         }
     }.flowOn(Dispatchers.IO) // Run the flow on IO thread, as it involves network operations
-
-    override fun supports(scheme: String) = scheme == "http" || scheme == "https"
-
-    override suspend fun start(servient: Servient) {
-    }
-
-    override suspend fun stop() {
-        client.close()
-    }
 
     override fun setSecurity(metadata: List<SecurityScheme>, credentials: Map<String, String>): Boolean {
         if (metadata.isEmpty()) {

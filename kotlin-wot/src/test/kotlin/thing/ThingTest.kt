@@ -120,11 +120,11 @@ class ThingTest {
 
     @Test
     fun fromMap() {
-        val map: Map<*, *> = java.util.Map.of(
-            "id", "Foo",
-            "description", "Bar",
-            "@type", "Thing",
-            "@context", listOf("http://www.w3.org/ns/td")
+        val map: Map<Any, Any> = mapOf(
+            "id" to "Foo",
+            "description" to "Bar",
+            "@type" to "Thing",
+            "@context" to listOf("http://www.w3.org/ns/td")
         )
         val thing: Thing = Thing.fromMap(map)
         assertEquals("Foo", thing.id)

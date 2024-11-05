@@ -55,6 +55,10 @@ open class StringSchema(
     @JsonInclude(NON_EMPTY)
     var contentMediaType: String? = null
 ) : DataSchema<String> {
+
+    override val classType: Class<String>
+        get() = String::class.java
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

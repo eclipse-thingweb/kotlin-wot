@@ -1,10 +1,13 @@
 package ai.ancf.lmos.wot
 
+import ai.ancf.lmos.wot.content.ContentCodecException
+import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.ObjectSchema
 import ai.anfc.lmos.wot.binding.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory
 import java.net.*
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
 
 /**
  * The Servient hosts, exposes and consumes things based on provided protocol bindings.
@@ -32,11 +36,12 @@ import java.util.concurrent.CompletableFuture
  */
 class Servient(
     private val servers: List<ProtocolServer> = emptyList(),
-    val clients: List<ProtocolClient> = emptyList(),
+    private val clientFactories: Map<String, ProtocolClientFactory> = emptyMap(),
     val things: MutableMap<String, ExposedThing> = mutableMapOf()
 ) {
+
     override fun toString(): String {
-        return "Servient [servers=$servers clients=$clients]"
+        return "Servient [servers=" + servers + " clientFactories=" + clientFactories.values + "]"
     }
 
     /**
@@ -54,8 +59,8 @@ class Servient(
         }
 
         // Launch coroutines for initializing client factories
-        val clientJobs = clients.map { client ->
-            async { client.start(this@Servient) } // Launching client factory initialization in a coroutine
+        val clientJobs = clientFactories.values.map { client ->
+            async { client.init() } // Launching client factory initialization in a coroutine
         }
 
         // Wait for all jobs to complete
@@ -77,8 +82,8 @@ class Servient(
         }
 
         // Launch coroutines for initializing client factories
-        val clientJobs = clients.map { client ->
-            async { client.stop() } // Launching client factory initialization in a coroutine
+        val clientJobs = clientFactories.values.map { client ->
+            async { client.destroy() } // Launching client factory initialization in a coroutine
         }
 
         // Wait for all jobs to complete
@@ -145,7 +150,7 @@ class Servient(
      * @return
      */
     fun addThing(exposedThing: ExposedThing): Boolean {
-        val previous = things.putIfAbsent(exposedThing.id!!, exposedThing)
+        val previous = things.putIfAbsent(exposedThing.id, exposedThing)
         return previous == null
     }
 
@@ -157,7 +162,7 @@ class Servient(
      * @return
      */
     @Throws(URISyntaxException::class)
-    fun fetch(url: String): Thing {
+    suspend fun fetch(url: String): ExposedThing {
         return fetch(URI(url))
     }
 
@@ -168,35 +173,28 @@ class Servient(
      * @param url
      * @return
      */
-    fun fetch(url: URI): Thing {
+    suspend fun fetch(url: URI): ExposedThing {
         log.debug("Fetch thing from url '{}'", url)
         val scheme = url.scheme
-        return try {
+        try {
             val client = getClientFor(scheme)
             if (client != null) {
-                /*
-                val form: Form = Builder()
-                    .setHref(url.toString())
-                    .build()
-                client.readResource(form).thenApply { content ->
-                    try {
-                        val map: Map<*, *> = ContentManager.contentToValue(content, ObjectSchema())
-                        return@thenApply Thing.fromMap(map)
-                    } catch (e: ContentCodecException) {
-                        throw CompletionException(ServientException("Error while fetching TD: $e"))
-                    }
+                val form = Form(href = url.toString())
+                val content = client.readResource(form)
+                try {
+                    val map = ContentManager.contentToValue(content, ObjectSchema())
+                    return ExposedThing.fromMap(map)
+                } catch (e: ContentCodecException) {
+                    throw CompletionException(ServientException("Error while fetching TD: $e"))
                 }
-
-                TODO
-                */
-                throw RuntimeException()
             } else {
-               throw ServientException("Unable to fetch '$url'. Missing ClientFactory for scheme '$scheme'")
+                throw ServientException("Unable to fetch '$url'. Missing ClientFactory for scheme '$scheme'")
             }
         } catch (e: ProtocolClientException) {
             throw ServientException("Unable to create client: " + e.message)
         }
     }
+
 
     fun getCredentials(id: String?): String {
         log.debug("Servient looking up credentials for '{}'", id)
@@ -211,8 +209,7 @@ class Servient(
      * @return
      * @throws URISyntaxException
      */
-    @Throws(URISyntaxException::class)
-    suspend fun fetchDirectory(url: String):Map<String, Thing> {
+    suspend fun fetchDirectory(url: String):Map<String, ExposedThing> {
         return fetchDirectory(URI(url))
     }
 
@@ -223,33 +220,27 @@ class Servient(
      * @param url
      * @return
      */
-    private suspend fun fetchDirectory(url: URI): Map<String, Thing> = coroutineScope {
+    private suspend fun fetchDirectory(url: URI): Map<String, ExposedThing> {
         log.debug("Fetch thing directory from url '{}'", url)
         val scheme = url.scheme
         try {
             val client: ProtocolClient? = getClientFor(scheme)
             if (client != null) {
                 val form = Form(url.toString())
-                return@coroutineScope emptyMap()
-                /*
-                client.readResource(form).thenApply { content ->
-                    try {
-                        val value: Map<String, Map<*, *>> = ContentManager.contentToValue(content, ObjectSchema())
-                        val directoryThings: MutableMap<String, Thing> = HashMap<String, Thing>()
-                        if (value != null) {
-                            for ((id, map) in value) {
-                                val thing: Thing = Thing.fromMap(map)
-                                directoryThings[id] = thing
-                            }
-                        }
-                        return@thenApply directoryThings
-                    } catch (e2: ContentCodecException) {
-                        throw(ServientException("Error while fetching TD directory: $e2")
+                val content = client.readResource(form)
+                try {
+                    val value = ContentManager.contentToValue(content, ObjectSchema())
+                    val directoryThings: MutableMap<String, ExposedThing> = mutableMapOf()
+                    /*
+                    for ((id) in value) {
+                        val thing: Thing = Thing.fromMap(value)
+                        directoryThings[id] = thing
                     }
-
-                    r
-                }*/
-
+                    */
+                    return directoryThings
+                } catch (e2: ContentCodecException) {
+                    throw ServientException("Error while fetching TD directory: $e2")
+                }
             } else {
                 throw ServientException("Unable to fetch directory '$url'. Missing ClientFactory for scheme '$scheme'")
             }
@@ -258,7 +249,16 @@ class Servient(
         }
     }
 
-    fun getClientFor(scheme: String) = clients.first{ client -> client.supports(scheme) }
+    @Throws(ProtocolClientException::class)
+    fun getClientFor(scheme: String): ProtocolClient? {
+        val factory = clientFactories[scheme]
+        return if (factory != null) {
+            factory.client
+        } else {
+            log.warn("Servient has no ClientFactory for scheme '{}'", scheme)
+            null
+        }
+    }
 
     /**
      * Adds `thing` to the Thing Directory `directory`.
@@ -324,14 +324,12 @@ class Servient(
      * @return
      */
 
-    suspend fun discover(): Flow<Thing> {
+    suspend fun discover(): Flow<ExposedThing> {
         return discover(ThingFilter(method = ANY))
     }
 
     fun getClientSchemes(): List<String> {
-
-        //return ArrayList<String>(clientFactories.keys)
-        return listOf()
+        return clientFactories.keys.toMutableList()
     }
 
     /**
@@ -343,7 +341,7 @@ class Servient(
      * @return
      */
 
-    suspend fun discover(filter: ThingFilter): Flow<Thing> {
+    suspend fun discover(filter: ThingFilter): Flow<ExposedThing> {
         return when (filter.method) {
             DIRECTORY -> discoverDirectory(filter)
             LOCAL -> discoverLocal(filter)
@@ -353,11 +351,12 @@ class Servient(
 
     // Discover any available Things across all protocols
     @Throws(ServientException::class)
-    private suspend fun discoverAny(filter: ThingFilter): Flow<Thing> = flow {
+    private suspend fun discoverAny(filter: ThingFilter): Flow<ExposedThing> = flow {
         var foundAtLeastOne = false
         // Try to run a discovery with every available protocol binding
-        for (client in clients) {
+        for (factory in clientFactories.values) {
             try {
+                val client = factory.client
                 val clientFlow = client.discover(filter) // Assuming discover now returns Flow
                 emitAll(clientFlow) // Merges the flow from the client
                 foundAtLeastOne = true
@@ -377,26 +376,24 @@ class Servient(
 
     private suspend fun discoverDirectory(
         filter: ThingFilter
-    ): Flow<Thing> = flow {
-        val discoveredThings: Map<String, Thing>? = filter.url?.let { fetchDirectory(it) }
-        val thingsList: List<Thing> = discoveredThings?.values?.toList() ?: emptyList()
+    ): Flow<ExposedThing> = flow {
+        val discoveredThings = filter.url?.let { fetchDirectory(it) }
+        val thingsList = discoveredThings?.values?.toList() ?: emptyList()
 
         // Apply the filter query if available
-        val filteredThings: List<Thing>? = filter.query?.filter(thingsList)
+        val filteredThings = filter.query?.filter(thingsList)
         filteredThings?.forEach { emit(it) } // Emit each thing one by one
     }
 
-    private fun discoverLocal(filter: ThingFilter): Flow<Thing> = flow {
-        val myThings: List<Thing> = things.values.toList() as List<Thing>
+    private fun discoverLocal(filter: ThingFilter): Flow<ExposedThing> = flow {
+        val myThings = things.values.toList()
 
         // Apply the filter query if available
-        val filteredThings: List<Thing> = filter.query?.filter(myThings) ?: myThings
+        val filteredThings = filter.query?.filter(myThings) ?: myThings
         filteredThings.forEach { emit(it) } // Emit each thing one by one
     }
 
-    fun hasClientFor(scheme: String): Boolean {
-        TODO("Not yet implemented")
-    }
+    fun hasClientFor(scheme: String): Boolean = clientFactories.containsKey(scheme)
 
     companion object {
         private val log = LoggerFactory.getLogger(Servient::class.java)
@@ -430,22 +427,28 @@ class Servient(
             }
 
         private fun getAddressByInetAddress(ifaceAddress: InetAddress): String? {
-            if (ifaceAddress.isLoopbackAddress() || ifaceAddress.isLinkLocalAddress() || ifaceAddress.isMulticastAddress()) {
+            if (ifaceAddress.isLoopbackAddress || ifaceAddress.isLinkLocalAddress || ifaceAddress.isMulticastAddress) {
                 return null
             }
-            return if (ifaceAddress is Inet4Address) {
-                ifaceAddress.getHostAddress()
-            } else if (ifaceAddress is Inet6Address) {
-                var hostAddress: String = ifaceAddress.getHostAddress()
-
-                // remove scope
-                val percent = hostAddress.indexOf('%')
-                if (percent != -1) {
-                    hostAddress = hostAddress.substring(0, percent)
+            return when (ifaceAddress) {
+                is Inet4Address -> {
+                    ifaceAddress.getHostAddress()
                 }
-                "[$hostAddress]"
-            } else {
-                null
+
+                is Inet6Address -> {
+                    var hostAddress: String = ifaceAddress.getHostAddress()
+
+                    // remove scope
+                    val percent = hostAddress.indexOf('%')
+                    if (percent != -1) {
+                        hostAddress = hostAddress.substring(0, percent)
+                    }
+                    "[$hostAddress]"
+                }
+
+                else -> {
+                    null
+                }
             }
         }
 
@@ -455,6 +458,6 @@ class Servient(
 open class ServientException : WotException {
     constructor(message: String?) : super(message)
     constructor(cause: Throwable?) : super(cause)
-    constructor(message: String, cause: Exception): super(message, cause)
+    constructor(message: String, cause: Throwable): super(message, cause)
     constructor() : super()
 }

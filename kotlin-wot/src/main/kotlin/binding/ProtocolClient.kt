@@ -1,7 +1,8 @@
 package ai.anfc.lmos.wot.binding
 
-import ai.ancf.lmos.wot.Servient
+import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.security.SecurityScheme
+import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
@@ -12,29 +13,6 @@ import kotlinx.coroutines.flow.Flow
  * etc.).
  */
 interface ProtocolClient {
-
-    /**
-     * Check if the client can support the scheme
-     *
-     * @param servient
-     * @return
-     */
-    fun supports(scheme : String) : Boolean
-
-    /**
-     * Starts the client
-     *
-     * @param servient
-     * @return
-     */
-    suspend fun start(servient: Servient)
-
-    /**
-     * Stops the client
-     *
-     * @return
-     */
-    suspend fun stop()
 
     /**
      * Adds the `metadata` with security mechanisms (e.g. use password authentication)
@@ -56,7 +34,7 @@ interface ProtocolClient {
      * @param filter
      * @return
      */
-    fun discover(filter: ThingFilter): Flow<Thing> {
+    fun discover(filter: ThingFilter): Flow<ExposedThing> {
         throw ProtocolClientNotImplementedException(javaClass, "discover")
     }
 
@@ -117,7 +95,4 @@ interface ProtocolClient {
     suspend fun observeResource(form: Form): Flow<Content> {
         throw ProtocolClientNotImplementedException(javaClass, "observe")
     }
-}
-
-class Content(val type: String, val body: Any) {
 }

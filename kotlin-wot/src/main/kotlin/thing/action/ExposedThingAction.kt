@@ -1,11 +1,10 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.ActionAffordance
 import ai.ancf.lmos.wot.thing.schema.DataSchema
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
@@ -15,15 +14,12 @@ import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 
 @Serializable
-data class ExposedThingAction<I, O> @JsonCreator constructor(
+data class ExposedThingAction<I, O>(
     private val action: ThingAction<I, O> = ThingAction(),
     @JsonIgnore
-    private val thing: Thing = Thing(),
+    private val thing: ExposedThing = ExposedThing(),
     private val state: ActionState<I, O> = ActionState()
 ) : ActionAffordance<I, O> by action {
-
-
-
     /**
      * Invokes the method and executes the handler defined in [.state]. `input`
      * contains the request payload. `options` can contain additional data (for example,
@@ -34,8 +30,8 @@ data class ExposedThingAction<I, O> @JsonCreator constructor(
      * @return
      */
     suspend fun invokeAction(
-        input: I,
-        options: Map<String, Map<String, Any>> = emptyMap()
+        input: I?,
+        options: Map<String, Map<String, Any>>? = mapOf()
     ): O? {
         log.debug("'{}' has Action state of '{}': {}", thing.id, title, state)
         return if (state.handler != null) {
@@ -104,7 +100,7 @@ data class ThingAction<I, O>(
     override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var forms: MutableList<Form>? = null,
+    override var forms: MutableList<Form> = mutableListOf(),
 
     @JsonProperty("@type")
     @JsonInclude(NON_EMPTY)
@@ -130,5 +126,5 @@ data class ThingAction<I, O>(
 ) : ActionAffordance<I, O>
 
 fun interface ActionHandler<I, O> {
-    suspend fun handle(input: I, options: Map<String, Map<String, Any>>): O?
+    suspend fun handle(input: I?, options: Map<String, Map<String, Any>>?): O?
 }

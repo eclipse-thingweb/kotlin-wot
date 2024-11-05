@@ -18,7 +18,7 @@ interface InteractionAffordance : BaseSchema {
      * Mandatory.
      */
     @get:JsonInclude(NON_EMPTY)
-    var forms: MutableList<Form>?
+    var forms: MutableList<Form>
 
     /**
      * Define URI template variables according to [RFC6570] as a collection based

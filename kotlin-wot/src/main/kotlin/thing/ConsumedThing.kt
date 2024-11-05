@@ -1,13 +1,21 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.Servient
+import ai.ancf.lmos.wot.content.ContentCodecException
+import ai.ancf.lmos.wot.content.ContentManager
+import ai.ancf.lmos.wot.security.SecurityScheme
+import ai.ancf.lmos.wot.thing.action.ConsumedThingAction
+import ai.ancf.lmos.wot.thing.action.ConsumedThingEvent
 import ai.ancf.lmos.wot.thing.action.ConsumedThingException
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
+import ai.ancf.lmos.wot.thing.property.ConsumedThingProperty
+import ai.ancf.lmos.wot.thing.schema.DataSchema
 import ai.ancf.lmos.wot.thing.schema.ObjectSchema
 import ai.ancf.lmos.wot.thing.schema.ThingDescription
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
+import kotlinx.serialization.Contextual
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletionException
 
@@ -16,7 +24,31 @@ import java.util.concurrent.CompletionException
  * reading and writing Properties), invoke Actions, subscribe and unsubscribe for Property changes
  * and Events. https://w3c.github.io/wot-scripting-api/#the-consumedthing-interface
  */
-class ConsumedThing(private val servient: Servient, private val thing: Thing) : ThingDescription by thing {
+class ConsumedThing(val servient: Servient,
+    override var id: String,
+    override var objectType: Type? = Type("Thing"),
+    override var objectContext: Context? = Context("https://www.w3.org/2022/wot/td/v1.1"),
+    override var title: String? = null,
+    override var titles: MutableMap<String, String>? = mutableMapOf(),
+    override var description: String? = null,
+    override var descriptions: MutableMap<String, String>? = mutableMapOf(),
+    override var properties: MutableMap<String, ConsumedThingProperty<*>> = mutableMapOf(),
+    override var actions: MutableMap<String, ConsumedThingAction<*, *>> = mutableMapOf(),
+    override var events: MutableMap<String, ConsumedThingEvent<*, *, *>> = mutableMapOf(),
+    override var forms: List<Form> = emptyList(),
+    override var security: List<String> = emptyList(),
+    override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
+    override var base: String? = null,
+    override var version: VersionInfo? = null,
+    override var created: String? = null,
+    override var modified: String? = null,
+    override var support: String? = null,
+    override var links: List<Link>? = null,
+    override var profile: List<String>? = null,
+    override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
+    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
+) : ThingDescription<ConsumedThingProperty<*>, ConsumedThingAction<*,*>, ConsumedThingEvent<*,*,*>>  {
+
 
     private val clients: MutableMap<String, ProtocolClient> = mutableMapOf()
     fun getClientFor(
@@ -68,14 +100,11 @@ class ConsumedThing(private val servient: Servient, private val thing: Thing) : 
     private fun initNewClientFor(schemes: Set<String>): Pair<String, ProtocolClient> {
         try {
             schemes.forEach { scheme ->
-
-                if (servient.hasClientFor(scheme)) {
-                    val client = servient.getClientFor(scheme)
-
+                val client = servient.getClientFor(scheme)
+                if (client != null) {
                     // Initialize client security system if security details are provided
                     security.takeIf { it.isNotEmpty() }?.let {
                         log.debug("'{}' setting credentials for '{}'", id, client)
-
                         val metadata = security.mapNotNull { key -> securityDefinitions[key] }
                         client.setSecurity(metadata, mapOf( "credentials" to servient.getCredentials(id)))
                     }
@@ -99,7 +128,7 @@ class ConsumedThing(private val servient: Servient, private val thing: Thing) : 
             ?: throw NoFormForInteractionConsumedThingException(id, op)
     }
 
-    suspend fun readProperties(vararg names: String): Map<Any, Any> {
+    suspend fun readProperties(vararg names: String): Map<*, *> {
         return readProperties(listOf(*names))
     }
 
@@ -109,7 +138,7 @@ class ConsumedThing(private val servient: Servient, private val thing: Thing) : 
      * @param names
      * @return
      */
-    suspend fun readProperties(names: List<String>): Map<Any, Any> {
+    suspend fun readProperties(names: List<String>): Map<*, *> {
         val values = readProperties()
 
         return values.filter { (key, _) -> key in names }
@@ -121,7 +150,7 @@ class ConsumedThing(private val servient: Servient, private val thing: Thing) : 
      *
      * @return
      */
-    suspend fun readProperties(): Map<Any, Any> {
+    suspend fun readProperties(): Map<*, *> {
         val clientAndForm: Pair<ProtocolClient, Form> = getClientFor(forms, Operation.READ_ALL_PROPERTIES)
         val client = clientAndForm.first
         val form: Form = clientAndForm.second
@@ -160,7 +189,7 @@ class ConsumedThing(private val servient: Servient, private val thing: Thing) : 
 
 class NoFormForInteractionConsumedThingException : ConsumedThingException {
     constructor(title: String, op: Operation) : super("'$title' has no form for interaction '$op'")
-    constructor(message: String?) : super(message)
+    constructor(message: String) : super(message)
 }
 
 

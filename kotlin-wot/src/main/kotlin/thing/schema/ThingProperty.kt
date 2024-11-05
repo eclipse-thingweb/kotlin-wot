@@ -21,47 +21,47 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 )
 sealed interface ThingProperty<T> : PropertyAffordance<T>{
     data class StringProperty(
-        override var forms: MutableList<Form>? = mutableListOf(),
+        override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false
     ) : ThingProperty<String>, StringSchema()
 
     data class IntProperty(
-        override var forms: MutableList<Form>? = mutableListOf(),
+        override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false
     ) : ThingProperty<Int>, IntegerSchema()
 
     data class BooleanProperty(
-        override var forms: MutableList<Form>? = mutableListOf(),
+        override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false
     ) : ThingProperty<Boolean>, BooleanSchema()
 
     data class NumberProperty(
-        override var forms: MutableList<Form>? = mutableListOf(),
+        override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false
     ) : ThingProperty<Number>, NumberSchema()
 
-    data class ArrayProperty<I>(
-        override var forms: MutableList<Form>? = mutableListOf(),
+    data class ArrayProperty(
+        override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false,
-        override var items: List<DataSchema<I>>
-    ) : ThingProperty<List<I>>, ArraySchema<I>(items = items)
+        override var items: List<DataSchema<Any>> = mutableListOf()
+    ) : ThingProperty<List<*>>, ArraySchema<Any>(items = items)
 
     data class NullProperty(
-        override var forms: MutableList<Form>? = mutableListOf(),
+        override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false
     ) : ThingProperty<Any>, NullSchema()
 
     data class ObjectProperty(
-        override var forms: MutableList<Form>? = mutableListOf(),
+        override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false
-    ) : ThingProperty<Map<Any, Any>>, ObjectSchema()
+    ) : ThingProperty<Map<*, *>>, ObjectSchema()
 }
 
 fun stringProperty(initializer: StringProperty.() -> Unit): StringProperty {
@@ -86,6 +86,6 @@ fun objectProperty(initializer: ObjectProperty.() -> Unit): ObjectProperty {
     return ObjectProperty().apply(initializer)
 }
 
-fun <I> arrayProperty(items: List<DataSchema<I>>, initializer: ArrayProperty<I>.() -> Unit): ArrayProperty<I> {
-    return ArrayProperty(items = items).apply { initializer() }
+fun <I> arrayProperty(items: List<DataSchema<I>>, initializer: ArrayProperty.() -> Unit): ArrayProperty {
+    return ArrayProperty().apply { initializer() }
 }

@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing.property
 
 import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
 import ai.ancf.lmos.wot.thing.schema.stringProperty
@@ -18,12 +18,12 @@ import kotlin.test.assertFailsWith
 
 class ExposedThingPropertyTest {
 
-    private lateinit var thing: Thing
+    private lateinit var thing: ExposedThing
     private lateinit var state: PropertyState<String>
 
     @BeforeTest
     fun setUp() {
-        thing = Thing(id = "testThing")
+        thing = ExposedThing(id = "testThing")
         state = mockk()
 
 
@@ -38,7 +38,7 @@ class ExposedThingPropertyTest {
 
     @Test
     fun testHashCode() {
-        val thing = Thing(id = "Foo")
+        val thing = ExposedThing(id = "Foo")
 
         val property1 = ExposedStringProperty(thing = thing, property = stringProperty { title = "title" }).hashCode()
         val property2 = ExposedStringProperty(thing = thing, property = stringProperty { title = "title" }).hashCode()

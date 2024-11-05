@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot
 
 import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.anfc.lmos.wot.binding.ProtocolClient
+import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import io.mockk.coVerify
 import io.mockk.every
@@ -16,13 +16,13 @@ class ServientTest {
 
     private val mockServer1 = mockk<ProtocolServer>(relaxed = true)
     private val mockServer2 = mockk<ProtocolServer>(relaxed = true)
-    private val mockClient = mockk<ProtocolClient>(relaxed = true)
+    private val factoryMock = mockk<ProtocolClientFactory>(relaxed = true)
     private val mockThing = mockk<ExposedThing>(relaxed = true) {
         every { id } returns "testThing"
     }
     private val servient = Servient(
         servers = listOf(mockServer1, mockServer2),
-        clients = listOf(mockClient),
+        clientFactories = mapOf("http" to factoryMock),
         things = mutableMapOf("testThing" to mockThing)
     )
 
@@ -34,7 +34,7 @@ class ServientTest {
         // Assert
         coVerify { mockServer1.start(servient) }
         coVerify { mockServer2.start(servient) }
-        coVerify { mockClient.start(servient) }
+        coVerify { factoryMock.init() }
     }
 
     @Test
@@ -45,7 +45,7 @@ class ServientTest {
         // Assert
         coVerify { mockServer1.stop() }
         coVerify { mockServer2.stop() }
-        coVerify { mockClient.stop() }
+        coVerify { factoryMock.destroy() }
     }
 
     @Test

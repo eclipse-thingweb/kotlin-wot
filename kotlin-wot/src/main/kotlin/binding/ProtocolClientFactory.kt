@@ -6,7 +6,8 @@ package ai.anfc.lmos.wot.binding
  * is a separate client instance for each [ConsumedThing].
  */
 interface ProtocolClientFactory {
-    val scheme: String?
+
+    val scheme: String
 
     val client: ProtocolClient
 

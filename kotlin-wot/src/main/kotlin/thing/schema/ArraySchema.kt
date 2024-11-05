@@ -23,9 +23,9 @@ open class ArraySchema<T>(
     @JsonInclude(NON_EMPTY)
     override var descriptions: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY)
-    override var const: List<T>? = null,
+    override var const: List<*>? = null,
     @JsonInclude(NON_EMPTY)
-    override var default: List<T>? = null,
+    override var default: List<*>? = null,
     @JsonInclude(NON_EMPTY)
     override var unit: String? = null,
     @JsonInclude(NON_EMPTY)
@@ -44,7 +44,9 @@ open class ArraySchema<T>(
     var minItems: Int? = null,          // Minimum number of items
     @JsonInclude(NON_NULL)
     var maxItems: Int? = null           // Maximum number of items
-) : DataSchema<List<T>>{
+) : DataSchema<List<*>>{
+    override val classType: Class<List<*>>
+        get() = List::class.java
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

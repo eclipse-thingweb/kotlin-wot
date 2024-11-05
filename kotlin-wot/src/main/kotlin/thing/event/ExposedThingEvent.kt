@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory
 data class ExposedThingEvent<T, S, C>(private val event: EventAffordance<T, S, C> = ThingEvent()) : EventAffordance<T, S, C> by event {
 
     @Transient @JsonIgnore private val state : EventState<T> = EventState()
-
     fun getState(): EventState<T> {
         return state
     }
@@ -86,7 +85,7 @@ data class ThingEvent<T, S, C>(
     override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var forms: MutableList<Form>? = null,
+    override var forms: MutableList<Form> = mutableListOf(),
 
     @JsonInclude(NON_EMPTY)
     override var subscription: DataSchema<@Contextual S>? = null,

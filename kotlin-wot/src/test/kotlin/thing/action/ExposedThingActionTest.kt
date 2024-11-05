@@ -1,7 +1,8 @@
 package ai.ancf.lmos.wot.thing.action
 
 import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.action.ExposedThingAction.ActionState
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.coEvery
@@ -13,13 +14,13 @@ import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.*
 
 class ExposedThingActionTest {
-    private lateinit var thing: Thing
+    private lateinit var thing: ExposedThing
     private lateinit var thingAction: ThingAction<String, String>
-    private lateinit var state: ExposedThingAction.ActionState<String, String>
+    private lateinit var state: ActionState<String, String>
 
     @BeforeTest
     fun setUp() {
-        thing = Thing(id = "test")
+        thing = ExposedThing(id = "test")
         thingAction = ThingAction(title = "title")
         state = mockk()
     }

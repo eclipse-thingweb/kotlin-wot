@@ -25,9 +25,9 @@ open class ObjectSchema(
     @JsonInclude(NON_EMPTY)
     override var descriptions: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY)
-    override var const: Map<Any, Any>? = null,
+    override var const: Map<*, *>? = null,
     @JsonInclude(NON_EMPTY)
-    override var default: Map<Any, Any>? = null,
+    override var default: Map<*, *>? = null,
     @JsonInclude(NON_EMPTY)
     override var unit: String? = null,
     @JsonInclude(NON_EMPTY)
@@ -40,7 +40,10 @@ open class ObjectSchema(
     override var writeOnly: Boolean = false,
     @JsonInclude(NON_NULL)
     override var format: String? = null
-) : DataSchema<Map<Any, Any>>{
+) : DataSchema<Map<*, *>>{
+
+    override val classType: Class<Map<*, *>>
+        get() = Map::class.java
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

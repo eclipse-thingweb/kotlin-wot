@@ -17,8 +17,8 @@ class ExposedThingTest {
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThing(thing)
-        val thingB = ExposedThing(thing)
+        val thingA = ExposedThing.from(thing)
+        val thingB = ExposedThing.from(thing)
         assertEquals(thingA, thingB)
     }
 
@@ -30,8 +30,8 @@ class ExposedThingTest {
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThing(thing).hashCode()
-        val thingB = ExposedThing(thing).hashCode()
+        val thingA = ExposedThing.from(thing).hashCode()
+        val thingB = ExposedThing.from(thing).hashCode()
         assertEquals(thingA, thingB)
     }
 
@@ -45,7 +45,7 @@ class ExposedThingTest {
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
-        val exposedThing = ExposedThing(thing)
+        val exposedThing = ExposedThing.from(thing)
 
         val thingAsJson = exposedThing.toJson()
         println(thingAsJson)

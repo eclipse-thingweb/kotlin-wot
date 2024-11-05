@@ -1,14 +1,13 @@
 package ai.ancf.lmos.wot.thing.action
 
 import ai.ancf.lmos.wot.ServientException
+import ai.ancf.lmos.wot.content.Content
+import ai.ancf.lmos.wot.content.ContentCodecException
+import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.ContentCodecException
-import ai.ancf.lmos.wot.thing.ContentManager
-import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.ActionAffordance
-import ai.anfc.lmos.wot.binding.Content
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import com.fasterxml.jackson.annotation.JsonIgnore
 import kotlinx.serialization.Transient
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory
 data class ConsumedThingAction<I, O>(
     private val action: ThingAction<I, O>,
     @JsonIgnore
-    private val thing: Thing,
+    private val thing: ConsumedThing,
     @Transient private val state: ExposedThingAction.ActionState<I, O> = ExposedThingAction.ActionState()
 ) : ActionAffordance<I, O> by action {
 
@@ -60,8 +59,12 @@ data class ConsumedThingAction<I, O>(
             }
             form = ConsumedThing.handleUriVariables(form, parameters)
             val result = client.invokeResource(form, input)
-            try {
-                return ContentManager.contentToValue(result, output)
+            return try {
+                if (output != null){
+                    ContentManager.contentToValue(result, output!!)
+                }else{
+                    null
+                }
             } catch (e: ContentCodecException) {
                 throw ConsumedThingException("Received invalid writeResource from Thing: " + e.message)
             }
@@ -77,6 +80,8 @@ data class ConsumedThingAction<I, O>(
 
 
 open class ConsumedThingException : ServientException {
-    constructor(message: String?) : super(message)
+    constructor(message: String) : super(message)
     constructor(cause: Throwable?) : super(cause)
+
+    constructor(message: String, cause: Throwable?) : super(cause)
 }

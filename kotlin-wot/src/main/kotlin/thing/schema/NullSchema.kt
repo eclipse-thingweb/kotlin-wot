@@ -40,6 +40,9 @@ open class NullSchema(
     override var format: String? = null
 ) : DataSchema<Any>{
 
+    override val classType: Class<Any>
+        get() = Any::class.java
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

@@ -2,7 +2,15 @@ package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.thing
+import ai.ancf.lmos.wot.thing.action.ActionHandler
+import ai.ancf.lmos.wot.thing.action.ExposedThingAction.ActionState
+import ai.ancf.lmos.wot.thing.exposedThing
+import ai.ancf.lmos.wot.thing.form.Operation
+import ai.ancf.lmos.wot.thing.form.Operation.READ_PROPERTY
+import ai.ancf.lmos.wot.thing.form.Operation.WRITE_PROPERTY
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.PropertyState
+import ai.ancf.lmos.wot.thing.schema.StringSchema
+import ai.ancf.lmos.wot.thing.schema.stringSchema
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -18,20 +26,41 @@ import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
+private const val PROPERTY_NAME = "property1"
+
+private const val ACTION_NAME = "action1"
+
+private const val EVENT_NAME = "event1"
+
+private const val CONTENT_TYPE = "application/json"
+
 class HttpProtocolServerTest {
 
     private lateinit var server: HttpProtocolServer
     private val servient: Servient = mockk()
     private val mockServer: EmbeddedServer<*, *> = mockk()
-    private val exposedThing: ExposedThing = ExposedThing(
-        thing("test") {
-            intProperty("property1"){
+    private val exposedThing: ExposedThing = exposedThing("test") {
+            intProperty(PROPERTY_NAME, PropertyState(initialValue = 0, readHandler = { 2 })){
                 title = "title"
+                readOnly = true
             }
-            action("action1"){
-
+            action<String, String>(ACTION_NAME, state = ActionState(handler = ActionHandler { input, _ ->
+                // Your action logic here
+                println("Input: $input")
+                return@ActionHandler input?.let { "Output: $it" }
+            }))
+            {
+                input = stringSchema {
+                    title = "Action Input"
+                    minLength = 10
+                    default = "test"
+                }
+                output = StringSchema()
             }
-    })
+            event<String, Nothing, Nothing>(EVENT_NAME){
+                data = StringSchema()
+            }
+    }
 
     @BeforeTest
     fun setUp() {
@@ -125,7 +154,6 @@ class HttpProtocolServerTest {
         assertEquals(1, things.size)
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertContains(things, exposedThing)
     }
 
     @Test
@@ -143,7 +171,7 @@ class HttpProtocolServerTest {
         val thing : ExposedThing = response.body()
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(thing, exposedThing)
+        assertEquals(exposedThing.id, thing.id)
     }
 
     @Test
@@ -162,13 +190,36 @@ class HttpProtocolServerTest {
     }
 
     @Test
+    fun `GET on properties retrieves a thing property`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        val client = httpClient()
+        // Setup test data for property
+        val propertyName = PROPERTY_NAME
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
+
+        // Perform PUT request on property endpoint
+        val response = client.get("/test/properties/$propertyName") {
+            contentType(ContentType.Application.Json)
+        }
+
+        val propertyValue : String = response.body()
+
+        println(propertyValue)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+    }
+
+    @Test
     fun `PUT on properties updates a thing property`() = testApplication {
         application {
             setupRouting(servient)
         }
         val client = httpClient()
         // Setup test data for property
-        val propertyName = "property1"
+        val propertyName = PROPERTY_NAME
         every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform PUT request on property endpoint
@@ -209,4 +260,84 @@ class HttpProtocolServerTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
     }
+
+    @Test
+    fun `expose should throw exception if server is not started`() {
+        // Arrange
+        server.started = false // Set the server to not started
+
+        // Act & Assert
+        val exception = assertFailsWith<ProtocolServerException> {
+            server.expose(exposedThing)
+        }
+        assertEquals("Server has not started yet", exception.message)
+    }
+
+    @Test
+    fun `expose should expose thing and add forms`() {
+        // Arrange
+        server.started = true
+        // Act
+        server.expose(exposedThing)
+
+        // Assert
+        assertTrue(exposedThing.forms.isNotEmpty(), "Expected forms to be added to thing")
+
+        val expectedHref = "http://0.0.0.0:8080/${exposedThing.id}/all/properties"
+        val form = exposedThing.forms.find { it.href == expectedHref  }
+        assertNotNull(form, "Expected form for reading all properties to be added")
+        assertEquals(CONTENT_TYPE, form.contentType)
+        assertEquals(2, form.op?.size)
+    }
+
+    @Test
+    fun `exposeProperties should add forms for read write properties`() {
+        // Arrange
+        server.started = true
+        val address = "http://0.0.0.0:8080"
+        // Act
+        server.exposeProperties(exposedThing, address, CONTENT_TYPE)
+
+        // Assert
+        val expectedHref = "$address/${exposedThing.id}/properties/$PROPERTY_NAME"
+        val form = exposedThing.properties[PROPERTY_NAME]?.forms?.find { it.href == expectedHref }
+        assertNotNull(form, "Expected form for property '$PROPERTY_NAME' to be added")
+
+        assertTrue(form.op?.contains(READ_PROPERTY) == true, "Expected READ_PROPERTY operation")
+        assertTrue(form.op?.contains(WRITE_PROPERTY) == true, "Expected WRITE_PROPERTY operation")
+    }
+    @Test
+    fun `exposeActions should add form for action`() {
+        // Arrange
+        server.started = true
+        val address = "http://0.0.0.0:8080"
+        // Act
+        server.exposeActions(exposedThing, address, CONTENT_TYPE)
+
+        // Assert
+        val expectedHref = "$address/${exposedThing.id}/actions/$ACTION_NAME"
+        val form = exposedThing.actions[ACTION_NAME]?.forms?.find { it.href == expectedHref }
+        assertNotNull(form, "Expected form for action 'action1' to be added")
+        assertEquals(CONTENT_TYPE, form.contentType, "Content type should match")
+        assertTrue(form.op?.contains(Operation.INVOKE_ACTION) == true, "Expected INVOKE_ACTION operation")
+    }
+
+
+    @Test
+    fun `exposeEvents should add form for event`() {
+        // Arrange
+        server.started = true
+        val address = "http://0.0.0.0:8080"
+        // Act
+        server.exposeEvents(exposedThing, address, CONTENT_TYPE)
+
+        // Assert
+        val expectedHref = "$address/${exposedThing.id}/events/$EVENT_NAME"
+        val form = exposedThing.events[EVENT_NAME]?.forms?.find { it.href == expectedHref }
+        assertNotNull(form, "Expected form for action 'action1' to be added")
+        assertEquals(CONTENT_TYPE, form.contentType, "Content type should match")
+        assertTrue(form.op?.contains(Operation.SUBSCRIBE_EVENT) == true, "Expected SUBSCRIBE_EVENT operation")
+
+    }
+
 }

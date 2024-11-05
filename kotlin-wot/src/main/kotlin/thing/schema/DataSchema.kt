@@ -1,11 +1,8 @@
 package ai.ancf.lmos.wot.thing.schema
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 /**
  * Metadata that describes the data format used. It can be used for varidation.
@@ -83,8 +80,8 @@ sealed interface DataSchema<T> : BaseSchema {
     //@get:JsonInclude(NON_EMPTY)
     //var type: String? // Optional: JSON-based data types (one of object, array, string, number, integer, boolean, or null)
 
-    //@get:JsonIgnore
-    //val classType: Class<*>
+    @get:JsonIgnore
+    val classType: Class<T>
 
 }
 

@@ -1,20 +1,19 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.JsonMapper
+import ai.ancf.lmos.wot.WoTDSL
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.action.ExposedThingAction
 import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ExposedThingEvent
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import ai.ancf.lmos.wot.thing.schema.ThingDescription
 import ai.ancf.lmos.wot.thing.schema.ThingProperty
 import ai.ancf.lmos.wot.thing.schema.ThingProperty.*
-import ai.anfc.lmos.wot.binding.ProtocolClient
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -35,41 +34,34 @@ import java.util.*
  * to add interactive capabilities. This class enables interaction with the [Thing]'s properties, actions, and events
  * by exposing methods to read and write property values, invoke actions, and subscribe to events.
  *
- * @constructor Creates an [ExposedThing] based on an existing [Thing]. Initializes internal maps for properties,
- * actions, and events based on the provided [thing] and allows access to them through additional functionality.
- *
- * @param thing A base [Thing] instance to be exposed with interactive capabilities.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Serializable
-data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription by thing {
-
-    val exposedProperties : MutableMap<String, ExposedThingProperty<*>> = mutableMapOf()
-    val exposedActions : MutableMap<String, ExposedThingAction<*, *>> = mutableMapOf()
-    val exposedEvents : MutableMap<String, ExposedThingEvent<*, *, *>> = mutableMapOf()
-
-    init {
-        thing.properties.forEach { (name, property) ->
-            val exposedProperty = when (property) {
-                is StringProperty -> ExposedStringProperty(thing = thing, property = property)
-                is IntProperty -> ExposedIntProperty(thing = thing, property = property)
-                is BooleanProperty -> ExposedBooleanProperty(thing = thing, property = property)
-                is NumberProperty -> ExposedNumberProperty(thing = thing, property = property)
-                is NullProperty -> ExposedNullProperty(thing = thing, property = property)
-                is ArrayProperty<*> -> ExposedArrayProperty(thing = thing, property = property)
-                is ObjectProperty -> ExposedObjectProperty(thing = thing, property = property)
-            }
-            exposedProperties[name] = exposedProperty
-        }
-
-        thing.actions.forEach { (name, action) ->
-            exposedActions[name] = ExposedThingAction(action, thing)
-        }
-
-        thing.events.forEach { (name, event) ->
-            exposedEvents[name] = ExposedThingEvent(event)
-        }
-    }
+@WoTDSL
+data class ExposedThing(
+    override var id: String = getRandomThingId(),
+    override var objectType: Type? = Type(DEFAULT_TYPE),
+    override var objectContext: Context? = Context(DEFAULT_CONTEXT),
+    override var title: String? = null,
+    override var titles: MutableMap<String, String>? = mutableMapOf(),
+    override var description: String? = null,
+    override var descriptions: MutableMap<String, String>? = mutableMapOf(),
+    override var properties: MutableMap<String, ExposedThingProperty<*>> = mutableMapOf(),
+    override var actions: MutableMap<String, ExposedThingAction<*, *>> = mutableMapOf(),
+    override var events: MutableMap<String, ExposedThingEvent<*, *, *>> = mutableMapOf(),
+    override var forms: List<Form> = emptyList(),
+    override var security: List<String> = emptyList(),
+    override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
+    override var base: String? = null,
+    override var version: VersionInfo? = null,
+    override var created: String? = null,
+    override var modified: String? = null,
+    override var support: String? = null,
+    override var links: List<Link>? = null,
+    override var profile: List<String>? = null,
+    override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
+    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
+) : ThingDescription<ExposedThingProperty<*>, ExposedThingAction<*, *>, ExposedThingEvent<*,*,*>> {
 
     /**
      * Reads the current values of all properties exposed by the Thing.
@@ -78,11 +70,12 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
      */
     suspend fun readProperties(): Map<String, Any> {
         val values: MutableMap<String, Any> = HashMap()
-        exposedProperties.forEach { (name, property) ->
+        properties.forEach { (name, property) ->
             values[name] = property.read() as Any
         }
         return values
     }
+
 
     /**
      * Writes the specified values to the respective properties of the Thing. If successful, returns the new
@@ -94,7 +87,7 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
     suspend fun writeProperties(values: Map<String, Any>): Map<String, Any> {
         val returnValues: MutableMap<String, Any> = HashMap()
         values.forEach { (name, value) ->
-            val property = exposedProperties[name]
+            val property = properties[name]
             if (property != null) {
                 // Check if the property's type matches the value's type
                 when (property) {
@@ -111,19 +104,53 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
                         returnValues[name] = property.write(value) as Any
                     }
                     is ExposedObjectProperty -> if (value is Map<*, *>) {
-                        returnValues[name] = property.write(value as Map<Any, Any>) as Any
+                        returnValues[name] = property.write(value) as Any
                     }
                     is ExposedNullProperty -> {
                         returnValues[name] = property.write(value) as Any
                     }
-                    is ExposedArrayProperty<*> -> if (value is List<*>) {
-                        //returnValues[name] = property.write(value as List<Any>) as Any
+                    is ExposedArrayProperty -> if (value is List<*>) {
+                        returnValues[name] = property.write(value) as Any
                     }
                 }
             }
         }
         // wait until all properties have been written
         return returnValues
+    }
+
+    fun stringProperty(name: String, state: PropertyState<String> = PropertyState(), configure: ExposedStringProperty.() -> Unit) {
+        this.properties[name] = ExposedStringProperty(state = state).apply(configure)
+    }
+    fun intProperty(name: String, state: PropertyState<Int> = PropertyState(), configure: ExposedIntProperty.() -> Unit) {
+        this.properties[name] = ExposedIntProperty(state = state).apply(configure)
+    }
+    fun booleanProperty(name: String, state: PropertyState<Boolean> = PropertyState(), configure: ExposedBooleanProperty.() -> Unit) {
+        this.properties[name] = ExposedBooleanProperty(state = state).apply(configure)
+    }
+    fun objectProperty(name: String, state: PropertyState<Map<*, *>> = PropertyState(), configure: ExposedObjectProperty.() -> Unit) {
+        this.properties[name] = ExposedObjectProperty(state = state).apply(configure)
+    }
+    fun numberProperty(name: String, state: PropertyState<Number> = PropertyState(), configure: ExposedNumberProperty.() -> Unit) {
+        this.properties[name] = ExposedNumberProperty(state = state).apply(configure)
+    }
+
+    fun nullProperty(name: String, state: PropertyState<Any> = PropertyState(), configure: ExposedNullProperty.() -> Unit) {
+        this.properties[name] = ExposedNullProperty(state = state).apply(configure)
+    }
+
+    fun arrayProperty(name: String, state: PropertyState<List<*>> = PropertyState(), configure: ExposedArrayProperty.() -> Unit) {
+        this.properties[name] = ExposedArrayProperty(state = state).apply(configure)
+    }
+
+    fun <I : Any, O : Any> action(name: String, state: ExposedThingAction.ActionState<I, O> = ExposedThingAction.ActionState(), configure: ExposedThingAction<I, O>.() -> Unit) {
+        val action = ExposedThingAction<I, O>(state = state).apply(configure)
+        actions[name] = action
+    }
+
+    fun <T, S, C> event(name: String, configure: ExposedThingEvent<T, S, C>.() -> Unit) {
+        val event = ExposedThingEvent<T, S, C>().apply(configure)
+        events[name] = event
     }
 
     fun toJson() : String?{
@@ -137,6 +164,63 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
 
     companion object {
         private val log = LoggerFactory.getLogger(ExposedThing::class.java)
+
+        fun from(thing: Thing): ExposedThing {
+            // Create an instance of ExposedThing first
+            val exposedThing = ExposedThing(
+                id = thing.id,
+                objectType = thing.objectType,
+                objectContext = thing.objectContext,
+                title = thing.title,
+                titles = thing.titles,
+                description = thing.description,
+                descriptions = thing.descriptions,
+                actions = mutableMapOf(),  // initialize as needed
+                events = mutableMapOf(),
+                forms = thing.forms,
+                security = thing.security,
+                securityDefinitions = thing.securityDefinitions,
+                base = thing.base,
+                version = thing.version,
+                created = thing.created,
+                modified = thing.modified,
+                support = thing.support,
+                links = thing.links,
+                profile = thing.profile,
+                schemaDefinitions = thing.schemaDefinitions,
+                uriVariables = thing.uriVariables
+            )
+
+            exposedThing.properties = mutableMapOf<String, ExposedThingProperty<*>>().apply {
+                thing.properties.forEach { (name, property) ->
+                    val exposedProperty = when (property) {
+                        is StringProperty -> ExposedStringProperty(thing = exposedThing, property = property)
+                        is IntProperty -> ExposedIntProperty(thing = exposedThing, property = property)
+                        is BooleanProperty -> ExposedBooleanProperty(thing = exposedThing, property = property)
+                        is NumberProperty -> ExposedNumberProperty(thing = exposedThing, property = property)
+                        is NullProperty -> ExposedNullProperty(thing = exposedThing, property = property)
+                        is ArrayProperty -> ExposedArrayProperty(thing = exposedThing, property = property)
+                        is ObjectProperty -> ExposedObjectProperty(thing = exposedThing, property = property)
+                    }
+                    this[name] = exposedProperty
+                }
+            }
+
+            // Initialize actions based on the type of each action
+            exposedThing.actions = mutableMapOf<String, ExposedThingAction<*, *>>().apply {
+                thing.actions.forEach { (name, action) ->
+                    this[name] = ExposedThingAction(action, exposedThing)
+                }
+            }
+            // Initialize events based on the type of each event
+            exposedThing.events = mutableMapOf<String, ExposedThingEvent<*, *, *>>().apply {
+                thing.events.forEach { (name, event) ->
+                    this[name] = ExposedThingEvent(event)
+                }
+            }
+
+            return exposedThing
+        }
 
         /**
          * Parses a JSON string into a Thing object.
@@ -180,7 +264,8 @@ data class ExposedThing(private val thing: Thing = Thing()) : ThingDescription b
     }
 }
 
-private const val s = "https://www.w3.org/2022/wot/td/v1.1"
+private const val DEFAULT_CONTEXT = "https://www.w3.org/2022/wot/td/v1.1"
+private const val DEFAULT_TYPE = "Thing"
 
 /**
  * Represents a Thing entity in the Web of Things (WoT) model.
@@ -213,10 +298,13 @@ private const val s = "https://www.w3.org/2022/wot/td/v1.1"
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Serializable
+@WoTDSL
 data class Thing (
-    @JsonProperty("id") override var id: String = "urn:uuid:" + UUID.randomUUID().toString(),
-    @SerialName("@type") @JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = Type("Thing"),
-    @SerialName("@context") @JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = Context("https://www.w3.org/2022/wot/td/v1.1"),
+    @JsonProperty("id") override var id: String = getRandomThingId(),
+    @SerialName("@type") @JsonProperty("@type") @JsonInclude(NON_NULL) override var objectType: Type? = Type(
+        DEFAULT_TYPE),
+    @SerialName("@context") @JsonProperty("@context") @JsonInclude(NON_NULL) override var objectContext: Context? = Context(
+        DEFAULT_CONTEXT),
     @JsonInclude(NON_EMPTY) override var title: String? = null,
     @JsonInclude(NON_EMPTY) override var titles: MutableMap<String, String>? = null,
     @JsonInclude(NON_EMPTY) override var description: String? = null,
@@ -236,50 +324,53 @@ data class Thing (
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY]) @JsonInclude(NON_EMPTY) override var profile: List<String>? = null,
     @JsonInclude(NON_EMPTY) override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
     @JsonInclude(NON_EMPTY) override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
-) : ThingDescription {
+) : ThingDescription<ThingProperty<*>, ThingAction<*,*>, ThingEvent<*, *, *>> {
 
-    inline fun <reified T> property(name: String, configure: ThingProperty<T>.() -> Unit) {
-        val property: ThingProperty<T> = when (T::class) {
-            String::class -> StringProperty() as ThingProperty<T>
-            Int::class -> IntProperty() as ThingProperty<T>
-            Boolean::class -> BooleanProperty() as ThingProperty<T>
-            else -> throw IllegalArgumentException("Unsupported property type")
-        }
-        property.configure()
-        properties[name] = property
-    }
-
-    fun Thing.stringProperty(name: String, configure: StringProperty.() -> Unit) {
+    fun stringProperty(name: String, configure: StringProperty.() -> Unit) {
         this.properties[name] = StringProperty().apply(configure)
     }
-    fun Thing.intProperty(name: String, configure: IntProperty.() -> Unit) {
+    fun intProperty(name: String, configure: IntProperty.() -> Unit) {
         this.properties[name] = IntProperty().apply(configure)
     }
-    fun Thing.booleanProperty(name: String, configure: BooleanProperty.() -> Unit) {
+    fun booleanProperty(name: String, configure: BooleanProperty.() -> Unit) {
         this.properties[name] = BooleanProperty().apply(configure)
     }
-    fun <I : Any, O : Any> Thing.action(name: String, configure: ThingAction<I, O>.() -> Unit) {
+    fun objectProperty(name: String, configure: ObjectProperty.() -> Unit) {
+        this.properties[name] = ObjectProperty().apply(configure)
+    }
+    fun numberProperty(name: String, configure: NumberProperty.() -> Unit) {
+        this.properties[name] = NumberProperty().apply(configure)
+    }
+
+    fun nullProperty(name: String, configure: NullProperty.() -> Unit) {
+        this.properties[name] = NullProperty().apply(configure)
+    }
+
+    fun arrayProperty(name: String, configure: ArrayProperty.() -> Unit) {
+        this.properties[name] = ArrayProperty().apply(configure)
+    }
+
+    fun <I : Any, O : Any> action(name: String, configure: ThingAction<I, O>.() -> Unit) {
         val action = ThingAction<I, O>().apply(configure)
         actions[name] = action
     }
 
-    fun <T, S, C> Thing.event(name: String, configure: ThingEvent<T, S, C>.() -> Unit) {
+    fun <T, S, C> event(name: String, configure: ThingEvent<T, S, C>.() -> Unit) {
         val event = ThingEvent<T, S, C>().apply(configure)
         events[name] = event
     }
-    /*
 
-    fun getPropertiesByObjectType(objectType: String): Map<String, ThingProperty<Any>> {
+    fun getPropertiesByObjectType(objectType: String): Map<String, ThingProperty<*>> {
         return getPropertiesByExpandedObjectType(getExpandedObjectType(objectType))
     }
 
-    private fun getPropertiesByExpandedObjectType(objectType: String): Map<String, ThingProperty<Any>> {
+    private fun getPropertiesByExpandedObjectType(objectType: String): Map<String, ThingProperty<*>> {
         return properties.filter { (_, property) ->
-            getExpandedObjectType(property.objectType?.defaultType) == objectType
+            property.objectType?.defaultType?.let { getExpandedObjectType(it) } == objectType
         }.toMap()
     }
 
-    fun getExpandedObjectType(objectType: String?): String {
+    fun getExpandedObjectType(objectType: String): String {
 
         val parts = objectType.split(":", limit = 2)
         val prefix = if (parts.size == 2) parts[0] else null
@@ -287,7 +378,6 @@ data class Thing (
 
         return objectContext?.getUrl(prefix)?.let { "$it#$suffix" } ?: objectType
     }
-    */
 
     fun toJson() : String?{
         return try {
@@ -296,10 +386,6 @@ data class Thing (
             log.warn("Unable to write json", e)
             null
         }
-    }
-
-    fun getClientFor(forms: MutableList<Form>?, invokeAction: Operation): Pair<ProtocolClient, Form> {
-        TODO("Not yet implemented")
     }
 
     companion object {
@@ -367,7 +453,20 @@ data class VersionInfo(
  * @param configure Lambda expression to configure the Thing properties.
  * @return Configured [Thing] instance.
  */
-fun thing(id: String = "urn:uuid:" + UUID.randomUUID().toString(), configure: Thing.() -> Unit): Thing {
+fun thing(id: String = getRandomThingId(), configure: Thing.() -> Unit): Thing {
     return Thing(id = id).apply(configure)
 }
+
+/**
+ * DSL function to create and configure a [ExposedThing] instance.
+ *
+ * @param id The unique identifier for the Thing. Defaults to a random UUID.
+ * @param configure Lambda expression to configure the Thing properties.
+ * @return Configured [ExposedThing] instance.
+ */
+fun exposedThing(id: String = getRandomThingId(), configure: ExposedThing.() -> Unit): ExposedThing {
+    return ExposedThing(id).apply(configure)
+}
+
+private fun getRandomThingId() = "urn:uuid:" + UUID.randomUUID().toString()
 

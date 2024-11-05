@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing.property
 
 
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
 import ai.ancf.lmos.wot.thing.schema.PropertyAffordance
 import ai.ancf.lmos.wot.thing.schema.ThingProperty
@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -30,7 +31,7 @@ import kotlinx.serialization.Serializable
 sealed class ExposedThingProperty<T>(
     private val property: ThingProperty<T>,
     @JsonIgnore
-    private val thing: Thing = Thing(),
+    private val thing: ExposedThing = ExposedThing(),
     private val state: PropertyState<T> = PropertyState()
 ) : PropertyAffordance<T> by property {
 
@@ -84,9 +85,14 @@ sealed class ExposedThingProperty<T>(
         return result
     }
 
+    override fun toString(): String {
+        return "ExposedThingProperty(property=$property)"
+    }
+
 
     data class PropertyState<T>(
-        private val _flow: MutableStateFlow<T?> = MutableStateFlow(null),
+        private val initialValue: T? = null,  // Add initial value parameter
+        private val _flow: MutableStateFlow<T?> = MutableStateFlow(initialValue),
         val readHandler: ReadHandler<T>? = null,
         val writeHandler: WriteHandler<T>? = null
     ) {
@@ -94,26 +100,23 @@ sealed class ExposedThingProperty<T>(
         // Getter for the current value
         val value: T? get() = _flow.value
 
-        // Emit value to the flow
-        private suspend fun emit(value: T) {
-            _flow.emit(value)
-        }
+        // Public read-only view of the flow
+        val flow: StateFlow<T?> get() = _flow
 
-        // Update the value
-        suspend fun setValue(newValue: T?) {
-            _flow.value = newValue
-            newValue?.let { emit(it) }
+        // Update the value, which automatically emits the new value
+        fun setValue(newValue: T?) {
+            _flow.value = newValue  // This automatically emits the new value
         }
     }
 
 
-    class ExposedStringProperty(property: StringProperty = StringProperty(), thing : Thing = Thing(), state: PropertyState<String> = PropertyState()) : ExposedThingProperty<String>(property, thing, state)
-    class ExposedIntProperty(property: IntProperty = IntProperty(), thing : Thing = Thing(), state: PropertyState<Int> = PropertyState()) : ExposedThingProperty<Int>(property, thing, state)
-    class ExposedBooleanProperty(property: BooleanProperty = BooleanProperty(), thing : Thing = Thing(), state: PropertyState<Boolean> = PropertyState()) : ExposedThingProperty<Boolean>(property, thing, state)
-    class ExposedNumberProperty(property: NumberProperty = NumberProperty(), thing : Thing = Thing(), state: PropertyState<Number> = PropertyState()) : ExposedThingProperty<Number>(property, thing, state)
-    class ExposedNullProperty(property: NullProperty = NullProperty(), thing : Thing = Thing(), state: PropertyState<Any> = PropertyState()) : ExposedThingProperty<Any>(property, thing, state)
-    class ExposedArrayProperty<I>(property: ArrayProperty<I> = ArrayProperty(items = mutableListOf()), thing : Thing = Thing(), state: PropertyState<List<I>> = PropertyState()) : ExposedThingProperty<List<I>>(property, thing, state)
-    class ExposedObjectProperty(property: ObjectProperty = ObjectProperty(), thing : Thing = Thing(), state: PropertyState<Map<Any, Any>> = PropertyState()) : ExposedThingProperty<Map<Any, Any>>(property, thing, state)
+    class ExposedStringProperty(property: StringProperty = StringProperty(), thing : ExposedThing = ExposedThing(), state: PropertyState<String> = PropertyState()) : ExposedThingProperty<String>(property, thing, state)
+    class ExposedIntProperty(property: IntProperty = IntProperty(), thing : ExposedThing = ExposedThing(), state: PropertyState<Int> = PropertyState()) : ExposedThingProperty<Int>(property, thing, state)
+    class ExposedBooleanProperty(property: BooleanProperty = BooleanProperty(), thing : ExposedThing = ExposedThing(), state: PropertyState<Boolean> = PropertyState()) : ExposedThingProperty<Boolean>(property, thing, state)
+    class ExposedNumberProperty(property: NumberProperty = NumberProperty(), thing : ExposedThing = ExposedThing(), state: PropertyState<Number> = PropertyState()) : ExposedThingProperty<Number>(property, thing, state)
+    class ExposedNullProperty(property: NullProperty = NullProperty(), thing : ExposedThing = ExposedThing(), state: PropertyState<Any> = PropertyState()) : ExposedThingProperty<Any>(property, thing, state)
+    class ExposedArrayProperty(property: ArrayProperty = ArrayProperty(), thing : ExposedThing = ExposedThing(), state: PropertyState<List<*>> = PropertyState()) : ExposedThingProperty<List<*>>(property, thing, state)
+    class ExposedObjectProperty(property: ObjectProperty = ObjectProperty(), thing : ExposedThing = ExposedThing(), state: PropertyState<Map<*, *>> = PropertyState()) : ExposedThingProperty<Map<*, *>>(property, thing, state)
 
     companion object {
         private val log: org.slf4j.Logger = org.slf4j.LoggerFactory.getLogger(ExposedThingProperty::class.java)

@@ -56,6 +56,9 @@ open class IntegerSchema(
     override var multipleOf: Int? = null
 ) : BaseNumberSchema<Int>{
 
+    override val classType: Class<Int>
+        get() = Int::class.java
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

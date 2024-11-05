@@ -19,7 +19,7 @@ interface Wot {
      * @param filter
      * @return
      */
-    suspend fun discover(filter: ThingFilter): Flow<Thing>
+    suspend fun discover(filter: ThingFilter): Flow<ExposedThing>
 
     /**
      * Starts the discovery process that will provide all available Things.
@@ -27,7 +27,7 @@ interface Wot {
      * @return
      */
 
-    suspend fun discover(): Flow<Thing>
+    suspend fun discover(): Flow<ExposedThing>
 
     /**
      * Accepts a `thing` argument of type [Thing] and returns an [ ] object.<br></br> The result can be used to start exposing interfaces for thing
@@ -48,7 +48,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun fetch(url: URI): Thing
+    suspend fun fetch(url: URI): ExposedThing
 
     /**
      * Accepts an [String] containing an url (e.g. "file:..." or "http://...") to a resource
@@ -57,7 +57,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun fetch(url: String): Thing
+    suspend fun fetch(url: String): ExposedThing
 
 }
 
@@ -65,7 +65,10 @@ interface Wot {
 open class WotException : RuntimeException {
     constructor(message: String?) : super(message)
     constructor(cause: Throwable?) : super(cause)
-    constructor(message: String, cause: Exception): super(message, cause)
+    constructor(message: String, cause: Throwable): super(message, cause)
 
     constructor() : super()
 }
+
+@DslMarker
+annotation class WoTDSL

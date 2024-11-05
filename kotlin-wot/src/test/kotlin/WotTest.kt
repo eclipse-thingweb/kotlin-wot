@@ -31,7 +31,7 @@ class WotTest {
     fun `test discover with filter`() = runTest {
         // Given
         val filter = ThingFilter(method = DiscoveryMethod.ANY)
-        val thing = mockk<Thing>()
+        val thing = mockk<ExposedThing>()
         coEvery { servient.discover(filter) } returns flowOf(thing)
 
         // When
@@ -47,7 +47,7 @@ class WotTest {
     fun `test discover without filter`() = runTest {
         // Given
         val filter = ThingFilter(method = DiscoveryMethod.ANY)
-        val thing = mockk<Thing>()
+        val thing = mockk<ExposedThing>()
         coEvery { servient.discover(filter) } returns flowOf(thing)
 
         // When
@@ -63,7 +63,7 @@ class WotTest {
     fun `test fetch with URI`() = runTest {
         // Given
         val url = URI("http://example.com")
-        val thing = mockk<Thing>()
+        val thing = mockk<ExposedThing>()
         coEvery { servient.fetch(url) } returns thing
 
         // When
@@ -78,7 +78,7 @@ class WotTest {
     fun `test fetch with String URL`() = runTest {
         // Given
         val urlString = "http://example.com"
-        val thing = mockk<Thing>()
+        val thing = mockk<ExposedThing>()
         coEvery { servient.fetch(urlString) } returns thing
 
         // When
