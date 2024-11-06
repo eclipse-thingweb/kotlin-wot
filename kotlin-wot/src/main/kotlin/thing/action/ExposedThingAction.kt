@@ -30,9 +30,9 @@ data class ExposedThingAction<I, O>(
      * @return
      */
     suspend fun invokeAction(
-        input: I?,
+        input: Any?,
         options: Map<String, Map<String, Any>>? = mapOf()
-    ): O? {
+    ): Any? {
         log.debug("'{}' has Action state of '{}': {}", thing.id, title, state)
         return if (state.handler != null) {
             log.debug(
@@ -41,7 +41,7 @@ data class ExposedThingAction<I, O>(
             )
             try {
                 // Use the handler as a suspending function directly
-                state.handler.handle(input, options).also { output ->
+                state.handler.handle(input as I, options).also { output ->
                     if (output == null) {
                         log.warn(
                             "'{}': Called registered handler for Action '{}' returned null. This can cause problems.",

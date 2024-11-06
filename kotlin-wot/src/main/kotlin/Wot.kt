@@ -59,6 +59,13 @@ interface Wot {
      */
     suspend fun fetch(url: String): ExposedThing
 
+    companion object {
+        // Factory method to create an instance of WoT with a given Servient
+        fun create(servient: Servient): Wot {
+            return DefaultWot(servient)
+        }
+    }
+
 }
 
 

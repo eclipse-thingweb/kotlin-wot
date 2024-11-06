@@ -5,9 +5,12 @@ import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.action.ExposedThingAction
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
+import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
+import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -17,6 +20,7 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
@@ -212,7 +216,15 @@ fun Application.setupRouting(servient: Servient) {
                                 val value = property.read()
                                 //contentType = getOrDefaultRequestContentType(call.request)
                                 //val content = ContentManager.valueToContent(value, contentType.toString())
-                                call.respond(value, typeInfo<Any>())
+                                 when (property) {
+                                     is ExposedStringProperty -> call.respond(property.read(), typeInfo<String>())
+                                     is ExposedIntProperty -> call.respond(property.read(), typeInfo<Int>())
+                                     is ExposedBooleanProperty -> call.respond(property.read(), typeInfo<Boolean>())
+                                     is ExposedNumberProperty -> call.respond(property.read(), typeInfo<Double>())
+                                     is ExposedObjectProperty -> call.respond(property.read(), typeInfo<Map<*,*>>())
+                                     is ExposedNullProperty -> call.respond(property.read(), typeInfo<Any>())
+                                     is ExposedArrayProperty -> call.respond(property.read(), typeInfo<List<*>>())
+                                 }
                             }
                              catch (e: ContentCodecException) {
                                  call.response.status(HttpStatusCode.InternalServerError)
@@ -235,8 +247,16 @@ fun Application.setupRouting(servient: Servient) {
                         if (!property.readOnly) {
                             //val contentType = getOrDefaultRequestContentType(call.request)
                             //val content = Content(contentType.toString(), call.receiveChannel().toByteArray())
-                            //val newValue = property.write(call.receive())
-                            //call.respond(newValue, typeInfo<Any>())
+
+                            when (property) {
+                                is ExposedStringProperty -> call.respond(property.write(call.receive<String>()), typeInfo<String>())
+                                is ExposedIntProperty -> call.respond(property.write(call.receive<Int>()), typeInfo<Int>())
+                                is ExposedBooleanProperty -> call.respond(property.write(call.receive<Boolean>()), typeInfo<Boolean>())
+                                is ExposedNumberProperty -> call.respond(property.write(call.receive<Double>()), typeInfo<Double>())
+                                is ExposedObjectProperty -> call.respond(property.write(call.receive<Map<*,*>>()), typeInfo<Map<*,*>>())
+                                is ExposedNullProperty -> call.respond(property.write(call.receive<Any>()), typeInfo<Any>())
+                                is ExposedArrayProperty -> call.respond(property.write(call.receive<List<*>>()), typeInfo<List<*>>())
+                            }
                         } else {
                             call.response.status(HttpStatusCode.BadRequest)
                         }
@@ -256,7 +276,7 @@ fun Application.setupRouting(servient: Servient) {
 
                     if(action.input != null){
                         val input = ContentManager.contentToValue(content, action.input!!)
-                        val newValue = action.invokeAction(null, null)
+                        val newValue = action.invokeAction(input, null)
                         call.respond(newValue, typeInfo<Any>())
                     }else{
                         val newValue = action.invokeAction(null, null)

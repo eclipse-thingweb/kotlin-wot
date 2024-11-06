@@ -23,22 +23,14 @@ import java.util.concurrent.CompletionException
 
 /**
  * The Servient hosts, exposes and consumes things based on provided protocol bindings.
- * https://w3c.github.io/wot-architecture/#sec-servient-implementation<br></br> It reads the servers
- * contained in the configuration parameter "wot.servient.servers", starts them and thus exposes
- * Things via the protocols supported by the servers. "wot.servient.servers" should contain an array
- * of strings of fully qualified class names implementing [ProtocolServer].<br></br> It also reads
- * the clients contained in the configuration parameter "wot.servient.client-factories" and is then
- * able to consume Things via the protocols supported by the clients.
- * "wot.servient.client-factories" should contain an array of strings of fully qualified class names
- * implementing [ProtocolClientFactory].<br></br> The optional configuration parameter
- * "wot.servient.credentials" can contain credentials (e.g. username and password) for the different
- * things.  The parameter should contain a map that uses the thing ids as key.
+ * https://w3c.github.io/wot-architecture/#sec-servient-implementation
  */
 class Servient(
     private val servers: List<ProtocolServer> = emptyList(),
-    private val clientFactories: Map<String, ProtocolClientFactory> = emptyMap(),
+    clientFactories: List<ProtocolClientFactory> = emptyList(),
     val things: MutableMap<String, ExposedThing> = mutableMapOf()
 ) {
+    private val clientFactories: Map<String, ProtocolClientFactory> = clientFactories.associateBy { it.scheme }
 
     override fun toString(): String {
         return "Servient [servers=" + servers + " clientFactories=" + clientFactories.values + "]"
@@ -161,7 +153,6 @@ class Servient(
      * @param url
      * @return
      */
-    @Throws(URISyntaxException::class)
     suspend fun fetch(url: String): ExposedThing {
         return fetch(URI(url))
     }

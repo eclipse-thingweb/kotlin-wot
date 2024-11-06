@@ -22,7 +22,7 @@ class ServientTest {
     }
     private val servient = Servient(
         servers = listOf(mockServer1, mockServer2),
-        clientFactories = mapOf("http" to factoryMock),
+        clientFactories = listOf(factoryMock),
         things = mutableMapOf("testThing" to mockThing)
     )
 

@@ -11,5 +11,5 @@ plugins {
 
 rootProject.name = "kotlin-wot"
 include("kotlin-wot")
-//include("kotlin-wot-spring-starter")
 include("kotlin-wot-binding-http")
+include("kotlin-wot-integration-tests")

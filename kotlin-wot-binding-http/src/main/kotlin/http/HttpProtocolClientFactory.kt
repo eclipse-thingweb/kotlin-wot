@@ -15,10 +15,10 @@ open class HttpProtocolClientFactory : ProtocolClientFactory {
         get() = HttpProtocolClient()
 
     override suspend fun init() {
-        TODO("Not yet implemented")
+       // TODO
     }
 
     override suspend fun destroy() {
-        TODO("Not yet implemented")
+        // TODO
     }
 }

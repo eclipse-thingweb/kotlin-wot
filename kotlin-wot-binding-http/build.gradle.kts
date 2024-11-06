@@ -18,5 +18,5 @@ dependencies {
     implementation("io.ktor:ktor-server-auto-head-response")
     //implementation("io.insert-koin:koin-ktor:4.0.0")
     testImplementation("io.ktor:ktor-server-test-host")
-    testImplementation("org.slf4j:slf4j-simple:2.0.16")
+    testImplementation("ch.qos.logback:logback-classic:1.5.12")
 }

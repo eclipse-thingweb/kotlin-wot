@@ -152,7 +152,6 @@ object ContentManager {
      * @return
      * @throws ContentCodecException
      */
-    @Throws(ContentCodecException::class)
     fun valueToContent(value: Any?): Content {
         return valueToContent(value, null)
     }

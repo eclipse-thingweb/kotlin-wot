@@ -13,7 +13,6 @@ subprojects {
     version = "1.0-SNAPSHOT"
 
     dependencies {
-
         testImplementation(kotlin("test"))
         testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test")
         testImplementation("io.mockk:mockk:1.13.13")

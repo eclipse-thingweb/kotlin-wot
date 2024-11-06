@@ -40,16 +40,14 @@ class HttpProtocolServerTest {
     private val servient: Servient = mockk()
     private val mockServer: EmbeddedServer<*, *> = mockk()
     private val exposedThing: ExposedThing = exposedThing("test") {
-            intProperty(PROPERTY_NAME, PropertyState(initialValue = 0, readHandler = { 2 })){
+            intProperty(PROPERTY_NAME, PropertyState(initialValue = 0, readHandler = { 2 }, writeHandler = { input -> input })){
                 title = "title"
-                readOnly = true
             }
-            action<String, String>(ACTION_NAME, state = ActionState(handler = ActionHandler { input, _ ->
-                // Your action logic here
-                println("Input: $input")
-                return@ActionHandler input?.let { "Output: $it" }
+            action<String, String>(ACTION_NAME, state = ActionState(handler = { input, _ ->
+                input
             }))
             {
+                title = ACTION_NAME
                 input = stringSchema {
                     title = "Action Input"
                     minLength = 10
@@ -149,11 +147,12 @@ class HttpProtocolServerTest {
         // Perform GET request on "/"
         val response = client.get("/")
 
-        val things : List<ExposedThing> = response.body()
+        assertEquals(HttpStatusCode.OK, response.status)
 
+        val things : List<ExposedThing> = response.body()
         assertEquals(1, things.size)
 
-        assertEquals(HttpStatusCode.OK, response.status)
+
     }
 
     @Test
@@ -204,11 +203,8 @@ class HttpProtocolServerTest {
             contentType(ContentType.Application.Json)
         }
 
-        val propertyValue : String = response.body()
-
-        println(propertyValue)
-
         assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(2, response.body<Int>())
 
     }
 
@@ -225,10 +221,11 @@ class HttpProtocolServerTest {
         // Perform PUT request on property endpoint
         val response = client.put("/test/properties/$propertyName") {
             contentType(ContentType.Application.Json)
-            setBody("""{ "value": "newValue" }""") // JSON payload to update the property
+            setBody(2) // JSON payload to update the property
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(2, response.body<Int>())
 
     }
 
@@ -255,10 +252,12 @@ class HttpProtocolServerTest {
         // Perform POST request on action endpoint
         val response = client.post("/test/actions/action1") {
             contentType(ContentType.Application.Json)
-            setBody("""{ "input": "someValue" }""") // JSON payload for action input
+            setBody(""""input"""") // JSON payload for action input"
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
+
+        assertEquals("input", response.body<String>())
     }
 
     @Test
