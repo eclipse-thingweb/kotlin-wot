@@ -84,6 +84,8 @@ class ThingTest {
             }
         }
 
+        assertEquals("Test Thing", thing.title)
+
     }
 
     @Test

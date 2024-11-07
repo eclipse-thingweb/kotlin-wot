@@ -1,7 +1,8 @@
 package ai.ancf.lmos.wot.thing.filter
 
 import ai.ancf.lmos.wot.ServientException
-import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
+import ai.ancf.lmos.wot.thing.schema.ExposedThing
 
 /**
  * Is used in the discovery process and filters the things according to certain properties
@@ -16,7 +17,7 @@ interface ThingQuery {
      * @return
      */
     @Throws(ThingQueryException::class)
-    fun filter(things: Collection<ExposedThing>): List<ExposedThing>
+    fun filter(things: Collection<ExposedThing>): List<ExposedThingImpl>
 }
 
 /**

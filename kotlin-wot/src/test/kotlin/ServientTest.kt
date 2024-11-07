@@ -1,12 +1,21 @@
 package ai.ancf.lmos.wot
 
-import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.content.Content
+import ai.ancf.lmos.wot.content.ContentCodecException
+import ai.ancf.lmos.wot.content.ContentManager
+import ai.ancf.lmos.wot.thing.Context
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
+import ai.ancf.lmos.wot.thing.Type
+import ai.ancf.lmos.wot.thing.schema.ObjectSchema
+import ai.anfc.lmos.wot.binding.ProtocolClient
+import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import ai.anfc.lmos.wot.binding.ProtocolServer
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.assertThrows
+import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -16,10 +25,18 @@ class ServientTest {
 
     private val mockServer1 = mockk<ProtocolServer>(relaxed = true)
     private val mockServer2 = mockk<ProtocolServer>(relaxed = true)
-    private val factoryMock = mockk<ProtocolClientFactory>(relaxed = true)
-    private val mockThing = mockk<ExposedThing>(relaxed = true) {
+    private val mockClient = mockk<ProtocolClient>()
+    private val factoryMock = mockk<ProtocolClientFactory>{
+        every { scheme } returns "http"
+        every { client } returns mockClient
+        coEvery { init() } just Runs
+        coEvery { destroy() } just Runs
+    }
+    private val mockThing = mockk<ExposedThingImpl>() {
         every { id } returns "testThing"
     }
+    private val mockContent = mockk<Content>()
+
     private val servient = Servient(
         servers = listOf(mockServer1, mockServer2),
         clientFactories = listOf(factoryMock),
@@ -91,7 +108,7 @@ class ServientTest {
     @Test
     fun `addThing - should return true if thing is added successfully`() {
         // Arrange
-        val newThing = mockk<ExposedThing> {
+        val newThing = mockk<ExposedThingImpl> {
             every { id } returns "newThing"
         }
 
@@ -110,5 +127,86 @@ class ServientTest {
 
         // Assert
         assertEquals(false, result)
+    }
+
+    @Test
+    fun `fetch should return Thing when successful`() = runTest {
+        // Arrange
+        val url = URI("http://example.com")
+        val thingAsMap = mapOf(
+            "id" to "Foo",
+            "description" to "Bar",
+            "@type" to "Thing",
+            "@context" to listOf("http://www.w3.org/ns/td")
+        )
+
+        // Mock readResource to return mockContent
+        coEvery { mockClient.readResource(any()) } returns mockContent
+
+        // Mock ContentManager to return a map from content
+        mockkObject(ContentManager)
+        every { ContentManager.contentToValue(mockContent, ObjectSchema()) } returns thingAsMap
+
+        // Act
+        val fetchedThing = servient.fetch(url)
+
+        // Assert
+        assertEquals("Foo", fetchedThing.id)
+        assertEquals(Type("Thing"), fetchedThing.objectType)
+        assertEquals(Context("http://www.w3.org/ns/td"), fetchedThing.objectContext)
+    }
+
+    @Test
+    fun `fetch should throw ServientException when ProtocolClientException occurs`() = runTest {
+        // Arrange
+        val url = URI("http://example.com")
+        val scheme = url.scheme
+
+        coEvery { mockClient.readResource(any()) } throws ProtocolClientException("Client error")
+
+        // Act & Assert
+        val exception = assertThrows<ServientException> {
+            runBlocking { servient.fetch(url) }
+        }
+        assertEquals("Unable to create client: Client error", exception.message)
+        verify { servient.getClientFor(scheme) }
+        coVerify { mockClient.readResource(any()) }
+    }
+
+    @Test
+    fun `fetch should throw ServientException when ContentCodecException occurs`() = runTest {
+        // Arrange
+        val url = URI("http://example.com")
+        coEvery { mockClient.readResource(any()) } returns mockContent
+
+        mockkObject(ContentManager)
+        every { ContentManager.contentToValue(mockContent, ObjectSchema()) } throws ContentCodecException("Codec error")
+
+        // Act & Assert
+        val exception = assertThrows<ServientException> {
+            runBlocking { servient.fetch(url) }
+        }
+        assertEquals("Error while fetching TD: Codec error", exception.message)
+        coVerify { mockClient.readResource(any()) }
+        verify { ContentManager.contentToValue(mockContent, ObjectSchema()) }
+    }
+
+    @Test
+    fun `test fetchDirectory success`() = runBlocking {
+        // Arrange
+        val expectedThings = listOf(ExposedThingImpl(id = "test"))
+
+        // Mocking ProtocolClient's readResource method
+        coEvery { mockClient.readResource(any()) } returns mockContent
+
+        // Mocking ContentManager to simulate content to value conversion
+        mockkObject(ContentManager)
+        every { ContentManager.contentToValue(mockContent, ArraySchema<Map<*,*>>()) } returns expectedThings
+
+        // Act
+        val result = servient.fetchDirectory("http://example.com")
+
+        // Assert
+        assertEquals(1, result.size)
     }
 }

@@ -1,8 +1,10 @@
 package ai.ancf.lmos.wot
 
-import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ConsumedThingImpl
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
+import ai.ancf.lmos.wot.thing.schema.ConsumedThing
+import ai.ancf.lmos.wot.thing.schema.ExposedThing
 import kotlinx.coroutines.flow.Flow
 import java.net.URI
 
@@ -35,11 +37,20 @@ interface Wot {
      *
      * @param thing
      * @return
-     * @throws WotException If thing with same id is already exposed
      */
     fun produce(thing: Thing): ExposedThing
 
     fun produce(configure: Thing.() -> Unit): ExposedThing
+
+    /**
+     * Accepts a `thing` argument of type [Thing] and returns a [ConsumedThingImpl] object.<br></br>
+     *
+     * The result can be used to interact with a thing.
+     *
+     * @param thing
+     * @return
+     */
+    fun consume(thing: Thing): ConsumedThing
 
     /**
      * Accepts an [java.net.URL] (e.g. "file:..." or "http://...") to a resource that serves a
@@ -48,7 +59,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun fetch(url: URI): ExposedThing
+    suspend fun requestThingDescription(url: URI): Thing
 
     /**
      * Accepts an [String] containing an url (e.g. "file:..." or "http://...") to a resource
@@ -57,7 +68,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun fetch(url: String): ExposedThing
+    suspend fun requestThingDescription(url: String): Thing
 
     companion object {
         // Factory method to create an instance of WoT with a given Servient

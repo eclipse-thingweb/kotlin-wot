@@ -2,7 +2,7 @@ package ai.ancf.lmos.wot.thing.property
 
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ConsumedThing
+import ai.ancf.lmos.wot.thing.ConsumedThingImpl
 import ai.ancf.lmos.wot.thing.action.ConsumedThingException
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
@@ -12,20 +12,20 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import org.slf4j.LoggerFactory
 
 /**
- * Used in combination with [ConsumedThing] and allows consuming of a [ThingProperty].
+ * Used in combination with [ConsumedThingImpl] and allows consuming of a [ThingProperty].
  */
 data class ConsumedThingProperty<T>(
-   private val property: ThingProperty<T>,
-   @JsonIgnore
-   private val thing: ConsumedThing,
-   private val state: ExposedThingProperty.PropertyState<T> = ExposedThingProperty.PropertyState()
+    private val property: ThingProperty<T>,
+    @JsonIgnore
+   private val thing: ConsumedThingImpl,
+    private val state: ExposedThingProperty.PropertyState<T> = ExposedThingProperty.PropertyState()
 ) : PropertyAffordance<T> by property {
 
-    private fun normalizeHrefs(forms: List<Form>, thing: ConsumedThing): List<Form> {
+    private fun normalizeHrefs(forms: List<Form>, thing: ConsumedThingImpl): List<Form> {
         return forms.map { form -> normalizeHref(form, thing) }
     }
 
-    private fun normalizeHref(form: Form, thing: ConsumedThing): Form {
+    private fun normalizeHref(form: Form, thing: ConsumedThingImpl): Form {
         val base: String? = thing.base
         return if (!base.isNullOrEmpty() && !form.href.matches("^(?i:[a-z+]+:).*".toRegex())) {
             val normalizedHref = base + form.href

@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing.event
 
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.ConsumedThing
+import ai.ancf.lmos.wot.thing.ConsumedThingImpl
 import ai.ancf.lmos.wot.thing.action.ConsumedThingEvent
 import ai.ancf.lmos.wot.thing.action.ConsumedThingException
 import ai.ancf.lmos.wot.thing.form.Form
@@ -21,7 +21,7 @@ import kotlin.test.assertFailsWith
 
 class ConsumedThingEventTest {
     private lateinit var event: ThingEvent<String, String, String>
-    private lateinit var thing: ConsumedThing
+    private lateinit var thing: ConsumedThingImpl
     private lateinit var client: ProtocolClient
     private lateinit var form: Form
     private lateinit var consumedThingEvent: ConsumedThingEvent<String, String, String>

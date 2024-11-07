@@ -3,7 +3,8 @@ package ai.ancf.lmos.wot.thing.schema
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.Context
 import ai.ancf.lmos.wot.thing.Link
-import ai.ancf.lmos.wot.thing.VersionInfo
+import ai.ancf.lmos.wot.thing.action.ThingAction
+import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -11,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 /**
  * Interface representing a Thing Description (TD) in a Web of Things context.
  */
-interface ThingDescription<P : PropertyAffordance<*>, A : ActionAffordance<*, *>, E : EventAffordance<*, *, *>> : BaseSchema {
+interface ThingDescription : BaseSchema {
 
     /**
      * JSON-LD keyword to define short-hand names called terms that are used throughout a TD document.
@@ -75,7 +76,7 @@ interface ThingDescription<P : PropertyAffordance<*>, A : ActionAffordance<*, *>
      * @return a map of property affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var properties: MutableMap<String, P> // Optional: Map of PropertyAffordance
+    var properties: MutableMap<String, ThingProperty<*>> // Optional: Map of PropertyAffordance
 
     /**
      * All Action-based Interaction Affordances of the Thing.
@@ -83,7 +84,7 @@ interface ThingDescription<P : PropertyAffordance<*>, A : ActionAffordance<*, *>
      * @return a map of action affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var actions: MutableMap<String, A> // Optional: Map of ActionAffordance
+    var actions: MutableMap<String, ThingAction<*, *>> // Optional: Map of ActionAffordance
 
     /**
      * All Event-based Interaction Affordances of the Thing.
@@ -91,7 +92,7 @@ interface ThingDescription<P : PropertyAffordance<*>, A : ActionAffordance<*, *>
      * @return a map of event affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var events: MutableMap<String, E> // Optional: Map of EventAffordance
+    var events: MutableMap<String, ThingEvent<*, *, *>> // Optional: Map of EventAffordance
 
     /**
      * Provides Web links to arbitrary resources that relate to the specified Thing Description.
@@ -149,3 +150,141 @@ interface ThingDescription<P : PropertyAffordance<*>, A : ActionAffordance<*, *>
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
     var uriVariables: MutableMap<String, DataSchema<Any>>? // Optional: Map of DataSchema
 }
+
+/**
+ * An interface representing an interaction affordance for a thing.
+ * This interface defines properties and methods that provide metadata about the interaction affordance.
+ */
+interface InteractionAffordance : BaseSchema {
+
+    /**
+     * Set of form hypermedia controls that describe how an operation can be performed.
+     * Forms are serializations of Protocol Bindings. The array cannot be empty.
+     *
+     * Mandatory.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
+    var forms: MutableList<Form>
+
+    /**
+     * Define URI template variables according to [RFC6570] as a collection based
+     * on DataSchema declarations. The individual variable DataSchemas cannot be an
+     * ObjectSchema or an ArraySchema since each variable needs to be serialized to a
+     * string inside the href upon the execution of the operation. If the same variable
+     * is both declared in Thing level uriVariables and in Interaction Affordance level,
+     * the Interaction Affordance level variable takes precedence.
+     *
+     * Optional.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
+    var uriVariables: MutableMap<String, DataSchema<Any>>?
+}
+
+/**
+ * Interface representing the details of an Action in a Web of Things context.
+ */
+interface ActionAffordance<I, O> : InteractionAffordance {
+
+    /**
+     * Used to define the input data schema of the Action.
+     *
+     * @return an optional data schema for input.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var input: DataSchema<I>? // Optional: DataSchema
+
+    /**
+     * Used to define the output data schema of the Action.
+     *
+     * @return an optional data schema for output.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var output: DataSchema<O>? // Optional: DataSchema
+
+    /**
+     * Signals if the Action is safe (true) or not.
+     *
+     * Used to indicate if no internal state (cf. resource state) is changed when invoking an Action.
+     * In that case, responses can be cached, for example.
+     *
+     * @return true if the Action is safe; false otherwise.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    var safe: Boolean // Default: true
+
+    /**
+     * Indicates whether the Action is idempotent (true) or not.
+     *
+     * Informs whether the Action can be called repeatedly with the same result, based on the same input.
+     *
+     * @return true if the Action is idempotent; false otherwise.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    var idempotent: Boolean // Default: true
+
+    /**
+     * Indicates whether the action is synchronous (true) or not.
+     *
+     * A synchronous action means that the response of the action contains all the information about the result
+     * of the action, and no further querying about the status of the action is needed.
+     * Lack of this keyword means that no claim on the synchronicity of the action can be made.
+     *
+     * @return true if the Action is synchronous; false otherwise.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var synchronous: Boolean? // Optional: boolean
+}
+
+/**
+ * Interface representing the details of an Event in a Web of Things context.
+ */
+interface EventAffordance<T, S, C> : InteractionAffordance {
+
+    /**
+     * Defines data that needs to be passed upon subscription, e.g., filters or message format for setting up Webhooks.
+     *
+     * @return an optional data schema for subscription.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var subscription: DataSchema<S>? // Optional: DataSchema
+
+    /**
+     * Defines the data schema of the Event instance messages pushed by the Thing.
+     *
+     * @return an optional data schema for event messages.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var data: DataSchema<T>? // Optional: DataSchema
+
+    /**
+     * Defines any data that needs to be passed to cancel a subscription, e.g., a specific message to remove a Webhook.
+     *
+     * @return an optional data schema for cancellation.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var cancellation: DataSchema<C>? // Optional: DataSchema
+}
+
+interface PropertyAffordance<T> : InteractionAffordance, DataSchema<T> {
+
+    /**
+     * A hint that indicates whether Servients hosting the Thing and Intermediaries should provide a Protocol Binding that supports the observeproperty and unobserveproperty operations for this Property.
+     *
+     * Optional.
+     */
+    @get:JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    var observable: Boolean
+}
+
+
+
+/**
+ * Data class representing version information of a Thing Description (TD) and its underlying Thing Model (TM).
+ *
+ * @property instance Provides a version indicator of this TD. This field is mandatory.
+ * @property model Provides a version indicator of the underlying TM. This field is optional.
+ */
+data class VersionInfo(
+    val instance: String, // Mandatory: string
+    val model: String? = null // Optional: string
+)

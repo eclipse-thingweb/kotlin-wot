@@ -5,16 +5,18 @@ import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ConsumedThing
+import ai.ancf.lmos.wot.thing.ConsumedThingImpl
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.ActionAffordance
+import ai.ancf.lmos.wot.thing.schema.ConsumedThing
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import com.fasterxml.jackson.annotation.JsonIgnore
 import kotlinx.serialization.Transient
 import org.slf4j.LoggerFactory
 
 /**
- * Used in combination with [ConsumedThing] and allows consuming of a [ThingAction].
+ * Used in combination with [ConsumedThingImpl] and allows consuming of a [ThingAction].
  */
 data class ConsumedThingAction<I, O>(
     private val action: ThingAction<I, O>,
@@ -23,11 +25,13 @@ data class ConsumedThingAction<I, O>(
     @Transient private val state: ExposedThingAction.ActionState<I, O> = ExposedThingAction.ActionState()
 ) : ActionAffordance<I, O> by action {
 
-
     /**
-     * Invokes this action without parameters.
+     * Invokes the method and executes the handler defined in [ExposedThingAction.ActionState]. `input`
+     * contains the request payload. `options` can contain additional data (for example,
+     * the query parameters when using COAP/HTTP).
      *
-     *
+     * @param input
+     * @param options
      * @return
      */
     suspend fun invoke(): O? {
@@ -57,7 +61,7 @@ data class ConsumedThingAction<I, O>(
             if (parameters.isNotEmpty()) {
                 input = ContentManager.valueToContent(parameters, form.contentType)
             }
-            form = ConsumedThing.handleUriVariables(form, parameters)
+            form = ConsumedThingImpl.handleUriVariables(form, parameters)
             val result = client.invokeResource(form, input)
             return try {
                 if (output != null){

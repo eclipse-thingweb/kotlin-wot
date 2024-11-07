@@ -2,11 +2,13 @@ package ai.ancf.lmos.wot
 
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.ArraySchema
+import ai.ancf.lmos.wot.thing.schema.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.ObjectSchema
 import ai.anfc.lmos.wot.binding.*
 import kotlinx.coroutines.async
@@ -18,8 +20,6 @@ import kotlinx.coroutines.flow.flow
 import org.slf4j.LoggerFactory
 import java.net.*
 import java.util.*
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionException
 
 /**
  * The Servient hosts, exposes and consumes things based on provided protocol bindings.
@@ -153,7 +153,7 @@ class Servient(
      * @param url
      * @return
      */
-    suspend fun fetch(url: String): ExposedThing {
+    suspend fun fetch(url: String): Thing {
         return fetch(URI(url))
     }
 
@@ -164,7 +164,7 @@ class Servient(
      * @param url
      * @return
      */
-    suspend fun fetch(url: URI): ExposedThing {
+     suspend fun fetch(url: URI): Thing {
         log.debug("Fetch thing from url '{}'", url)
         val scheme = url.scheme
         try {
@@ -174,15 +174,15 @@ class Servient(
                 val content = client.readResource(form)
                 try {
                     val map = ContentManager.contentToValue(content, ObjectSchema())
-                    return ExposedThing.fromMap(map)
+                    return Thing.fromMap(map)
                 } catch (e: ContentCodecException) {
-                    throw CompletionException(ServientException("Error while fetching TD: $e"))
+                    throw ServientException("Error while fetching TD: ${e.message}", e)
                 }
             } else {
                 throw ServientException("Unable to fetch '$url'. Missing ClientFactory for scheme '$scheme'")
             }
         } catch (e: ProtocolClientException) {
-            throw ServientException("Unable to create client: " + e.message)
+            throw ServientException("Unable to create client: ${e.message}", e)
         }
     }
 
@@ -200,7 +200,7 @@ class Servient(
      * @return
      * @throws URISyntaxException
      */
-    suspend fun fetchDirectory(url: String):Map<String, ExposedThing> {
+    suspend fun fetchDirectory(url: String):Map<String, Thing> {
         return fetchDirectory(URI(url))
     }
 
@@ -211,7 +211,7 @@ class Servient(
      * @param url
      * @return
      */
-    private suspend fun fetchDirectory(url: URI): Map<String, ExposedThing> {
+    suspend fun fetchDirectory(url: URI): Map<String, Thing> {
         log.debug("Fetch thing directory from url '{}'", url)
         val scheme = url.scheme
         try {
@@ -220,14 +220,14 @@ class Servient(
                 val form = Form(url.toString())
                 val content = client.readResource(form)
                 try {
-                    val value = ContentManager.contentToValue(content, ObjectSchema())
-                    val directoryThings: MutableMap<String, ExposedThing> = mutableMapOf()
-                    /*
-                    for ((id) in value) {
-                        val thing: Thing = Thing.fromMap(value)
-                        directoryThings[id] = thing
+                    val things = ContentManager.contentToValue(content, ArraySchema<Map<*,*>>())
+                    val directoryThings: MutableMap<String, Thing> = mutableMapOf()
+
+                    for (thingMap in things) {
+                        val thing = thingMap as Thing
+                        directoryThings[thing.id] = thing
                     }
-                    */
+
                     return directoryThings
                 } catch (e2: ContentCodecException) {
                     throw ServientException("Error while fetching TD directory: $e2")
@@ -240,7 +240,6 @@ class Servient(
         }
     }
 
-    @Throws(ProtocolClientException::class)
     fun getClientFor(scheme: String): ProtocolClient? {
         val factory = clientFactories[scheme]
         return if (factory != null) {
@@ -262,8 +261,8 @@ class Servient(
 
     fun register(
         directory: String,
-        thing: ExposedThing
-    ): CompletableFuture<Void> {
+        thing: ExposedThingImpl
+    ) {
         return register(URI(directory), thing)
     }
 
@@ -274,9 +273,9 @@ class Servient(
      * @param thing
      * @return
      */
-    private fun register(directory: URI, thing: ExposedThing): CompletableFuture<Void> {
+    private fun register(directory: URI, thing: ExposedThingImpl) {
         // FIXME: implement
-        return CompletableFuture.failedFuture(ServientException("not implemented"))
+        throw ServientException("not implemented")
     }
 
     /**
@@ -290,8 +289,8 @@ class Servient(
 
     fun unregister(
         directory: String,
-        thing: ExposedThing
-    ): CompletableFuture<Void> {
+        thing: ExposedThingImpl
+    ) {
         return unregister(URI(directory), thing)
     }
 
@@ -302,9 +301,8 @@ class Servient(
      * @param thing
      * @return
      */
-    private fun unregister(directory: URI, thing: ExposedThing): CompletableFuture<Void> {
-        // FIXME: implement
-        return CompletableFuture.failedFuture(ServientException("not implemented"))
+    private fun unregister(directory: URI, thing: ExposedThingImpl) {
+        throw ServientException("not implemented")
     }
 
     /**
@@ -367,8 +365,9 @@ class Servient(
 
     private suspend fun discoverDirectory(
         filter: ThingFilter
-    ): Flow<ExposedThing> = flow {
-        val discoveredThings = filter.url?.let { fetchDirectory(it) }
+    ): Flow<ExposedThingImpl> = flow {
+        //val discoveredThings = filter.url?.let { fetchDirectory(it) } TODO
+        val discoveredThings : Map<String, ExposedThingImpl>? = null
         val thingsList = discoveredThings?.values?.toList() ?: emptyList()
 
         // Apply the filter query if available

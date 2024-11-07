@@ -1,6 +1,6 @@
 package ai.ancf.lmos.wot
 
-import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
@@ -31,7 +31,7 @@ class WotTest {
     fun `test discover with filter`() = runTest {
         // Given
         val filter = ThingFilter(method = DiscoveryMethod.ANY)
-        val thing = mockk<ExposedThing>()
+        val thing = mockk<ExposedThingImpl>()
         coEvery { servient.discover(filter) } returns flowOf(thing)
 
         // When
@@ -47,7 +47,7 @@ class WotTest {
     fun `test discover without filter`() = runTest {
         // Given
         val filter = ThingFilter(method = DiscoveryMethod.ANY)
-        val thing = mockk<ExposedThing>()
+        val thing = mockk<ExposedThingImpl>()
         coEvery { servient.discover(filter) } returns flowOf(thing)
 
         // When
@@ -63,11 +63,11 @@ class WotTest {
     fun `test fetch with URI`() = runTest {
         // Given
         val url = URI("http://example.com")
-        val thing = mockk<ExposedThing>()
+        val thing = mockk<Thing>()
         coEvery { servient.fetch(url) } returns thing
 
         // When
-        val result = defaultWot.fetch(url)
+        val result = defaultWot.requestThingDescription(url)
 
         // Then
         assertEquals(thing, result)
@@ -78,11 +78,11 @@ class WotTest {
     fun `test fetch with String URL`() = runTest {
         // Given
         val urlString = "http://example.com"
-        val thing = mockk<ExposedThing>()
+        val thing = mockk<Thing>()
         coEvery { servient.fetch(urlString) } returns thing
 
         // When
-        val result = defaultWot.fetch(urlString)
+        val result = defaultWot.requestThingDescription(urlString)
 
         // Then
         assertEquals(thing, result)
@@ -107,7 +107,7 @@ class WotTest {
         // Arrange
 
         // Mocking servient.addThing to return true, indicating the Thing is added successfully
-        every { servient.addThing(ofType(ExposedThing::class)) } returns true
+        every { servient.addThing(ofType(ExposedThingImpl::class)) } returns true
 
         // Act
         val exposedThing = defaultWot.produce{
@@ -130,7 +130,7 @@ class WotTest {
         val thing = Thing(id = "existingThing")
 
         // Mocking servient.addThing to return false, indicating the Thing already exists
-        coEvery { servient.addThing(ofType(ExposedThing::class)) } returns false
+        coEvery { servient.addThing(ofType(ExposedThingImpl::class)) } returns false
 
         // Act and Assert
         val exception = assertFailsWith<WotException> {

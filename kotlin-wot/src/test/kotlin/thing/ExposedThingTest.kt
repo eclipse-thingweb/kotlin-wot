@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.thing
 
+import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
@@ -17,8 +18,8 @@ class ExposedThingTest {
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThing.from(thing)
-        val thingB = ExposedThing.from(thing)
+        val thingA = ExposedThingImpl(Servient(), thing)
+        val thingB = ExposedThingImpl(Servient(), thing)
         assertEquals(thingA, thingB)
     }
 
@@ -30,8 +31,8 @@ class ExposedThingTest {
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThing.from(thing).hashCode()
-        val thingB = ExposedThing.from(thing).hashCode()
+        val thingA = ExposedThingImpl(Servient(), thing).hashCode()
+        val thingB = ExposedThingImpl(Servient(), thing).hashCode()
         assertEquals(thingA, thingB)
     }
 
@@ -45,7 +46,7 @@ class ExposedThingTest {
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
-        val exposedThing = ExposedThing.from(thing)
+        val exposedThing = ExposedThingImpl(Servient(), thing)
 
         val thingAsJson = exposedThing.toJson()
         println(thingAsJson)
@@ -77,7 +78,7 @@ class ExposedThingTest {
                     },    
                     "security": ["basic_sc"]
                 }"""
-        val thing = ExposedThing.fromJson(json)
+        val thing = ExposedThingImpl.fromJson(json)
         if (thing != null) {
             assertEquals("Foo", thing.id)
             assertEquals("Bar", thing.description)

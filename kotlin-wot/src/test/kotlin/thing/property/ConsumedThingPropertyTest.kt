@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing.property
 
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.ConsumedThing
+import ai.ancf.lmos.wot.thing.ConsumedThingImpl
 import ai.ancf.lmos.wot.thing.action.ConsumedThingException
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.ThingProperty
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.assertThrows
 
 class ConsumedThingPropertyTest {
 
-    private val thing: ConsumedThing = mockk(relaxed = true)
+    private val thing: ConsumedThingImpl = mockk(relaxed = true)
     private val property: ThingProperty<String> = stringProperty {
         title = "test"
         forms = mutableListOf(Form("test", "application/json"))

@@ -1,9 +1,10 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.ActionAffordance
+import ai.ancf.lmos.wot.thing.schema.ActionHandler
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory
 data class ExposedThingAction<I, O>(
     private val action: ThingAction<I, O> = ThingAction(),
     @JsonIgnore
-    private val thing: ExposedThing = ExposedThing(),
+    private val thing: ExposedThingImpl = ExposedThingImpl(),
     private val state: ActionState<I, O> = ActionState()
 ) : ActionAffordance<I, O> by action {
     /**
@@ -122,9 +123,10 @@ data class ThingAction<I, O>(
     override var synchronous: Boolean? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var titles: MutableMap<String, String>? = null
-) : ActionAffordance<I, O>
+    override var titles: MutableMap<String, String>? = null,
 
-fun interface ActionHandler<I, O> {
-    suspend fun handle(input: I?, options: Map<String, Map<String, Any>>?): O?
+    @JsonIgnore
+    var actionHandler: ActionHandler<I, O>? = null
+) : ActionAffordance<I, O> {
 }
+

@@ -1,14 +1,12 @@
 package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.action.ActionHandler
-import ai.ancf.lmos.wot.thing.action.ExposedThingAction.ActionState
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.exposedThing
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.form.Operation.READ_PROPERTY
 import ai.ancf.lmos.wot.thing.form.Operation.WRITE_PROPERTY
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.PropertyState
+import ai.ancf.lmos.wot.thing.schema.PropertyReadHandler
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.schema.stringSchema
 import ai.anfc.lmos.wot.binding.ProtocolServerException
@@ -39,25 +37,24 @@ class HttpProtocolServerTest {
     private lateinit var server: HttpProtocolServer
     private val servient: Servient = mockk()
     private val mockServer: EmbeddedServer<*, *> = mockk()
-    private val exposedThing: ExposedThing = exposedThing("test") {
-            intProperty(PROPERTY_NAME, PropertyState(initialValue = 0, readHandler = { 2 }, writeHandler = { input -> input })){
-                title = "title"
+    private val exposedThing: ExposedThingImpl = exposedThing(servient) {
+        intProperty(PROPERTY_NAME) {
+            observable = true
+            readHandler = PropertyReadHandler { 2 }
+        }
+        action<String, String>(ACTION_NAME)
+        {
+            title = ACTION_NAME
+            input = stringSchema {
+                title = "Action Input"
+                minLength = 10
+                default = "test"
             }
-            action<String, String>(ACTION_NAME, state = ActionState(handler = { input, _ ->
-                input
-            }))
-            {
-                title = ACTION_NAME
-                input = stringSchema {
-                    title = "Action Input"
-                    minLength = 10
-                    default = "test"
-                }
-                output = StringSchema()
-            }
-            event<String, Nothing, Nothing>(EVENT_NAME){
-                data = StringSchema()
-            }
+            output = StringSchema()
+        }
+        event<String, Nothing, Nothing>(EVENT_NAME){
+            data = StringSchema()
+        }
     }
 
     @BeforeTest
@@ -149,7 +146,7 @@ class HttpProtocolServerTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
 
-        val things : List<ExposedThing> = response.body()
+        val things : List<ExposedThingImpl> = response.body()
         assertEquals(1, things.size)
 
 
@@ -167,7 +164,7 @@ class HttpProtocolServerTest {
         // Perform GET request on "/test"
         val response = client.get("/${exposedThing.id}")
 
-        val thing : ExposedThing = response.body()
+        val thing : ExposedThingImpl = response.body()
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(exposedThing.id, thing.id)

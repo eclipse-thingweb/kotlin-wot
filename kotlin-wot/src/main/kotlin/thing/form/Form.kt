@@ -50,7 +50,10 @@ data class Form(
     val subprotocol: String? = null, // Optional term for the interaction mechanism
 
     @JsonInclude(NON_EMPTY)
-    val op: List<Operation>? = null // Default op values
+    val op: List<Operation>? = null, // Default op values
+
+    @JsonInclude(NON_EMPTY)
+    val optionalProperties : Map<String, Any>? = null
 ) {
 
     @get:JsonIgnore

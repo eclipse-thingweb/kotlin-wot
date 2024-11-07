@@ -4,13 +4,10 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.action.ExposedThingAction
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
 import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
-import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -20,7 +17,6 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
@@ -38,19 +34,20 @@ open class HttpProtocolServer(
     private val bindPort: Int = 8080,
     private val createServer: (host: String, port: Int, servient: Servient) -> EmbeddedServer<*, *> = ::defaultServer
 ) : ProtocolServer {
-    val things: MutableMap<String, ExposedThing> = mutableMapOf()
+    val things: MutableMap<String, ExposedThingImpl> = mutableMapOf()
     var started = false
     private var server: EmbeddedServer<*, *>? = null
     private var actualAddresses: List<String> = listOf("http://$bindHost:$bindPort")
 
     companion object {
         private val log = LoggerFactory.getLogger(HttpProtocolServer::class.java)
+        private const val HTTP_METHOD_NAME = "htv:methodName"
     }
 
     override suspend fun start(servient: Servient) {
         log.info("Starting on '{}' port '{}'", bindHost, bindPort)
-        server = createServer(bindHost, bindPort, servient).start(wait)
         started = true
+        server = createServer(bindHost, bindPort, servient).start(wait)
     }
 
     // Stop the server
@@ -62,7 +59,7 @@ open class HttpProtocolServer(
     }
 
     // Expose a thing
-    override fun expose(thing: ExposedThing) {
+    override fun expose(thing: ExposedThingImpl) {
         if (!started) throw ProtocolServerException("Server has not started yet")
 
         log.info("Exposing thing '{}'", thing.id)
@@ -85,7 +82,7 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeProperties(thing: ExposedThing, address: String, contentType: String) {
+    internal fun exposeProperties(thing: ExposedThingImpl, address: String, contentType: String) {
         thing.properties.forEach { (name, property) ->
 
             val href = getHrefWithVariablePattern(address, thing, "properties", name, property)
@@ -97,8 +94,22 @@ open class HttpProtocolServer(
                 else -> listOf(Operation.READ_PROPERTY, Operation.WRITE_PROPERTY)
             }
 
+            // Determine the HTTP method based on property attributes
+            val httpMethod = when {
+                property.readOnly -> "GET"
+                property.writeOnly -> "PUT"
+                else -> null // No specific HTTP method for both read/write properties
+            }
+
             // Create the main form and add it to the property
-            val form = Form(href = href, contentType = contentType, op = operations)
+            val form = Form(
+                href = href,
+                contentType = contentType,
+                op = operations,
+                optionalProperties = hashMapOf<String, String>().apply {
+                    httpMethod?.let { put(HTTP_METHOD_NAME, it) }
+                }
+            )
             property.forms += form
             log.debug("Assign '{}' to Property '{}'", href, name)
 
@@ -117,7 +128,7 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeActions(thing: ExposedThing, address: String, contentType: String) {
+    internal fun exposeActions(thing: ExposedThingImpl, address: String, contentType: String) {
         thing.actions.forEach { (name, action) ->
             val href: String = getHrefWithVariablePattern(address, thing, "actions", name, action)
             // Initialize the form using named parameters
@@ -133,7 +144,7 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeEvents(thing: ExposedThing, address: String, contentType: String) {
+    internal fun exposeEvents(thing: ExposedThingImpl, address: String, contentType: String) {
         thing.events.forEach { (name, event) ->
             val href = getHrefWithVariablePattern(address, thing, "events", name, event)
 
@@ -153,7 +164,7 @@ open class HttpProtocolServer(
 
     private fun getHrefWithVariablePattern(
         address: String,
-        thing: ExposedThing,
+        thing: ExposedThingImpl,
         type: String,
         interactionName: String,
         interaction: InteractionAffordance
@@ -167,7 +178,7 @@ open class HttpProtocolServer(
     }
 
     // Destroy a thing
-    override suspend fun destroy(thing: ExposedThing) {
+    override suspend fun destroy(thing: ExposedThingImpl) {
         log.info("Removing thing '{}'", thing.id)
         things.remove(thing.id)
     }
@@ -186,15 +197,15 @@ fun Application.setupRouting(servient: Servient) {
     routing {
         route("/") {
             get {
-                call.respond(servient.things.values.toList(), typeInfo<List<ExposedThing>>())
+                call.respond(servient.things.values.toList(), typeInfo<List<ExposedThingImpl>>())
             }
         }
         route("/{id}") {
             get {
                 val id = call.parameters["id"]
-                val thing: ExposedThing? = servient.things[id]
+                val thing: ExposedThingImpl? = servient.things[id]
                 if (thing != null) {
-                    call.respond(thing, typeInfo<ExposedThing>())
+                    call.respond(thing, typeInfo<ExposedThingImpl>())
                 } else {
                     call.response.status(HttpStatusCode.NotFound)
                 }

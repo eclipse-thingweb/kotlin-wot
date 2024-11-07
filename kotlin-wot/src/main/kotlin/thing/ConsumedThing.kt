@@ -4,50 +4,128 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.action.ConsumedThingAction
-import ai.ancf.lmos.wot.thing.action.ConsumedThingEvent
 import ai.ancf.lmos.wot.thing.action.ConsumedThingException
+import ai.ancf.lmos.wot.thing.action.ThingAction
+import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.property.ConsumedThingProperty
-import ai.ancf.lmos.wot.thing.schema.DataSchema
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
-import ai.ancf.lmos.wot.thing.schema.ThingDescription
+import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import kotlinx.serialization.Contextual
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletionException
+import javax.xml.transform.ErrorListener
 
 /**
  * Represents an object that extends a Thing with methods for client interactions (send request for
  * reading and writing Properties), invoke Actions, subscribe and unsubscribe for Property changes
  * and Events. https://w3c.github.io/wot-scripting-api/#the-consumedthing-interface
  */
-class ConsumedThing(val servient: Servient,
-    override var id: String,
-    override var objectType: Type? = Type("Thing"),
-    override var objectContext: Context? = Context("https://www.w3.org/2022/wot/td/v1.1"),
-    override var title: String? = null,
-    override var titles: MutableMap<String, String>? = mutableMapOf(),
-    override var description: String? = null,
-    override var descriptions: MutableMap<String, String>? = mutableMapOf(),
-    override var properties: MutableMap<String, ConsumedThingProperty<*>> = mutableMapOf(),
-    override var actions: MutableMap<String, ConsumedThingAction<*, *>> = mutableMapOf(),
-    override var events: MutableMap<String, ConsumedThingEvent<*, *, *>> = mutableMapOf(),
-    override var forms: List<Form> = emptyList(),
-    override var security: List<String> = emptyList(),
-    override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
-    override var base: String? = null,
-    override var version: VersionInfo? = null,
-    override var created: String? = null,
-    override var modified: String? = null,
-    override var support: String? = null,
-    override var links: List<Link>? = null,
-    override var profile: List<String>? = null,
-    override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
-    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
-) : ThingDescription<ConsumedThingProperty<*>, ConsumedThingAction<*,*>, ConsumedThingEvent<*,*,*>>  {
+class ConsumedThingImpl(private val servient: Servient,
+                        override var id: String,
+                        override var objectType: Type? = Type("Thing"),
+                        override var objectContext: Context? = Context("https://www.w3.org/2022/wot/td/v1.1"),
+                        override var title: String? = null,
+                        override var titles: MutableMap<String, String>? = mutableMapOf(),
+                        override var description: String? = null,
+                        override var descriptions: MutableMap<String, String>? = mutableMapOf(),
+                        override var properties: MutableMap<String, ThingProperty<*>> = mutableMapOf(),
+                        override var actions: MutableMap<String, ThingAction<*, *>> = mutableMapOf(),
+                        override var events: MutableMap<String, ThingEvent<*, *, *>> = mutableMapOf(),
+                        override var forms: List<Form> = emptyList(),
+                        override var security: List<String> = emptyList(),
+                        override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
+                        override var base: String? = null,
+                        override var version: VersionInfo? = null,
+                        override var created: String? = null,
+                        override var modified: String? = null,
+                        override var support: String? = null,
+                        override var links: List<Link>? = null,
+                        override var profile: List<String>? = null,
+                        override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
+                        override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
+) : ConsumedThing {
+
+        // Secondary constructor that accepts a Thing and initializes the ConsumedThingImpl object
+        constructor(servient: Servient, thing: Thing) : this(
+            id = thing.id,
+            servient = servient,
+            objectType = thing.objectType,
+            objectContext = thing.objectContext,
+            title = thing.title,
+            titles = thing.titles,
+            description = thing.description,
+            descriptions = thing.descriptions,
+            properties = thing.properties,
+            actions = thing.actions,
+            events = thing.events,
+            forms = thing.forms,
+            security = thing.security,
+            securityDefinitions = thing.securityDefinitions,
+            base = thing.base,
+            version = thing.version,
+            created = thing.created,
+            modified = thing.modified,
+            support = thing.support,
+            links = thing.links,
+            profile = thing.profile,
+            schemaDefinitions = thing.schemaDefinitions,
+            uriVariables = thing.uriVariables
+        )
+
+    override suspend fun readProperty(propertyName: String, options: InteractionOptions): InteractionOutput<*> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun readAllProperties(options: InteractionOptions): PropertyReadMap {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun readMultipleProperties(
+        propertyNames: List<String>,
+        options: InteractionOptions
+    ): PropertyReadMap {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun writeProperty(propertyName: String, value: InteractionInput, options: InteractionOptions) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun writeMultipleProperties(valueMap: PropertyWriteMap, options: InteractionOptions) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun invokeAction(
+        actionName: String,
+        params: InteractionInput,
+        options: InteractionOptions
+    ): InteractionOutput<*> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun observeProperty(
+        name: String,
+        listener: InteractionListener<*>,
+        onError: ErrorListener?,
+        options: InteractionOptions
+    ): Subscription {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun subscribeEvent(
+        name: String,
+        listener: InteractionListener<*>,
+        onError: ErrorListener?,
+        options: InteractionOptions
+    ): Subscription {
+        TODO("Not yet implemented")
+    }
+
+    override fun getThingDescription(): ThingDescription {
+        return this
+    }
 
 
     private val clients: MutableMap<String, ProtocolClient> = mutableMapOf()
@@ -68,7 +146,7 @@ class ConsumedThing(val servient: Servient,
      * @throws ConsumedThingException
      */
 
-    fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form> {
+    override fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form> {
         require(forms.isNotEmpty()) { "No forms available for operation $op on $id" }
 
         // Get supported schemes in the order of preference
@@ -164,7 +242,8 @@ class ConsumedThing(val servient: Servient,
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ConsumedThing::class.java)
+        private val log = LoggerFactory.getLogger(ConsumedThingImpl::class.java)
+
 
         /**
          * Creates new form (if needed) for URI Variables http://192.168.178.24:8080/counter/actions/increment{?step}

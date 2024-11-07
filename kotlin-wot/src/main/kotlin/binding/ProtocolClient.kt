@@ -2,7 +2,7 @@ package ai.anfc.lmos.wot.binding
 
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
@@ -34,7 +34,7 @@ interface ProtocolClient {
      * @param filter
      * @return
      */
-    fun discover(filter: ThingFilter): Flow<ExposedThing> {
+    fun discover(filter: ThingFilter): Flow<ExposedThingImpl> {
         throw ProtocolClientNotImplementedException(javaClass, "discover")
     }
 

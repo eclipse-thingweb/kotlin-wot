@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.thing.action
 
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.ConsumedThing
+import ai.ancf.lmos.wot.thing.ConsumedThingImpl
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 
 class ConsumedThingActionTest {
 
-    private val thing: ConsumedThing = mockk(relaxed = true)
+    private val thing: ConsumedThingImpl = mockk(relaxed = true)
     private val action: ThingAction<String, String> = mockk()
     private val client: ProtocolClient = mockk()
     private val form: Form = Form("test", "application/json")
