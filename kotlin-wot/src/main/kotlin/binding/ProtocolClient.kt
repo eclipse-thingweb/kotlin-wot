@@ -2,8 +2,8 @@ package ai.anfc.lmos.wot.binding
 
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
 import kotlinx.coroutines.flow.Flow
@@ -34,13 +34,13 @@ interface ProtocolClient {
      * @param filter
      * @return
      */
-    fun discover(filter: ThingFilter): Flow<ExposedThingImpl> {
+    fun discover(filter: ThingFilter): Flow<ExposedThing> {
         throw ProtocolClientNotImplementedException(javaClass, "discover")
     }
 
     /**
      * Reads the resource defined in `form`. This can be a [ThingProperty], a
-     * [Thing] or a Thing Directory.
+     * [ThingDescription] or a Thing Directory.
      *
      * @param form
      * @return
@@ -57,7 +57,7 @@ interface ProtocolClient {
      * @param content
      * @return
      */
-    suspend fun writeResource(form: Form, content: Content): Content {
+    suspend fun writeResource(form: Form, content: Content) {
         throw ProtocolClientNotImplementedException(javaClass, "write")
     }
 

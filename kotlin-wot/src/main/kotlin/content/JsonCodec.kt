@@ -58,7 +58,7 @@ open class JsonCodec : ContentCodec {
 
                  is NullSchema -> {
                      // Return Null DataSchemaValue
-                     Null
+                     NullValue
                  }
 
                  else -> {
@@ -81,6 +81,21 @@ open class JsonCodec : ContentCodec {
             JsonMapper.instance.writeValueAsBytes(value)
         } catch (e: JsonProcessingException) {
             throw ContentCodecException("Failed to encode $mediaType: $e")
+        }
+    }
+
+    override fun valueToBytes(
+        value: DataSchemaValue,
+        parameters: Map<String, String>
+    ): ByteArray {
+        return when (value) {
+            is StringValue -> JsonMapper.instance.writeValueAsBytes(value.value)
+            is IntegerValue -> JsonMapper.instance.writeValueAsBytes(value.value)
+            is NumberValue -> JsonMapper.instance.writeValueAsBytes(value.value)
+            is BooleanValue -> JsonMapper.instance.writeValueAsBytes(value.value)
+            is ArrayValue -> JsonMapper.instance.writeValueAsBytes(value.value)
+            is ObjectValue -> JsonMapper.instance.writeValueAsBytes(value.value)
+            is NullValue -> JsonMapper.instance.writeValueAsBytes("")
         }
     }
 }

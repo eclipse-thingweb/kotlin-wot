@@ -3,9 +3,8 @@ package ai.ancf.lmos.wot.thing.property
 
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.thing.Type
-import ai.ancf.lmos.wot.thing.schema.ThingProperty.StringProperty
-import ai.ancf.lmos.wot.thing.schema.intProperty
-import ai.ancf.lmos.wot.thing.schema.stringProperty
+import ai.ancf.lmos.wot.thing.schema.IntProperty
+import ai.ancf.lmos.wot.thing.schema.StringProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
@@ -17,29 +16,21 @@ import kotlin.test.assertTrue
 class ThingPropertyTest {
     @Test
     fun testEquals() {
-        val property1 = stringProperty{
-            title = "title"
-        }
-        val property2 = stringProperty{
-            title = "title"
-        }
+        val property1 = StringProperty().apply { title = "title" }
+        val property2 = StringProperty().apply { title = "title" }
         assertEquals(property1, property2)
     }
 
     @Test
     fun testHashCode() {
-        val property1 = stringProperty{
-            title = "title"
-        }.hashCode()
-        val property2 = stringProperty{
-            title = "title"
-        }.hashCode()
+        val property1 = StringProperty().apply { title = "title" }.hashCode()
+        val property2 = StringProperty().apply { title = "title" }.hashCode()
         assertEquals(property1, property2)
     }
 
     @Test
     fun toJson() {
-        val property = intProperty{
+        val property = IntProperty().apply {
             objectType=Type("saref:Temperature")
             description = "bla bla"
             observable=true
@@ -58,7 +49,7 @@ class ThingPropertyTest {
         val json = """{"@type":"saref:Temperature","description":"bla bla","type":"string","observable":true,"readOnly":true}"""
 
         val parsedProperty = JsonMapper.instance.readValue<StringProperty>(json)
-        val property = stringProperty{
+        val property = StringProperty().apply {
             objectType = Type("saref:Temperature")
             description = "bla bla"
             observable = true
@@ -70,7 +61,7 @@ class ThingPropertyTest {
 
     @Test
     fun testConstructor() {
-        val property = intProperty{
+        val property = IntProperty().apply {
             objectType=Type("saref:Temperature")
             observable=true
             readOnly=true

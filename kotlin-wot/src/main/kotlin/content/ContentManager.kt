@@ -78,7 +78,7 @@ object ContentManager {
     fun contentToValue(
         content: Content,
         schema: DataSchema<*>
-    ): DataSchemaValue? {
+    ): DataSchemaValue {
         // Get content type or use default
         val contentType = content.type
 
@@ -166,7 +166,7 @@ object ContentManager {
                     // Parse as ObjectValue
                     DataSchemaValue.ObjectValue(readObject as Map<*, *>)
                 }
-                else -> { DataSchemaValue.Null }
+                else -> { DataSchemaValue.NullValue }
             }
              return response
         } catch (e: IOException) {
@@ -188,6 +188,24 @@ object ContentManager {
      */
     fun valueToContent(value: Any?): Content {
         return valueToContent(value, null)
+    }
+
+    fun valueToContent(value: DataSchemaValue, contentType: String?): Content {
+        val mediaType = getMediaType(contentType ?: DEFAULT)
+        val parameters = getMediaTypeParameters(contentType ?: DEFAULT)
+
+        // Select codec based on mediaType and log the action
+        val codec = CODECS[mediaType]
+        val bytes: ByteArray = if (codec != null) {
+            log.debug("Content serializing to '$mediaType'")
+            codec.valueToBytes(value, parameters)
+            //codec.valueToBytes(value ?: throw IllegalArgumentException("Value cannot be null when codec is available."), parameters)
+        } else {
+            log.warn("Content passthrough due to unsupported serialization format '$mediaType'")
+            fallbackValueToBytes(value)
+        }
+
+        return Content(contentType ?: DEFAULT, bytes)
     }
 
     /**

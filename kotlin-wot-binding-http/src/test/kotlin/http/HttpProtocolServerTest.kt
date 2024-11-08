@@ -1,14 +1,15 @@
 package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.exposedThing
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.form.Operation.READ_PROPERTY
 import ai.ancf.lmos.wot.thing.form.Operation.WRITE_PROPERTY
-import ai.ancf.lmos.wot.thing.schema.StringSchema
-import ai.ancf.lmos.wot.thing.schema.stringSchema
+import ai.ancf.lmos.wot.thing.schema.*
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue.IntegerValue
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue.StringValue
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -28,6 +29,12 @@ private const val PROPERTY_NAME = "property1"
 
 private const val ACTION_NAME = "action1"
 
+private const val ACTION_NAME_2 = "action2"
+
+private const val ACTION_NAME_3 = "action3"
+
+private const val ACTION_NAME_4 = "action4"
+
 private const val EVENT_NAME = "event1"
 
 private const val CONTENT_TYPE = "application/json"
@@ -37,7 +44,7 @@ class HttpProtocolServerTest {
     private lateinit var server: HttpProtocolServer
     private val servient: Servient = mockk()
     private val mockServer: EmbeddedServer<*, *> = mockk()
-    private val exposedThing: ExposedThingImpl = exposedThing(servient) {
+    private val exposedThing: ExposedThing = exposedThing(servient, id="test") {
         intProperty(PROPERTY_NAME) {
             observable = true
         }
@@ -51,9 +58,37 @@ class HttpProtocolServerTest {
             }
             output = StringSchema()
         }
+        action<String, String>(ACTION_NAME_2)
+        {
+            title = ACTION_NAME_2
+            output = StringSchema()
+        }
+        action<String, String>(ACTION_NAME_3)
+        {
+            title = ACTION_NAME_3
+            input = StringSchema()
+        }
+        action<String, String>(ACTION_NAME_4)
+        {
+            title = ACTION_NAME_4
+        }
         event<String, Nothing, Nothing>(EVENT_NAME){
             data = StringSchema()
         }
+    }.setPropertyReadHandler(PROPERTY_NAME) {
+        10.toInteractionInputValue()
+    }.setActionHandler(ACTION_NAME) { input, _->
+        val inputString = input.value() as StringValue
+        "${inputString.value} 10".toInteractionInputValue()
+    }.setPropertyWriteHandler(PROPERTY_NAME) { input, _->
+        val inputInt = input.value() as IntegerValue
+        inputInt.value.toInteractionInputValue()
+    }.setActionHandler(ACTION_NAME_2) { input, _->
+        "10".toInteractionInputValue()
+    }.setActionHandler(ACTION_NAME_3) { input, _->
+        InteractionInput.Value(DataSchemaValue.NullValue)
+    }.setActionHandler(ACTION_NAME_4) { _, _->
+        InteractionInput.Value(DataSchemaValue.NullValue)
     }
 
     @BeforeTest
@@ -145,8 +180,8 @@ class HttpProtocolServerTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
 
-        val things : List<Thing> = response.body()
-        assertEquals(1, things.size)
+        val thingDescriptions = response.body<List<ThingDescription>>()
+        assertEquals(1, thingDescriptions.size)
 
 
     }
@@ -163,10 +198,10 @@ class HttpProtocolServerTest {
         // Perform GET request on "/test"
         val response = client.get("/${exposedThing.id}")
 
-        val thing : Thing = response.body()
+        val thingDescription : ThingDescription = response.body()
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(exposedThing.id, thing.id)
+        assertEquals(exposedThing.id, thingDescription.id)
     }
 
     @Test
@@ -191,16 +226,15 @@ class HttpProtocolServerTest {
         }
         val client = httpClient()
         // Setup test data for property
-        val propertyName = PROPERTY_NAME
         every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform PUT request on property endpoint
-        val response = client.get("/test/properties/$propertyName") {
+        val response = client.get("/test/properties/$PROPERTY_NAME") {
             contentType(ContentType.Application.Json)
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(2, response.body<Int>())
+        assertEquals(10, response.body<Int>())
 
     }
 
@@ -211,18 +245,16 @@ class HttpProtocolServerTest {
         }
         val client = httpClient()
         // Setup test data for property
-        val propertyName = PROPERTY_NAME
         every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform PUT request on property endpoint
-        val response = client.put("/test/properties/$propertyName") {
+        val response = client.put("/test/properties/$PROPERTY_NAME") {
             contentType(ContentType.Application.Json)
             setBody(2) // JSON payload to update the property
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(2, response.body<Int>())
-
     }
 
     private fun ApplicationTestBuilder.httpClient(): HttpClient {
@@ -246,14 +278,69 @@ class HttpProtocolServerTest {
         every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
 
         // Perform POST request on action endpoint
-        val response = client.post("/test/actions/action1") {
+        val response = client.post("/test/actions/$ACTION_NAME") {
             contentType(ContentType.Application.Json)
-            setBody(""""input"""") // JSON payload for action input"
+            setBody("\"input\"") // JSON payload for action input
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
 
-        assertEquals("input", response.body<String>())
+        println( response.body<String>())
+
+        assertEquals("\"input 10\"", response.body<String>())
+    }
+
+    @Test
+    fun `POST without content on actions invokes action`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        // Setup action data
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
+
+        // Perform POST request on action endpoint
+        val response = client.post("/test/actions/$ACTION_NAME_2") {
+            contentType(ContentType.Application.Json)
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        println(response.body<String>())
+
+        assertEquals("\"10\"", response.body<String>())
+    }
+
+    @Test
+    fun `POST with only input invokes action`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        // Setup action data
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
+
+        // Perform POST request on action endpoint
+        val response = client.post("/test/actions/$ACTION_NAME_3") {
+            contentType(ContentType.Application.Json)
+            setBody("\"input\"") // JSON payload for action input
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+    }
+
+    @Test
+    fun `POST with no input and output invokes action`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        // Setup action data
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
+
+        // Perform POST request on action endpoint
+        val response = client.post("/test/actions/$ACTION_NAME_4") {
+            contentType(ContentType.Application.Json)
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
     }
 
     @Test

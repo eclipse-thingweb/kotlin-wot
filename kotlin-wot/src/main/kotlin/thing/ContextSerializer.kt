@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.SerializerProvider
 import java.io.IOException
 
 /**
- * Serializes the single context or the list of contexts of a [Thing] to JSON. Is used by
+ * Serializes the single context or the list of contexts of a [ThingDescription] to JSON. Is used by
  * Jackson
  */
 internal class ContextSerializer : JsonSerializer<Context>() {

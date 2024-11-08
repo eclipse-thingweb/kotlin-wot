@@ -4,15 +4,14 @@ import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.ServientException
 import ai.ancf.lmos.wot.content.Content
+import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.parseInteractionOptions
-import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import com.fasterxml.jackson.annotation.JsonIgnore
-import kotlinx.serialization.Contextual
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
@@ -23,61 +22,13 @@ import javax.xml.transform.ErrorListener
  * reading and writing Properties), invoke Actions, subscribe and unsubscribe for Property changes
  * and Events. https://w3c.github.io/wot-scripting-api/#the-consumedthing-interface
  */
-data class ConsumedThingImpl(
+data class ConsumedThing(
     @JsonIgnore
     private val servient: Servient,
-    override var id: String,
-    override var objectType: Type? = Type("Thing"),
-    override var objectContext: Context? = Context("https://www.w3.org/2022/wot/td/v1.1"),
-    override var title: String? = null,
-    override var titles: MutableMap<String, String>? = mutableMapOf(),
-    override var description: String? = null,
-    override var descriptions: MutableMap<String, String>? = mutableMapOf(),
-    override var properties: MutableMap<String, PropertyAffordance<*>> = mutableMapOf(),
-    override var actions: MutableMap<String, ActionAffordance<*, *>> = mutableMapOf(),
-    override var events: MutableMap<String, EventAffordance<*, *, *>> = mutableMapOf(),
-    override var forms: List<Form> = emptyList(),
-    override var security: List<String> = emptyList(),
-    override var securityDefinitions: MutableMap<String, SecurityScheme> = mutableMapOf(),
-    override var base: String? = null,
-    override var version: VersionInfo? = null,
-    override var created: String? = null,
-    override var modified: String? = null,
-    override var support: String? = null,
-    override var links: List<Link>? = null,
-    override var profile: List<String>? = null,
-    override var schemaDefinitions: MutableMap<String, DataSchema<@Contextual Any>>? = null,
-    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null
-) : ConsumedThing {
+    private val thingDescription: WoTThingDescription = ThingDescription(),
+) : WoTConsumedThing, WoTThingDescription by thingDescription  {
 
-        // Secondary constructor that accepts a Thing and initializes the ConsumedThingImpl object
-        constructor(servient: Servient, thing: Thing) : this(
-            id = thing.id,
-            servient = servient,
-            objectType = thing.objectType,
-            objectContext = thing.objectContext,
-            title = thing.title,
-            titles = thing.titles,
-            description = thing.description,
-            descriptions = thing.descriptions,
-            properties = thing.properties,
-            actions = thing.actions,
-            events = thing.events,
-            forms = thing.forms,
-            security = thing.security,
-            securityDefinitions = thing.securityDefinitions,
-            base = thing.base,
-            version = thing.version,
-            created = thing.created,
-            modified = thing.modified,
-            support = thing.support,
-            links = thing.links,
-            profile = thing.profile,
-            schemaDefinitions = thing.schemaDefinitions,
-            uriVariables = thing.uriVariables
-        )
-
-    override suspend fun readProperty(propertyName: String, options: InteractionOptions?): InteractionOutput {
+    override suspend fun readProperty(propertyName: String, options: InteractionOptions?): WoTInteractionOutput {
         val property = this.properties[propertyName]
         requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
 
@@ -107,7 +58,7 @@ data class ConsumedThingImpl(
         content: Content,
         form: Form,
         outputDataSchema: DataSchema<*>?
-    ): InteractionOutput {
+    ): WoTInteractionOutput {
 
         // Check if returned media type matches the expected media type from TD
         form.response?.let { response ->
@@ -118,7 +69,7 @@ data class ConsumedThingImpl(
             }
         }
 
-        return InteractionOutputImpl(content, outputDataSchema)
+        return InteractionOutput(content, outputDataSchema)
     }
 
     override suspend fun readAllProperties(options: InteractionOptions?): PropertyReadMap {
@@ -133,7 +84,29 @@ data class ConsumedThingImpl(
     }
 
     override suspend fun writeProperty(propertyName: String, value: InteractionInput, options: InteractionOptions?) {
-        TODO("Not yet implemented")
+        val property = this.properties[propertyName]
+        requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
+
+        return try {
+            // Ensure the property exists
+            // Retrieve the client and form for the property
+            val (client, form) = getClientFor(property.forms, Operation.WRITE_PROPERTY)
+
+            // Log the action
+            log.debug("ConsumedThing '{}' reading {}", this.title, form.href)
+
+            // Handle URI variables if present
+            //val finalForm = handleUriVariables(this, property, form, options)
+
+            val interactionValue = value as InteractionInput.Value
+
+            val content = ContentManager.valueToContent(interactionValue.value, form.contentType)
+
+            client.writeResource(form, content)
+
+        } catch (e: Exception) {
+            throw ConsumedThingException("Error while processing property for ${property.title}. ${e.message}", e)
+        }
     }
 
     override suspend fun writeMultipleProperties(valueMap: PropertyWriteMap, options: InteractionOptions?) {
@@ -144,8 +117,31 @@ data class ConsumedThingImpl(
         actionName: String,
         params: InteractionInput,
         options: InteractionOptions?
-    ): InteractionOutput {
-        TODO("Not yet implemented")
+    ): WoTInteractionOutput {
+        val action = this.actions[actionName]
+        requireNotNull(action) { "ConsumedThing '${this.title}' does not have action $actionName" }
+
+        return try {
+            // Retrieve the client and form for the property
+            val (client, form) = getClientFor(action.forms, Operation.INVOKE_ACTION)
+
+            // Log the action
+            log.debug("ConsumedThing '{}' invoke {}", this.title, form.href)
+
+            // Handle URI variables if present
+            //val finalForm = handleUriVariables(this, property, form, options)
+
+            val interactionValue = params as InteractionInput.Value
+
+            val content = ContentManager.valueToContent(interactionValue.value, form.contentType)
+
+            val response = client.invokeResource(form, content)
+
+            InteractionOutput(response, action.output)
+
+        } catch (e: Exception) {
+            throw ConsumedThingException("Error while invoking action for ${action.title}. ${e.message}", e)
+        }
     }
 
     override suspend fun observeProperty(
@@ -167,7 +163,7 @@ data class ConsumedThingImpl(
     }
 
     @JsonIgnore
-    override fun getThingDescription(): ThingDescription {
+    override fun getThingDescription(): WoTThingDescription {
         return this
     }
 
@@ -308,19 +304,19 @@ data class ConsumedThingImpl(
     }
 
     fun handleUriVariables(
-        thing: ConsumedThing,
+        thing: WoTConsumedThing,
         ti: InteractionAffordance,
         form: Form,
         options: InteractionOptions?
     ): Form {
         val uriTemplate = UriTemplate.fromTemplate(form.href)
-        val uriVariables = parseInteractionOptions(thing, ti, options).uriVariables ?: emptyMap()
+        val uriVariables = parseInteractionOptions(thingDescription, ti, options).uriVariables ?: emptyMap()
         val updatedHref = uriTemplate.expand(uriVariables)
 
         return if (updatedHref != form.href) {
             // Create a shallow copy and update href
             form.copy(href = updatedHref).also {
-                log.debug("ConsumedThing '${thing.title}' updated form URI to ${it.href}")
+                log.debug("ConsumedThing '${thingDescription.title}' updated form URI to ${it.href}")
             }
         } else {
             form
@@ -331,7 +327,7 @@ data class ConsumedThingImpl(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as ConsumedThingImpl
+        other as ConsumedThing
 
         if (id != other.id) return false
         if (objectType != other.objectType) return false
@@ -387,7 +383,7 @@ data class ConsumedThingImpl(
 
 
     companion object {
-        private val log = LoggerFactory.getLogger(ConsumedThingImpl::class.java)
+        private val log = LoggerFactory.getLogger(ConsumedThing::class.java)
 
         /**
          * Parses a JSON string into a Thing object.
@@ -397,7 +393,7 @@ data class ConsumedThingImpl(
          */
         fun fromJson(json: String?): ConsumedThing? {
             return try {
-                JsonMapper.instance.readValue(json, ConsumedThingImpl::class.java)
+                JsonMapper.instance.readValue(json, ConsumedThing::class.java)
             } catch (e: IOException) {
                 log.warn("Unable to read json", e)
                 null
@@ -412,7 +408,7 @@ data class ConsumedThingImpl(
          */
         fun fromJson(file: File?): ConsumedThing? {
             return try {
-                JsonMapper.instance.readValue(file, ConsumedThingImpl::class.java)
+                JsonMapper.instance.readValue(file, ConsumedThing::class.java)
             } catch (e: IOException) {
                 log.warn("Unable to read json", e)
                 null
@@ -426,7 +422,7 @@ data class ConsumedThingImpl(
          * @return A Thing instance converted from the map.
          */
         fun fromMap(map: Map<*, *>): ConsumedThing {
-            return JsonMapper.instance.convertValue(map, ConsumedThingImpl::class.java)
+            return JsonMapper.instance.convertValue(map, ConsumedThing::class.java)
         }
     }
 }

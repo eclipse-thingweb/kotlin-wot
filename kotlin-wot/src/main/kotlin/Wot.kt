@@ -1,10 +1,11 @@
 package ai.ancf.lmos.wot
 
-import ai.ancf.lmos.wot.thing.ConsumedThingImpl
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ConsumedThing
+import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
-import ai.ancf.lmos.wot.thing.schema.ConsumedThing
-import ai.ancf.lmos.wot.thing.schema.ExposedThing
+import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
+import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import kotlinx.coroutines.flow.Flow
 import java.net.URI
 
@@ -21,7 +22,7 @@ interface Wot {
      * @param filter
      * @return
      */
-    suspend fun discover(filter: ThingFilter): Flow<ExposedThing>
+    suspend fun discover(filter: ThingFilter): Flow<WoTExposedThing>
 
     /**
      * Starts the discovery process that will provide all available Things.
@@ -29,28 +30,28 @@ interface Wot {
      * @return
      */
 
-    suspend fun discover(): Flow<ExposedThing>
+    suspend fun discover(): Flow<WoTExposedThing>
 
     /**
-     * Accepts a `thing` argument of type [Thing] and returns an [ ] object.<br></br> The result can be used to start exposing interfaces for thing
+     * Accepts a `thing` argument of type [ThingDescription] and returns an [ ] object.<br></br> The result can be used to start exposing interfaces for thing
      * interaction. Returns a failed future if thing with same id is already exposed.
      *
-     * @param thing
+     * @param thingDescription
      * @return
      */
-    fun produce(thing: Thing): ExposedThing
+    fun produce(thingDescription: ThingDescription): ExposedThing
 
-    fun produce(configure: Thing.() -> Unit): ExposedThing
+    fun produce(configure: ThingDescription.() -> Unit): ExposedThing
 
     /**
-     * Accepts a `thing` argument of type [Thing] and returns a [ConsumedThingImpl] object.<br></br>
+     * Accepts a `thing` argument of type [ThingDescription] and returns a [ConsumedThing] object.<br></br>
      *
      * The result can be used to interact with a thing.
      *
-     * @param thing
+     * @param thingDescription
      * @return
      */
-    fun consume(thing: Thing): ConsumedThing
+    fun consume(thingDescription: ThingDescription): WoTConsumedThing
 
     /**
      * Accepts an [java.net.URL] (e.g. "file:..." or "http://...") to a resource that serves a
@@ -59,7 +60,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun requestThingDescription(url: URI): Thing
+    suspend fun requestThingDescription(url: URI): ThingDescription
 
     /**
      * Accepts an [String] containing an url (e.g. "file:..." or "http://...") to a resource
@@ -68,7 +69,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun requestThingDescription(url: String): Thing
+    suspend fun requestThingDescription(url: String): ThingDescription
 
     companion object {
         // Factory method to create an instance of WoT with a given Servient

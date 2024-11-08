@@ -1,16 +1,22 @@
 package ai.ancf.lmos.wot.thing.schema
 
+import ai.ancf.lmos.wot.WoTDSL
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.Context
 import ai.ancf.lmos.wot.thing.Link
+import ai.ancf.lmos.wot.thing.action.ThingAction
+import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 /**
  * Interface representing a Thing Description (TD) in a Web of Things context.
  */
-interface ThingDescription : BaseSchema {
+interface WoTThingDescription : BaseSchema {
 
     /**
      * JSON-LD keyword to define short-hand names called terms that are used throughout a TD document.
@@ -153,7 +159,7 @@ interface ThingDescription : BaseSchema {
  * An interface representing an interaction affordance for a thing.
  * This interface defines properties and methods that provide metadata about the interaction affordance.
  */
-interface InteractionAffordance : BaseSchema {
+sealed interface InteractionAffordance : BaseSchema {
 
     /**
      * Set of form hypermedia controls that describe how an operation can be performed.
@@ -181,6 +187,7 @@ interface InteractionAffordance : BaseSchema {
 /**
  * Interface representing the details of an Action in a Web of Things context.
  */
+@JsonDeserialize(`as` = ThingAction::class)
 interface ActionAffordance<I, O> : InteractionAffordance {
 
     /**
@@ -236,6 +243,7 @@ interface ActionAffordance<I, O> : InteractionAffordance {
 /**
  * Interface representing the details of an Event in a Web of Things context.
  */
+@JsonDeserialize(`as` = ThingEvent::class)
 interface EventAffordance<T, S, C> : InteractionAffordance {
 
     /**
@@ -263,6 +271,21 @@ interface EventAffordance<T, S, C> : InteractionAffordance {
     var cancellation: DataSchema<C>? // Optional: DataSchema
 }
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = StringProperty::class, name = "string") ,
+    JsonSubTypes.Type(value = IntProperty::class, name = "integer"),
+    JsonSubTypes.Type(value = BooleanProperty::class, name = "boolean"),
+    JsonSubTypes.Type(value = NumberProperty::class, name = "number"),
+    JsonSubTypes.Type(value = ArrayProperty::class, name = "array"),
+    JsonSubTypes.Type(value = ObjectProperty::class, name = "object"),
+    JsonSubTypes.Type(value = NullProperty::class, name = "null")
+)
+@WoTDSL
 interface PropertyAffordance<T> : InteractionAffordance, DataSchema<T> {
 
     /**
@@ -273,6 +296,48 @@ interface PropertyAffordance<T> : InteractionAffordance, DataSchema<T> {
     @get:JsonInclude(JsonInclude.Include.NON_DEFAULT)
     var observable: Boolean
 }
+
+data class StringProperty(
+    override var forms: MutableList<Form> = mutableListOf(),
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
+    override var observable: Boolean = false
+) : PropertyAffordance<String>, StringSchema()
+
+data class IntProperty(
+    override var forms: MutableList<Form> = mutableListOf(),
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
+    override var observable: Boolean = false
+) : PropertyAffordance<Int>, IntegerSchema()
+
+data class BooleanProperty(
+    override var forms: MutableList<Form> = mutableListOf(),
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
+    override var observable: Boolean = false
+) : PropertyAffordance<Boolean>, BooleanSchema()
+
+data class NumberProperty(
+    override var forms: MutableList<Form> = mutableListOf(),
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
+    override var observable: Boolean = false
+) : PropertyAffordance<Number>, NumberSchema()
+
+data class ArrayProperty<T>(
+    override var forms: MutableList<Form> = mutableListOf(),
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
+    override var observable: Boolean = false,
+) : PropertyAffordance<List<*>>, ArraySchema<T>()
+
+data class NullProperty(
+    override var forms: MutableList<Form> = mutableListOf(),
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
+    override var observable: Boolean = false
+) : PropertyAffordance<Any>, NullSchema()
+
+data class ObjectProperty(
+    override var forms: MutableList<Form> = mutableListOf(),
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
+    override var observable: Boolean = false
+) : PropertyAffordance<Map<*, *>>, ObjectSchema()
 
 
 

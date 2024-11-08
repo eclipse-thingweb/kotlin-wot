@@ -34,8 +34,8 @@ class HttpProtocolClient(
         return resolveRequestToContent(form, HttpMethod.Get)
     }
 
-    override suspend fun writeResource(form: Form, content: Content): Content {
-        return resolveRequestToContent(form, HttpMethod.Put, content)
+    override suspend fun writeResource(form: Form, content: Content) {
+        resolveRequestToContent(form, HttpMethod.Put, content)
     }
 
     override suspend fun invokeResource(form: Form, content: Content?): Content {

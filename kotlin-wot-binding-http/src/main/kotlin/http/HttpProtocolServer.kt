@@ -4,10 +4,12 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
+import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
+import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -18,11 +20,13 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.reflect.*
+import io.ktor.utils.io.*
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ExecutionException
 import kotlin.collections.set
 
 /**
@@ -192,12 +196,17 @@ fun defaultServer(host: String, port: Int, servient: Servient): EmbeddedServer<*
 }
 
 fun Application.setupRouting(servient: Servient) {
+    install(StatusPages) {
+        exception<IllegalArgumentException> { call, cause ->
+            call.respondText(text = "500: $cause" , status = HttpStatusCode.InternalServerError)
+            throw cause // re-throw if you want it to be logged
+        }
+    }
     setupJackson()
-
     routing {
         route("/") {
             get {
-                call.respond(servient.things.values.toList(), typeInfo<List<ExposedThing>>())
+                call.respond(servient.things.values.toList(), typeInfo<List<WoTExposedThing>>())
             }
         }
         route("/{id}") {
@@ -205,7 +214,7 @@ fun Application.setupRouting(servient: Servient) {
                 val id = call.parameters["id"]
                 val thing: ExposedThing? = servient.things[id]
                 if (thing != null) {
-                    call.respond(thing, typeInfo<ExposedThing>())
+                    call.respond(thing, typeInfo<ThingDescription>())
                 } else {
                     call.response.status(HttpStatusCode.NotFound)
                 }
@@ -218,23 +227,16 @@ fun Application.setupRouting(servient: Servient) {
                 */
                 get {
                     val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
-                    val propertyName = call.parameters["name"]
+                    val propertyName = call.parameters["name"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
                     val thing = servient.things[id] ?: return@get call.response.status(HttpStatusCode.NotFound)
                     val property = thing.properties[propertyName]
                     if (property != null) {
                         if (!property.writeOnly) {
-                             try {
-
-                                 thing.
-
-                                //val value = property.read()
-                                //contentType = getOrDefaultRequestContentType(call.request)
-                                //val content = ContentManager.valueToContent(value, contentType.toString())
-
-                              }
-                             catch (e: ContentCodecException) {
-                                 call.response.status(HttpStatusCode.InternalServerError)
-                            } catch (e: ExecutionException) {
+                            try {
+                                val content = thing.handleReadProperty(propertyName)
+                                call.respondBytes { content.body }
+                            }
+                            catch (e: ContentCodecException) {
                                 call.response.status(HttpStatusCode.InternalServerError)
                             }
                         } else {
@@ -246,50 +248,36 @@ fun Application.setupRouting(servient: Servient) {
                 }
                 put {
                     val id = call.parameters["id"] ?: return@put call.response.status(HttpStatusCode.BadRequest)
-                    val propertyName = call.parameters["name"]
+                    val propertyName = call.parameters["name"] ?: return@put call.response.status(HttpStatusCode.BadRequest)
                     val thing = servient.things[id] ?: return@put call.response.status(HttpStatusCode.NotFound)
-                    val property = thing.properties[propertyName]
-                    if (property != null) {
-                        if (!property.readOnly) {
-                            //val contentType = getOrDefaultRequestContentType(call.request)
-                            //val content = Content(contentType.toString(), call.receiveChannel().toByteArray())
-
-
-                        } else {
-                            call.response.status(HttpStatusCode.BadRequest)
-                        }
+                    val property = thing.properties[propertyName] ?: return@put call.response.status(HttpStatusCode.NotFound)
+                    val contentType = getOrDefaultRequestContentType(call.request)
+                    val content = Content(contentType.toString(), call.receiveChannel().toByteArray())
+                    if (!property.readOnly && content.body.isNotEmpty()) {
+                        call.respondBytes { thing.handleWriteProperty(propertyName, content).body }
                     } else {
-                        call.response.status(HttpStatusCode.NotFound)
+                        call.response.status(HttpStatusCode.BadRequest)
                     }
                 }
             }
             post("/actions/{name}") {
                 val id = call.parameters["id"] ?: return@post call.response.status(HttpStatusCode.BadRequest)
-                val actionName = call.parameters["name"]
+                val actionName = call.parameters["name"] ?: return@post call.response.status(HttpStatusCode.BadRequest)
                 val thing = servient.things[id] ?: return@post call.response.status(HttpStatusCode.NotFound)
-                val action = thing.actions[actionName]
-                if (action != null) {
-                    val requestContentType = getOrDefaultRequestContentType(call.request).toString()
-                    val content = Content(requestContentType, call.receive())
-
-                    if(action.input != null){
-                        val input = ContentManager.contentToValue(content, action.input!!)
-                        //val newValue = action.invokeAction(input, null)
-                        //call.respond(newValue, typeInfo<Any>())
-                    }else{
-                        //val newValue = action.invokeAction(null, null)
-                        //call.respond(newValue, typeInfo<Any>())
+                val action = thing.actions[actionName] ?: return@post call.response.status(HttpStatusCode.NotFound)
+                val contentType = getOrDefaultRequestContentType(call.request)
+                val content = Content(contentType.toString(), call.receiveChannel().toByteArray())
+                if(action.input != null && content.body.isEmpty()) {
+                    call.response.status(HttpStatusCode.BadRequest)
+                }else{
+                    val actionResult = thing.handleInvokeAction(actionName, content)
+                    if(actionResult != null && actionResult.body.isNotEmpty()) {
+                        call.respondBytes { actionResult.body }
+                    } else{
+                        call.response.status(HttpStatusCode.NoContent)
                     }
-
-
-                    /*
-                    val options = mapOf<String, Map<String, Any>>(
-                        "uriVariables" to parseUrlParameters(request.queryMap().toMap(), action.uriVariables)
-                    )
-                    */
-                } else {
-                    call.response.status(HttpStatusCode.NotFound)
                 }
+
             }
             get("/events/{name}") {
                 call.response.status(HttpStatusCode.OK)

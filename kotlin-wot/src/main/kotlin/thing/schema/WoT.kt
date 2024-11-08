@@ -8,16 +8,18 @@ import kotlinx.coroutines.flow.Flow
 import java.io.InputStream
 import javax.xml.transform.ErrorListener
 
+
+
 fun interface PropertyReadHandler {
     suspend fun handle(options: InteractionOptions?): InteractionInput?
 }
 
 fun interface PropertyWriteHandler {
-    suspend fun handle(input: InteractionInput, options: InteractionOptions?): InteractionOutput?
+    suspend fun handle(input: WoTInteractionOutput, options: InteractionOptions?): InteractionInput?
 }
 
 fun interface ActionHandler {
-    suspend fun handle(input: InteractionOutput, options: InteractionOptions?): InteractionInput?
+    suspend fun handle(input: WoTInteractionOutput, options: InteractionOptions?): InteractionInput?
 }
 
 // Type Aliases for Mapping and Listener Types
@@ -27,7 +29,7 @@ typealias PropertyHandlerMap = MutableMap<String, PropertyHandlers>
 typealias ActionHandlerMap = MutableMap<String, ActionHandler>
 typealias EventHandlerMap = MutableMap<String, EventHandlers>
 typealias ListenerMap = Map<String, ListenerItem>
-typealias PropertyReadMap = Map<String, InteractionOutput>
+typealias PropertyReadMap = Map<String, WoTInteractionOutput>
 typealias PropertyWriteMap = Map<String, InteractionInput>
 
 data class InteractionOptions(
@@ -72,10 +74,10 @@ sealed class InteractionInput {
     data class Value(val value: DataSchemaValue) : InteractionInput()
 }
 
-typealias InteractionListener = (data: InteractionOutput) -> Unit
+typealias InteractionListener = (data: WoTInteractionOutput) -> Unit
 
 // Interface for InteractionOutput
-interface InteractionOutput {
+interface WoTInteractionOutput {
     val data: Flow<ByteArray>? // assuming a stream of data, could be ReadableStream equivalent
     val dataUsed: Boolean
     //val form: Form?
@@ -84,8 +86,10 @@ interface InteractionOutput {
     suspend fun value(): DataSchemaValue?
 }
 
+
+
 sealed class DataSchemaValue {
-    data object Null : DataSchemaValue()
+    data object NullValue : DataSchemaValue()
     data class BooleanValue(val value: Boolean) : DataSchemaValue()
     data class IntegerValue(val value: Int) : DataSchemaValue()
     data class NumberValue(val value: Number) : DataSchemaValue()
@@ -94,27 +98,29 @@ sealed class DataSchemaValue {
     data class ArrayValue(val value: List<*>) : DataSchemaValue()
 }
 
-// Interface for ExposedThing, handling various property, action, and event interactions
-interface ExposedThing : ThingDescription {
 
-    fun setPropertyReadHandler(propertyName: String, handler: PropertyReadHandler): ExposedThing
-    fun setPropertyWriteHandler(propertyName: String, handler: PropertyWriteHandler): ExposedThing
-    fun setPropertyObserveHandler(propertyName: String, handler: PropertyReadHandler): ExposedThing
-    fun setPropertyUnobserveHandler(propertyName: String, handler: PropertyReadHandler): ExposedThing
+
+// Interface for ExposedThing, handling various property, action, and event interactions
+interface WoTExposedThing {
+
+    fun setPropertyReadHandler(propertyName: String, handler: PropertyReadHandler): WoTExposedThing
+    fun setPropertyWriteHandler(propertyName: String, handler: PropertyWriteHandler): WoTExposedThing
+    fun setPropertyObserveHandler(propertyName: String, handler: PropertyReadHandler): WoTExposedThing
+    fun setPropertyUnobserveHandler(propertyName: String, handler: PropertyReadHandler): WoTExposedThing
 
     suspend fun emitPropertyChange(propertyName: String, data: InteractionInput? = null)
 
-    fun setActionHandler(actionName: String, handler: ActionHandler): ExposedThing
+    fun setActionHandler(actionName: String, handler: ActionHandler): WoTExposedThing
 
-    fun setEventSubscribeHandler(eventName: String, handler: EventSubscriptionHandler): ExposedThing
-    fun setEventUnsubscribeHandler(eventName: String, handler: EventSubscriptionHandler): ExposedThing
+    fun setEventSubscribeHandler(eventName: String, handler: EventSubscriptionHandler): WoTExposedThing
+    fun setEventUnsubscribeHandler(eventName: String, handler: EventSubscriptionHandler): WoTExposedThing
 
     suspend fun emitEvent(eventName: String, data: InteractionInput? = null)
 
     //suspend fun expose(): Unit
     //suspend fun destroy(): Unit
 
-    fun getThingDescription(): ThingDescription
+    fun getThingDescription(): WoTThingDescription
 }
 
 
@@ -130,15 +136,15 @@ const val THING_CONTEXT_TD_URI_V1: String = "https://www.w3.org/2019/wot/td/v1"
  */
 const val THING_CONTEXT_TD_URI_TEMP: String = "http://www.w3.org/ns/td"
 
-interface ConsumedThing : ThingDescription {
+interface WoTConsumedThing {
 
     /**
      * Reads a property by its name.
      * @param propertyName The name of the property to read.
      * @param options Optional interaction options.
-     * @return The property value as [InteractionOutput].
+     * @return The property value as [WoTInteractionOutput].
      */
-    suspend fun readProperty(propertyName: String, options: InteractionOptions? = InteractionOptions()): InteractionOutput
+    suspend fun readProperty(propertyName: String, options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
 
     /**
      * Reads all properties.
@@ -175,9 +181,9 @@ interface ConsumedThing : ThingDescription {
      * @param actionName The name of the action to invoke.
      * @param params Optional parameters for the action.
      * @param options Optional interaction options.
-     * @return The result of the action as [InteractionOutput].
+     * @return The result of the action as [WoTInteractionOutput].
      */
-    suspend fun invokeAction(actionName: String, params: InteractionInput, options: InteractionOptions? = InteractionOptions()): InteractionOutput
+    suspend fun invokeAction(actionName: String, params: InteractionInput, options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
 
     /**
      * Observes a property by its name, with a callback for each update.
@@ -203,7 +209,7 @@ interface ConsumedThing : ThingDescription {
      * Gets the Thing Description associated with this consumed thing.
      * @return The Thing Description.
      */
-    fun getThingDescription(): ThingDescription
+    fun getThingDescription(): WoTThingDescription
 
     fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form>
 }

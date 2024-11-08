@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 
 /**
- * Deserializes the individual context or the list of contexts of a [Thing] from JSON. Is used
+ * Deserializes the individual context or the list of contexts of a [ThingDescription] from JSON. Is used
  * by Jackson
  */
 internal class ContextDeserializer : JsonDeserializer<Context?>() {

@@ -33,4 +33,19 @@ open class TextCodec : ContentCodec {
             value.toString().toByteArray()
         }
     }
+
+    override fun valueToBytes(
+        value: DataSchemaValue,
+        parameters: Map<String, String>
+    ): ByteArray {
+        return when (value) {
+            is StringValue -> value.value.toByteArray()
+            is IntegerValue -> value.value.toString().toByteArray()
+            is NumberValue ->  value.value.toString().toByteArray()
+            is BooleanValue -> value.value.toString().toByteArray()
+            is ArrayValue -> value.value.toString().toByteArray()
+            is ObjectValue -> value.value.toString().toByteArray()
+            is NullValue -> "".toByteArray()
+        }
+    }
 }

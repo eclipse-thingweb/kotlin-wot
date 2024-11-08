@@ -1,15 +1,6 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ConsumedThingImpl
 import ai.ancf.lmos.wot.thing.event.ThingEvent
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.EventAffordance
-import ai.anfc.lmos.wot.binding.ProtocolClient
-import ai.anfc.lmos.wot.binding.ProtocolClientException
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 /**
  * Used in combination with [ConsumedThingImpl] and allows consuming of a [ThingEvent].

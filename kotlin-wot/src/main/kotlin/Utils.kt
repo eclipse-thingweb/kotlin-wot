@@ -1,9 +1,9 @@
 package ai.ancf.lmos.wot
 
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
 import ai.ancf.lmos.wot.thing.schema.InteractionOptions
-import ai.ancf.lmos.wot.thing.schema.ThingDescription
+import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
 import ai.ancf.lmos.wot.thing.validateInteractionOptions
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -16,7 +16,7 @@ object JsonMapper {
 }
 
 fun parseInteractionOptions(
-    thing: ThingDescription,
+    thing: WoTThingDescription,
     ti: InteractionAffordance,
     options: InteractionOptions? = null
 ): InteractionOptions {
@@ -46,12 +46,12 @@ fun parseInteractionOptions(
 }
 
 fun validateInteractionOptions(
-    thing: Thing,
+    thingDescription: ThingDescription,
     ti: InteractionAffordance,
     options: InteractionOptions? = null
 ): Boolean {
     val interactionUriVariables = ti.uriVariables ?: emptyMap()
-    val thingUriVariables = thing.uriVariables ?: emptyMap()
+    val thingUriVariables = thingDescription.uriVariables ?: emptyMap()
 
     return options?.uriVariables?.all { (key, _) ->
         key in interactionUriVariables || key in thingUriVariables

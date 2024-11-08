@@ -184,11 +184,9 @@ class DataSchemaTest {
             "type": "array", 
             "title": "test",
             "default": [1,2], 
-            "items": [
-                {
-                  "type": "integer"
-                }
-              ],
+            "items": {
+              "type": "integer"
+            },
             "minItems": 1,
             "maxItems": 10}"""
         val schema: ArraySchema<Int> = mapper.readValue(json)

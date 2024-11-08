@@ -1,7 +1,7 @@
 package ai.anfc.lmos.wot.binding
 
 import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.thing.schema.ExposedThing
+import ai.ancf.lmos.wot.thing.ExposedThing
 
 /**
  * A ProtocolServer defines how to expose Thing for interaction via a specific protocol (e.g. HTTP,

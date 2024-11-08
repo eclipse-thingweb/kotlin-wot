@@ -9,7 +9,7 @@ import java.util.*
  * security mechanism providing confidentiality, for example, TLS.<br></br> See also:
  * https://www.w3.org/2019/wot/security#basicsecurityscheme
  */
-class BasicSecurityScheme @JvmOverloads constructor(@field:JsonInclude(JsonInclude.Include.NON_EMPTY) val `in`: String? = null) :
+class BasicSecurityScheme @JvmOverloads constructor(@field:JsonInclude(JsonInclude.Include.NON_EMPTY) var `in`: String? = null) :
     SecurityScheme {
 
     override fun hashCode(): Int {

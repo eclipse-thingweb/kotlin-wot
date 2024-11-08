@@ -2,14 +2,14 @@ package ai.ancf.lmos.wot
 
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
-import ai.ancf.lmos.wot.thing.Thing
+import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import ai.ancf.lmos.wot.thing.schema.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.ObjectSchema
+import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -138,33 +138,34 @@ class Servient(
     /**
      * Adds `thing` to the servient. This allows the Thing to be exposed later.
      *
-     * @param exposedThing
+     * @param thing
      * @return
      */
-    fun addThing(exposedThing: ExposedThing): Boolean {
-        val previous = things.putIfAbsent(exposedThing.id, exposedThing)
+    fun addThing(thing: WoTExposedThing): Boolean {
+        thing as ExposedThing
+        val previous = things.putIfAbsent(thing.id, thing)
         return previous == null
     }
 
     /**
      * Calls `url` and expects a Thing Description there. Returns the description as a
-     * [Thing].
+     * [ThingDescription].
      *
      * @param url
      * @return
      */
-    suspend fun fetch(url: String): Thing {
+    suspend fun fetch(url: String): ThingDescription {
         return fetch(URI(url))
     }
 
     /**
      * Calls `url` and expects a Thing Description there. Returns the description as a
-     * [Thing].
+     * [ThingDescription].
      *
      * @param url
      * @return
      */
-     suspend fun fetch(url: URI): Thing {
+     suspend fun fetch(url: URI): ThingDescription {
         log.debug("Fetch thing from url '{}'", url)
         val scheme = url.scheme
         try {
@@ -175,7 +176,11 @@ class Servient(
                 try {
                     val dataSchemaValue = ContentManager.contentToValue(content, ObjectSchema())
                     dataSchemaValue as DataSchemaValue.ObjectValue
-                    return Thing.fromMap(dataSchemaValue.value)
+
+                    val value = dataSchemaValue.value
+                    value.get("properties")
+
+                    return ThingDescription.fromMap(dataSchemaValue.value)
                 } catch (e: ContentCodecException) {
                     throw ServientException("Error while fetching TD: ${e.message}", e)
                 }
@@ -266,7 +271,7 @@ class Servient(
 
     fun register(
         directory: String,
-        thing: ExposedThingImpl
+        thing: ExposedThing
     ) {
         return register(URI(directory), thing)
     }
@@ -278,7 +283,7 @@ class Servient(
      * @param thing
      * @return
      */
-    private fun register(directory: URI, thing: ExposedThingImpl) {
+    private fun register(directory: URI, thing: ExposedThing) {
         // FIXME: implement
         throw ServientException("not implemented")
     }
@@ -294,7 +299,7 @@ class Servient(
 
     fun unregister(
         directory: String,
-        thing: ExposedThingImpl
+        thing: ExposedThing
     ) {
         return unregister(URI(directory), thing)
     }
@@ -306,7 +311,7 @@ class Servient(
      * @param thing
      * @return
      */
-    private fun unregister(directory: URI, thing: ExposedThingImpl) {
+    private fun unregister(directory: URI, thing: ExposedThing) {
         throw ServientException("not implemented")
     }
 
@@ -318,7 +323,7 @@ class Servient(
      * @return
      */
 
-    suspend fun discover(): Flow<ExposedThing> {
+    suspend fun discover(): Flow<WoTExposedThing> {
         return discover(ThingFilter(method = ANY))
     }
 
@@ -335,7 +340,7 @@ class Servient(
      * @return
      */
 
-    suspend fun discover(filter: ThingFilter): Flow<ExposedThing> {
+    suspend fun discover(filter: ThingFilter): Flow<WoTExposedThing> {
         return when (filter.method) {
             DIRECTORY -> discoverDirectory(filter)
             LOCAL -> discoverLocal(filter)
@@ -345,7 +350,7 @@ class Servient(
 
     // Discover any available Things across all protocols
     @Throws(ServientException::class)
-    private suspend fun discoverAny(filter: ThingFilter): Flow<ExposedThing> = flow {
+    private suspend fun discoverAny(filter: ThingFilter): Flow<WoTExposedThing> = flow {
         var foundAtLeastOne = false
         // Try to run a discovery with every available protocol binding
         for (factory in clientFactories.values) {
@@ -370,9 +375,9 @@ class Servient(
 
     private suspend fun discoverDirectory(
         filter: ThingFilter
-    ): Flow<ExposedThingImpl> = flow {
+    ): Flow<ExposedThing> = flow {
         //val discoveredThings = filter.url?.let { fetchDirectory(it) } TODO
-        val discoveredThings : Map<String, ExposedThingImpl>? = null
+        val discoveredThings : Map<String, ExposedThing>? = null
         val thingsList = discoveredThings?.values?.toList() ?: emptyList()
 
         // Apply the filter query if available
@@ -380,7 +385,7 @@ class Servient(
         filteredThings?.forEach { emit(it) } // Emit each thing one by one
     }
 
-    private fun discoverLocal(filter: ThingFilter): Flow<ExposedThing> = flow {
+    private fun discoverLocal(filter: ThingFilter): Flow<WoTExposedThing> = flow {
         val myThings = things.values.toList()
 
         // Apply the filter query if available

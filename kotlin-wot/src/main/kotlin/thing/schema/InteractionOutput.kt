@@ -4,10 +4,10 @@ import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
 import kotlinx.coroutines.flow.Flow
 
-class InteractionOutputImpl<T>(
+class InteractionOutput(
     private val content: Content,
-    override val schema: DataSchema<T>?
-) : InteractionOutput {
+    override val schema: DataSchema<*>?
+) : WoTInteractionOutput {
     override val data: Flow<ByteArray>?
         get() = TODO("Not yet implemented")
 

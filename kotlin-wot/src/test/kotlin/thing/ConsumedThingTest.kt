@@ -10,27 +10,27 @@ class ConsumedThingTest {
 
     @Test
     fun testEquals() {
-        val thing = Thing(
+        val thingDescription = ThingDescription(
             title = "foo",
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ConsumedThingImpl(Servient(), thing)
-        val thingB = ConsumedThingImpl(Servient(), thing)
+        val thingA = ConsumedThing(Servient(), thingDescription)
+        val thingB = ConsumedThing(Servient(), thingDescription)
         assertEquals(thingA, thingB)
     }
 
     @Test
     fun testHashCode() {
-        val thing = Thing(
+        val thingDescription = ThingDescription(
             title = "foo",
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ConsumedThingImpl(Servient(), thing).hashCode()
-        val thingB = ConsumedThingImpl(Servient(), thing).hashCode()
+        val thingA = ConsumedThing(Servient(), thingDescription).hashCode()
+        val thingB = ConsumedThing(Servient(), thingDescription).hashCode()
         assertEquals(thingA, thingB)
     }
 
@@ -49,7 +49,7 @@ class ConsumedThingTest {
                     },    
                     "security": ["basic_sc"]
                 }"""
-        val thing = ConsumedThingImpl.fromJson(json)
+        val thing = ConsumedThing.fromJson(json)
         if (thing != null) {
             assertEquals("Foo", thing.id)
             assertEquals("Bar", thing.description)

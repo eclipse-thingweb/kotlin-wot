@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.thing.property
 
-import ai.ancf.lmos.wot.thing.ConsumedThingImpl
-import ai.ancf.lmos.wot.thing.schema.ThingProperty
+
 
 /**
  * Used in combination with [ConsumedThingImpl] and allows consuming of a [ThingProperty].

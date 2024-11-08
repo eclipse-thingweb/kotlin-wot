@@ -13,41 +13,41 @@ class ExposedThingTest {
 
     @Test
     fun testEquals() {
-        val thing = Thing(
+        val thingDescription = ThingDescription(
             title = "foo",
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThingImpl(Servient(), thing)
-        val thingB = ExposedThingImpl(Servient(), thing)
+        val thingA = ExposedThing(Servient(), thingDescription)
+        val thingB = ExposedThing(Servient(), thingDescription)
         assertEquals(thingA, thingB)
     }
 
     @Test
     fun testHashCode() {
-        val thing = Thing(
+        val thingDescription = ThingDescription(
             title = "foo",
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThingImpl(Servient(), thing).hashCode()
-        val thingB = ExposedThingImpl(Servient(), thing).hashCode()
+        val thingA = ExposedThing(Servient(), thingDescription).hashCode()
+        val thingB = ExposedThing(Servient(), thingDescription).hashCode()
         assertEquals(thingA, thingB)
     }
 
 
     @Test
     fun toJson() {
-        val thing = Thing(
+        val thingDescription = ThingDescription(
             id  = "foo",
             title = "foo",
             description = "Bla bla",
             objectType = Type("Thing"),
             objectContext = Context("http://www.w3.org/ns/td")
         )
-        val exposedThing = ExposedThingImpl(Servient(), thing)
+        val exposedThing = ExposedThing(Servient(), thingDescription)
 
         val thingAsJson = JsonMapper.instance.writeValueAsString(exposedThing)
         JsonAssertions.assertThatJson(thingAsJson)
@@ -65,20 +65,93 @@ class ExposedThingTest {
 
     @Test
     fun shouldDeserializeGivenJsonToThing() {
-        val json = """{    
-                    "id":"Foo",
-                    "description":"Bar",
-                    "@type":"Thing",
-                    "@context":["http://www.w3.org/ns/td"],
-                    "securityDefinitions": {
-                        "basic_sc": {
-                            "scheme": "basic",
-                            "in": "header"
+        val json = """{
+                    "id": "Foo",
+                    "@type": "Thing",
+                    "@context": "https://www.w3.org/2022/wot/td/v1.1",
+                    "title": "Test Thing",
+                    "description": "A test thing for unit testing",
+                    "properties": {
+                        "stringProperty": {
+                            "type": "string",
+                            "title": "propertyTitle",
+                            "enum": [
+                                "a",
+                                "b",
+                                "c"
+                            ]
+                        },
+                        "intProperty": {
+                            "type": "integer",
+                            "title": "propertyTitle",
+                            "exclusiveMinimum": 1,
+                            "exclusiveMaximum": 10
+                        },
+                        "booleanProperty": {
+                            "type": "boolean",
+                            "title": "propertyTitle"
+                        },
+                        "numberProperty": {
+                            "type": "number",
+                            "title": "propertyTitle"
+                        },
+                        "objectProperty": {
+                            "type": "object",
+                            "properties": {
+                                "subStringProperty": {
+                                    "type": "string",
+                                    "title": "subPropertyTitle"
+                                },
+                                "subBooleanProperty": {
+                                    "type": "boolean",
+                                    "title": "subPropertyTitle"
+                                }
+                            },
+                            "required": [],
+                            "title": "propertyTitle"
+                        },
+                        "arrayProperty": {
+                            "type": "array",
+                            "title": "propertyTitle",
+                            "default": [
+                                "b",
+                                "b",
+                                "c"
+                            ],
+                            "items": {
+                                "type": "string"
+                            }
                         }
-                    },    
-                    "security": ["basic_sc"]
+                    },
+                    "actions": {
+                        "action": {
+                            "title": "actionTitle",
+                            "input": {
+                                "type": "string",
+                                "default": "test",
+                                "minLength": 10
+                            },
+                            "output": {
+                                "type": "integer"
+                            }
+                        },
+                        "action2": {
+                            "title": "actionTitle",
+                            "input": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "events": {
+                        "event": {
+                            "title": "eventTitle",
+                            "data": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 }"""
-        val thing = ExposedThingImpl.fromJson(json)
+        val thing = ExposedThing.fromJson(json)
         if (thing != null) {
             assertEquals("Foo", thing.id)
             assertEquals("Bar", thing.description)

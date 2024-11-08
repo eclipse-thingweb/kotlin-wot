@@ -4,7 +4,7 @@ import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.Context
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
+import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.ObjectSchema
@@ -33,7 +33,7 @@ class ServientTest {
         coEvery { init() } just Runs
         coEvery { destroy() } just Runs
     }
-    private val mockThing = mockk<ExposedThingImpl>() {
+    private val mockThing = mockk<ExposedThing>() {
         every { id } returns "testThing"
     }
     private val mockContent = mockk<Content>()
@@ -109,7 +109,7 @@ class ServientTest {
     @Test
     fun `addThing - should return true if thing is added successfully`() {
         // Arrange
-        val newThing = mockk<ExposedThingImpl> {
+        val newThing = mockk<ExposedThing> {
             every { id } returns "newThing"
         }
 

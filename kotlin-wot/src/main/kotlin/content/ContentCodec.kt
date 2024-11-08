@@ -47,17 +47,6 @@ interface ContentCodec {
         parameters: Map<String, String>
     ): DataSchemaValue
 
-    /**
-     * Serialized `value` according to the data schema defined in `schema` to
-     * a byte array.
-     *
-     * @param value
-     * @return
-     * @throws ContentCodecException
-     */
-    fun valueToBytes(value: Any): ByteArray {
-        return valueToBytes(value, emptyMap())
-    }
 
     /**
      * Serialized `value` according to the data schema defined in `schema` to
@@ -70,4 +59,6 @@ interface ContentCodec {
      * @throws ContentCodecException
      */
     fun valueToBytes(value: Any, parameters: Map<String, String>): ByteArray
+
+    fun valueToBytes(value: DataSchemaValue, parameters: Map<String, String>): ByteArray
 }

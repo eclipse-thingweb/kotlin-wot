@@ -1,13 +1,13 @@
 package ai.ancf.lmos.wot.binding.http.routes
 
 import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
+import ai.ancf.lmos.wot.thing.ExposedThing
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 
-internal abstract class AbstractInteractionRoute(private val servient: Servient, private val securityScheme: String, private val  things: Map<String, ExposedThingImpl>
+internal abstract class AbstractInteractionRoute(private val servient: Servient, private val securityScheme: String, private val  things: Map<String, ExposedThing>
 ) : AbstractRoute() {
 
     private fun checkCredentials(securityScheme: String?, id: String, request: RoutingRequest): Boolean {
