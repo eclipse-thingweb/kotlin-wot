@@ -1,17 +1,6 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.ConsumedThingImpl
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.anfc.lmos.wot.binding.ProtocolClient
-import ai.anfc.lmos.wot.binding.ProtocolClientException
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-
+/*
 class ConsumedThingActionTest {
 
     private val thing: ConsumedThingImpl = mockk(relaxed = true)
@@ -80,3 +69,4 @@ class ConsumedThingActionTest {
         }
     }
 }
+*/

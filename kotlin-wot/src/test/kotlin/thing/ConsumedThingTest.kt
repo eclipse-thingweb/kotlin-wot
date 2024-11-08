@@ -1,14 +1,11 @@
 package ai.ancf.lmos.wot.thing
 
-import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import net.javacrumbs.jsonunit.assertj.JsonAssertions
-import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ExposedThingTest {
+class ConsumedThingTest {
 
 
     @Test
@@ -19,8 +16,8 @@ class ExposedThingTest {
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThingImpl(Servient(), thing)
-        val thingB = ExposedThingImpl(Servient(), thing)
+        val thingA = ConsumedThingImpl(Servient(), thing)
+        val thingB = ConsumedThingImpl(Servient(), thing)
         assertEquals(thingA, thingB)
     }
 
@@ -32,35 +29,9 @@ class ExposedThingTest {
             objectContext = Context("http://www.w3.org/ns/td")
         )
 
-        val thingA = ExposedThingImpl(Servient(), thing).hashCode()
-        val thingB = ExposedThingImpl(Servient(), thing).hashCode()
+        val thingA = ConsumedThingImpl(Servient(), thing).hashCode()
+        val thingB = ConsumedThingImpl(Servient(), thing).hashCode()
         assertEquals(thingA, thingB)
-    }
-
-
-    @Test
-    fun toJson() {
-        val thing = Thing(
-            id  = "foo",
-            title = "foo",
-            description = "Bla bla",
-            objectType = Type("Thing"),
-            objectContext = Context("http://www.w3.org/ns/td")
-        )
-        val exposedThing = ExposedThingImpl(Servient(), thing)
-
-        val thingAsJson = JsonMapper.instance.writeValueAsString(exposedThing)
-        JsonAssertions.assertThatJson(thingAsJson)
-            .`when`(Option.IGNORING_ARRAY_ORDER)
-            .isEqualTo(
-                """{    
-                    "id": "foo",
-                    "title":"foo",
-                    "description":"Bla bla",
-                    "@type":"Thing",
-                    "@context":"http://www.w3.org/ns/td"
-                }"""
-            )
     }
 
     @Test
@@ -78,7 +49,7 @@ class ExposedThingTest {
                     },    
                     "security": ["basic_sc"]
                 }"""
-        val thing = ExposedThingImpl.fromJson(json)
+        val thing = ConsumedThingImpl.fromJson(json)
         if (thing != null) {
             assertEquals("Foo", thing.id)
             assertEquals("Bar", thing.description)

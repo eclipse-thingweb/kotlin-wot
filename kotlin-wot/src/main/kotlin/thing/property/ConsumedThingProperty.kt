@@ -1,19 +1,12 @@
 package ai.ancf.lmos.wot.thing.property
 
-import ai.ancf.lmos.wot.content.ContentCodecException
-import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ConsumedThingImpl
-import ai.ancf.lmos.wot.thing.action.ConsumedThingException
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.PropertyAffordance
 import ai.ancf.lmos.wot.thing.schema.ThingProperty
-import com.fasterxml.jackson.annotation.JsonIgnore
-import org.slf4j.LoggerFactory
 
 /**
  * Used in combination with [ConsumedThingImpl] and allows consuming of a [ThingProperty].
  */
+/*
 data class ConsumedThingProperty<T>(
     private val property: ThingProperty<T>,
     @JsonIgnore
@@ -76,3 +69,4 @@ data class ConsumedThingProperty<T>(
         private val log = LoggerFactory.getLogger(ConsumedThingProperty::class.java)
     }
 }
+*/

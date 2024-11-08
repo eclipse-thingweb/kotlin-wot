@@ -1,10 +1,6 @@
 package ai.ancf.lmos.wot.content
 
-import ai.ancf.lmos.wot.thing.schema.DataSchema
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
-import org.slf4j.LoggerFactory
-import java.util.stream.Collectors
-
+/*
 class LinkFormatCodec : ContentCodec {
     private val log = LoggerFactory.getLogger(LinkFormatCodec::class.java)
     override val mediaType: String
@@ -61,3 +57,4 @@ class LinkFormatCodec : ContentCodec {
         }
     }
 }
+*/

@@ -7,7 +7,7 @@ import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.ArraySchema
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.ObjectSchema
 import ai.anfc.lmos.wot.binding.*
@@ -173,8 +173,9 @@ class Servient(
                 val form = Form(href = url.toString())
                 val content = client.readResource(form)
                 try {
-                    val map = ContentManager.contentToValue(content, ObjectSchema())
-                    return Thing.fromMap(map)
+                    val dataSchemaValue = ContentManager.contentToValue(content, ObjectSchema())
+                    dataSchemaValue as DataSchemaValue.ObjectValue
+                    return Thing.fromMap(dataSchemaValue.value)
                 } catch (e: ContentCodecException) {
                     throw ServientException("Error while fetching TD: ${e.message}", e)
                 }
@@ -191,6 +192,8 @@ class Servient(
         log.debug("Servient looking up credentials for '{}'", id)
         return "credentialStore.get(id)"
     }
+
+    /*
 
     /**
      * Calls `url` and expects a Thing Directory there. Returns a list with all found
@@ -239,6 +242,8 @@ class Servient(
            throw ServientException("Unable to create client: " + e.message)
         }
     }
+
+     */
 
     fun getClientFor(scheme: String): ProtocolClient? {
         val factory = clientFactories[scheme]

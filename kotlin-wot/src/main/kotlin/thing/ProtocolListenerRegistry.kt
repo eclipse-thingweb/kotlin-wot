@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.thing.schema.ContentListener
+import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
 
 class ProtocolListenerRegistry {
 

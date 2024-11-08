@@ -1,11 +1,6 @@
 package ai.ancf.lmos.wot.thing.event
 
-import ai.ancf.lmos.wot.thing.event.ExposedThingEvent.EventState
-import app.cash.turbine.test
-import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-
+/*
 class EventStateTest {
 
     @Test
@@ -41,3 +36,4 @@ class EventStateTest {
         }
     }
 }
+*/

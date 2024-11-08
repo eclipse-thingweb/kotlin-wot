@@ -1,19 +1,16 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.ActionAffordance
-import ai.ancf.lmos.wot.thing.schema.ActionHandler
 import ai.ancf.lmos.wot.thing.schema.DataSchema
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import org.slf4j.LoggerFactory
 
+/*
 @Serializable
 data class ExposedThingAction<I, O>(
     private val action: ThingAction<I, O> = ThingAction(),
@@ -86,6 +83,8 @@ data class ExposedThingAction<I, O>(
     data class ActionState<I, O>(val handler: ActionHandler<I, O>? = null)
 }
 
+ */
+
 @Serializable
 data class ThingAction<I, O>(
     @JsonInclude(NON_EMPTY)
@@ -123,10 +122,7 @@ data class ThingAction<I, O>(
     override var synchronous: Boolean? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var titles: MutableMap<String, String>? = null,
-
-    @JsonIgnore
-    var actionHandler: ActionHandler<I, O>? = null
+    override var titles: MutableMap<String, String>? = null
 ) : ActionAffordance<I, O> {
 }
 

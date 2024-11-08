@@ -4,10 +4,10 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
+import ai.ancf.lmos.wot.thing.schema.ExposedThing
+import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -34,7 +34,7 @@ open class HttpProtocolServer(
     private val bindPort: Int = 8080,
     private val createServer: (host: String, port: Int, servient: Servient) -> EmbeddedServer<*, *> = ::defaultServer
 ) : ProtocolServer {
-    val things: MutableMap<String, ExposedThingImpl> = mutableMapOf()
+    val things: MutableMap<String, ExposedThing> = mutableMapOf()
     var started = false
     private var server: EmbeddedServer<*, *>? = null
     private var actualAddresses: List<String> = listOf("http://$bindHost:$bindPort")
@@ -59,7 +59,7 @@ open class HttpProtocolServer(
     }
 
     // Expose a thing
-    override fun expose(thing: ExposedThingImpl) {
+    override fun expose(thing: ExposedThing) {
         if (!started) throw ProtocolServerException("Server has not started yet")
 
         log.info("Exposing thing '{}'", thing.id)
@@ -82,7 +82,7 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeProperties(thing: ExposedThingImpl, address: String, contentType: String) {
+    internal fun exposeProperties(thing: ExposedThing, address: String, contentType: String) {
         thing.properties.forEach { (name, property) ->
 
             val href = getHrefWithVariablePattern(address, thing, "properties", name, property)
@@ -128,7 +128,7 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeActions(thing: ExposedThingImpl, address: String, contentType: String) {
+    internal fun exposeActions(thing: ExposedThing, address: String, contentType: String) {
         thing.actions.forEach { (name, action) ->
             val href: String = getHrefWithVariablePattern(address, thing, "actions", name, action)
             // Initialize the form using named parameters
@@ -144,7 +144,7 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeEvents(thing: ExposedThingImpl, address: String, contentType: String) {
+    internal fun exposeEvents(thing: ExposedThing, address: String, contentType: String) {
         thing.events.forEach { (name, event) ->
             val href = getHrefWithVariablePattern(address, thing, "events", name, event)
 
@@ -164,7 +164,7 @@ open class HttpProtocolServer(
 
     private fun getHrefWithVariablePattern(
         address: String,
-        thing: ExposedThingImpl,
+        thing: ExposedThing,
         type: String,
         interactionName: String,
         interaction: InteractionAffordance
@@ -178,7 +178,7 @@ open class HttpProtocolServer(
     }
 
     // Destroy a thing
-    override suspend fun destroy(thing: ExposedThingImpl) {
+    override suspend fun destroy(thing: ExposedThing) {
         log.info("Removing thing '{}'", thing.id)
         things.remove(thing.id)
     }
@@ -197,15 +197,15 @@ fun Application.setupRouting(servient: Servient) {
     routing {
         route("/") {
             get {
-                call.respond(servient.things.values.toList(), typeInfo<List<ExposedThingImpl>>())
+                call.respond(servient.things.values.toList(), typeInfo<List<ExposedThing>>())
             }
         }
         route("/{id}") {
             get {
                 val id = call.parameters["id"]
-                val thing: ExposedThingImpl? = servient.things[id]
+                val thing: ExposedThing? = servient.things[id]
                 if (thing != null) {
-                    call.respond(thing, typeInfo<ExposedThingImpl>())
+                    call.respond(thing, typeInfo<ExposedThing>())
                 } else {
                     call.response.status(HttpStatusCode.NotFound)
                 }
@@ -224,19 +224,14 @@ fun Application.setupRouting(servient: Servient) {
                     if (property != null) {
                         if (!property.writeOnly) {
                              try {
-                                val value = property.read()
+
+                                 thing.
+
+                                //val value = property.read()
                                 //contentType = getOrDefaultRequestContentType(call.request)
                                 //val content = ContentManager.valueToContent(value, contentType.toString())
-                                 when (property) {
-                                     is ExposedStringProperty -> call.respond(property.read(), typeInfo<String>())
-                                     is ExposedIntProperty -> call.respond(property.read(), typeInfo<Int>())
-                                     is ExposedBooleanProperty -> call.respond(property.read(), typeInfo<Boolean>())
-                                     is ExposedNumberProperty -> call.respond(property.read(), typeInfo<Double>())
-                                     is ExposedObjectProperty -> call.respond(property.read(), typeInfo<Map<*,*>>())
-                                     is ExposedNullProperty -> call.respond(property.read(), typeInfo<Any>())
-                                     is ExposedArrayProperty -> call.respond(property.read(), typeInfo<List<*>>())
-                                 }
-                            }
+
+                              }
                              catch (e: ContentCodecException) {
                                  call.response.status(HttpStatusCode.InternalServerError)
                             } catch (e: ExecutionException) {
@@ -259,15 +254,7 @@ fun Application.setupRouting(servient: Servient) {
                             //val contentType = getOrDefaultRequestContentType(call.request)
                             //val content = Content(contentType.toString(), call.receiveChannel().toByteArray())
 
-                            when (property) {
-                                is ExposedStringProperty -> call.respond(property.write(call.receive<String>()), typeInfo<String>())
-                                is ExposedIntProperty -> call.respond(property.write(call.receive<Int>()), typeInfo<Int>())
-                                is ExposedBooleanProperty -> call.respond(property.write(call.receive<Boolean>()), typeInfo<Boolean>())
-                                is ExposedNumberProperty -> call.respond(property.write(call.receive<Double>()), typeInfo<Double>())
-                                is ExposedObjectProperty -> call.respond(property.write(call.receive<Map<*,*>>()), typeInfo<Map<*,*>>())
-                                is ExposedNullProperty -> call.respond(property.write(call.receive<Any>()), typeInfo<Any>())
-                                is ExposedArrayProperty -> call.respond(property.write(call.receive<List<*>>()), typeInfo<List<*>>())
-                            }
+
                         } else {
                             call.response.status(HttpStatusCode.BadRequest)
                         }
@@ -287,11 +274,11 @@ fun Application.setupRouting(servient: Servient) {
 
                     if(action.input != null){
                         val input = ContentManager.contentToValue(content, action.input!!)
-                        val newValue = action.invokeAction(input, null)
-                        call.respond(newValue, typeInfo<Any>())
+                        //val newValue = action.invokeAction(input, null)
+                        //call.respond(newValue, typeInfo<Any>())
                     }else{
-                        val newValue = action.invokeAction(null, null)
-                        call.respond(newValue, typeInfo<Any>())
+                        //val newValue = action.invokeAction(null, null)
+                        //call.respond(newValue, typeInfo<Any>())
                     }
 
 

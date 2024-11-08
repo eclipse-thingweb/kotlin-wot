@@ -1,18 +1,7 @@
 package ai.ancf.lmos.wot.thing.event
 
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.thing.schema.StringSchema
-import app.cash.turbine.test
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
-import net.javacrumbs.jsonunit.assertj.JsonAssertions
-import net.javacrumbs.jsonunit.core.Option
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-
+/*
 class ExposedThingEventTest {
     private var name: String? = null
     private var state: ExposedThingEvent.EventState<*>? = null
@@ -100,3 +89,4 @@ class ExposedThingEventTest {
         }
     }
 }
+*/

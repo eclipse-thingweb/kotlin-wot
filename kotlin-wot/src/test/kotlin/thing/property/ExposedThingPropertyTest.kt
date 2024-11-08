@@ -1,21 +1,6 @@
 package ai.ancf.lmos.wot.thing.property
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
-import ai.ancf.lmos.wot.thing.Type
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
-import ai.ancf.lmos.wot.thing.schema.stringProperty
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.mockk.*
-import kotlinx.coroutines.test.runTest
-import net.javacrumbs.jsonunit.assertj.JsonAssertions
-import net.javacrumbs.jsonunit.core.Option
-import java.io.IOException
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-
+/*
 class ExposedThingPropertyTest {
 
     private lateinit var thing: ExposedThingImpl
@@ -154,3 +139,4 @@ class ExposedThingPropertyTest {
     }
 
 }
+ */

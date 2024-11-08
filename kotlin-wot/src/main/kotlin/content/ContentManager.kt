@@ -1,7 +1,10 @@
 package ai.ancf.lmos.wot.content
 
 import ai.ancf.lmos.wot.ServientException
+import ai.ancf.lmos.wot.thing.schema.ArraySchema
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
+import ai.ancf.lmos.wot.thing.schema.ObjectSchema
 import org.slf4j.LoggerFactory
 import java.io.*
 
@@ -15,7 +18,7 @@ object ContentManager {
     init {
         addCodec(JsonCodec(), true)
         addCodec(TextCodec())
-        addCodec(LinkFormatCodec())
+        //addCodec(LinkFormatCodec())
     }
 
     /**
@@ -72,10 +75,10 @@ object ContentManager {
      * @return
      * @throws ContentCodecException
     </T> */
-    fun <T> contentToValue(
+    fun contentToValue(
         content: Content,
-        schema: DataSchema<T>
-    ): T {
+        schema: DataSchema<*>
+    ): DataSchemaValue? {
         // Get content type or use default
         val contentType = content.type
 
@@ -87,7 +90,8 @@ object ContentManager {
         return if (codec != null) {
             log.debug("Content deserializing from '$mediaType'")
             codec.bytesToValue(content.body, schema, parameters)
-        } else {
+        }
+        else {
             log.warn("Content passthrough due to unsupported media type '$mediaType'")
             fallbackBytesToValue(content, schema)
         }
@@ -129,20 +133,50 @@ object ContentManager {
             } // Convert the list of pairs to a map
     }
 
+
+
     private fun <T> fallbackBytesToValue(
         content: Content,
         schema: DataSchema<T>
-    ): T {
-        return try {
-            val byteStream = ByteArrayInputStream(content.body)
-            val objectStream: ObjectInputStream = SecureObjectInputStream(byteStream, schema)
-            objectStream.readObject() as T
+    ): DataSchemaValue {
+         try {
+             val byteStream = ByteArrayInputStream(content.body)
+             val objectStream: ObjectInputStream = SecureObjectInputStream(byteStream, schema)
+             val response = when (val readObject = objectStream.readObject()) {
+                is String -> {
+                    DataSchemaValue.StringValue(readObject)
+                }
+                is Int -> {
+                    // Parse as IntegerValue
+                    DataSchemaValue.IntegerValue(readObject)
+                }
+                is Number -> {
+                    // Parse as NumberValue
+                    DataSchemaValue.NumberValue(readObject)
+                }
+                is Boolean -> {
+                    // Parse as BooleanValue
+                    DataSchemaValue.BooleanValue(readObject)
+                }
+                is ArraySchema<*> -> {
+                    // Parse as ArrayValue
+                    DataSchemaValue.ArrayValue(readObject as List<*>)
+                }
+                is ObjectSchema -> {
+                    // Parse as ObjectValue
+                    DataSchemaValue.ObjectValue(readObject as Map<*, *>)
+                }
+                else -> { DataSchemaValue.Null }
+            }
+             return response
         } catch (e: IOException) {
             throw ContentCodecException("Unable to deserialize content: " + e.message)
         } catch (e: ClassNotFoundException) {
             throw ContentCodecException("Unable to deserialize content: " + e.message)
         }
     }
+
+
 
     /**
      * Serialized `value` using default content type defined in [.DEFAULT] to a

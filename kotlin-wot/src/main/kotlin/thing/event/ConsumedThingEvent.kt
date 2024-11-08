@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 /**
  * Used in combination with [ConsumedThingImpl] and allows consuming of a [ThingEvent].
  */
+/*
 data class ConsumedThingEvent<T, S, C>(private val event: ThingEvent<T, S, C>, private val thing: ConsumedThingImpl) : EventAffordance<T, S, C> by event {
     suspend fun observe(): Flow<T> {
         return try {
@@ -26,3 +27,5 @@ data class ConsumedThingEvent<T, S, C>(private val event: ThingEvent<T, S, C>, p
         }
     }
 }
+*/
+

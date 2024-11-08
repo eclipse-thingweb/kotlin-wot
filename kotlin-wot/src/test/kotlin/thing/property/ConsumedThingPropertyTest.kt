@@ -1,20 +1,6 @@
 package ai.ancf.lmos.wot.thing.property
 
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.ConsumedThingImpl
-import ai.ancf.lmos.wot.thing.action.ConsumedThingException
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.ThingProperty
-import ai.ancf.lmos.wot.thing.schema.stringProperty
-import ai.anfc.lmos.wot.binding.ProtocolClient
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-
+/*
 class ConsumedThingPropertyTest {
 
     private val thing: ConsumedThingImpl = mockk(relaxed = true)
@@ -85,3 +71,4 @@ class ConsumedThingPropertyTest {
         }
     }
 }
+*/

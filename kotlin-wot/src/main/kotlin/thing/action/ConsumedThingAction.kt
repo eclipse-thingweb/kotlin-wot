@@ -1,20 +1,6 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.ServientException
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentCodecException
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.ConsumedThingImpl
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.ActionAffordance
-import ai.ancf.lmos.wot.thing.schema.ConsumedThing
-import ai.anfc.lmos.wot.binding.ProtocolClient
-import com.fasterxml.jackson.annotation.JsonIgnore
-import kotlinx.serialization.Transient
-import org.slf4j.LoggerFactory
-
+/*
 /**
  * Used in combination with [ConsumedThingImpl] and allows consuming of a [ThingAction].
  */
@@ -89,3 +75,4 @@ open class ConsumedThingException : ServientException {
 
     constructor(message: String, cause: Throwable?) : super(cause)
 }
+*/

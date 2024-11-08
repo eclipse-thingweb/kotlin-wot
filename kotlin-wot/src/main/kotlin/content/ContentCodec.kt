@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot.content
 
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 
 /**
  * A ContentCodec is responsible for (de)serializing data in certain encoding (e.g. JSON, CBOR).
@@ -24,7 +25,7 @@ interface ContentCodec {
      * @throws ContentCodecException
     </T> */
 
-    fun <T> bytesToValue(body: ByteArray, schema: DataSchema<T>): T {
+    fun bytesToValue(body: ByteArray, schema: DataSchema<*>): DataSchemaValue {
         return bytesToValue(body, schema, emptyMap())
     }
 
@@ -40,11 +41,11 @@ interface ContentCodec {
      * @return
      * @throws ContentCodecException
     </T> */
-    fun <T> bytesToValue(
+    fun bytesToValue(
         body: ByteArray,
-        schema: DataSchema<T>,
+        schema: DataSchema<*>,
         parameters: Map<String, String>
-    ): T
+    ): DataSchemaValue
 
     /**
      * Serialized `value` according to the data schema defined in `schema` to

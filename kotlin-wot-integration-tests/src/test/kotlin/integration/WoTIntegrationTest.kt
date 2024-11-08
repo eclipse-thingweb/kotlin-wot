@@ -4,7 +4,9 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
-import ai.ancf.lmos.wot.thing.schema.*
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
+import ai.ancf.lmos.wot.thing.schema.stringSchema
+import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,8 +33,6 @@ class WoTIntegrationTest() {
             stringProperty(PROPERTY_NAME) {
                 description = "Property description"
                 minLength = 10
-                readHandler = PropertyReadHandler { "propertyOutput" }
-                writeHandler = PropertyWriteHandler { input -> input }
             }
             action<String, String>(ACTION){
                 description = "Action description"
@@ -42,13 +42,11 @@ class WoTIntegrationTest() {
                 output = stringSchema {
                     description = "Output description"
                 }
-                actionHandler = ActionHandler { input, options -> "actionOutput: $input" }
             }
         }
 
-        exposedThing.setPropertyReadHandler(PROPERTY_NAME) { "propertyOutput" }
-        exposedThing.setPropertyWriteHandler<String>(PROPERTY_NAME) { input -> input }
-        exposedThing.setActionHandler<String, String>(ACTION) { input, options -> "actionOutput: $input" }
+        //exposedThing.setPropertyWriteHandler(PROPERTY_NAME) { input -> input }
+        //exposedThing.setActionHandler(ACTION) { input, options -> "actionOutput: $input" }
 
         servient.start()
         servient.addThing(exposedThing)
@@ -66,10 +64,14 @@ class WoTIntegrationTest() {
 
         val readProperty = consumedThing.readProperty(PROPERTY_NAME)
 
-        assertEquals("propertyOutput", readProperty.value())
+        val propertyResponse = readProperty.value() as DataSchemaValue.StringValue
 
-        val output = consumedThing.invokeAction(ACTION, "actionInput".toInteractionInputValue())
+        assertEquals("propertyOutput", propertyResponse.value)
 
-        assertEquals("actionOutput + actionInput", output.value())
+        val output = consumedThing.invokeAction(ACTION, "actionInput".toInteractionInputValue(), null)
+
+        val actionResponse = output.value() as DataSchemaValue.StringValue
+
+        assertEquals("actionOutput + actionInput", actionResponse.value)
     }
 }

@@ -19,3 +19,4 @@ fun Int.toInteractionInputValue(): InteractionInput.Value {
 fun List<DataSchemaValue>.toInteractionInputValue(): InteractionInput.Value {
     return InteractionInput.Value(DataSchemaValue.ArrayValue(this))
 }
+

@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot.content
 
 import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -59,13 +60,15 @@ class ContentManagerTest {
         // Arrange
         val expectedValue = "decoded value"
         every { schema.classType } returns String::class.java
-        every { jsonCodec.bytesToValue(testContent.body, schema, any()) } returns expectedValue
+        every { jsonCodec.bytesToValue(testContent.body, schema, any()) } returns DataSchemaValue.StringValue(expectedValue)
 
         // Act
         val result = ContentManager.contentToValue(testContent, schema)
 
+        result as DataSchemaValue.StringValue
+
         // Assert
-        assertEquals(expectedValue, result)
+        assertEquals(expectedValue, result.value)
         verify { jsonCodec.bytesToValue(testContent.body, schema, any()) }
     }
 
@@ -122,8 +125,10 @@ class ContentManagerTest {
         // Act
         val result = ContentManager.contentToValue(content, schema)
 
+        result as DataSchemaValue.StringValue
+
         // Assert
-        assertEquals("Fallback value", result)
+        assertEquals("Fallback value", result.value)
     }
 
     @Test

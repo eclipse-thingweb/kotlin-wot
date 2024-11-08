@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty
 import ai.ancf.lmos.wot.thing.schema.ThingProperty.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -22,96 +21,47 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 )
 sealed interface ThingProperty<T> : PropertyAffordance<T>{
 
-    var readHandler: PropertyReadHandler<T>?
-    var writeHandler: PropertyWriteHandler<T>?
-
-    suspend fun read(): T? {
-        log.debug("'{}' calls registered readHandler for Property '{}'", thing.id, title)
-        return try {
-            readHandler?.handle()?.also { state.setValue(it) } ?: state.value
-        } catch (e: Exception) {
-            ExposedThingProperty.log.error("Error while reading property '{}': {}", title, e.message)
-            throw e
-        }
-    }
-
-    suspend fun write(value: T): T? {
-        ExposedThingProperty.log.debug("'{}' calls registered writeHandler for Property '{}'", thing.id, title)
-        return try {
-            if (state.writeHandler != null) {
-                val customValue = state.writeHandler.handle(value)
-                state.setValue(customValue)
-                ExposedThingProperty.log.debug(
-                    "'{}' write handler for Property '{}' sets custom value '{}'",
-                    thing.id,
-                    title,
-                    customValue
-                )
-                customValue
-            } else {
-                state.setValue(value)
-                value
-            }
-        } catch (e: Exception) {
-            throw e
-        }
-    }
-
     data class StringProperty(
         override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
-        override var observable: Boolean = false,
-        override var readHandler: PropertyReadHandler<String>? = null,
-        override var writeHandler: PropertyWriteHandler<String>? = null
+        override var observable: Boolean = false
     ) : ThingProperty<String>, StringSchema()
 
     data class IntProperty(
         override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
-        override var observable: Boolean = false,
-        override var readHandler: PropertyReadHandler<Int>? = null,
-        override var writeHandler: PropertyWriteHandler<Int>? = null
+        override var observable: Boolean = false
     ) : ThingProperty<Int>, IntegerSchema()
 
     data class BooleanProperty(
         override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
-        override var observable: Boolean = false,
-        override var readHandler: PropertyReadHandler<Boolean>? = null,
-        override var writeHandler: PropertyWriteHandler<Boolean>? = null
+        override var observable: Boolean = false
     ) : ThingProperty<Boolean>, BooleanSchema()
 
     data class NumberProperty(
         override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
-        override var observable: Boolean = false,
-        override var readHandler: PropertyReadHandler<Number>? = null,
-        override var writeHandler: PropertyWriteHandler<Number>? = null
+        override var observable: Boolean = false
     ) : ThingProperty<Number>, NumberSchema()
 
     data class ArrayProperty(
         override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
         override var observable: Boolean = false,
-        override var items: List<DataSchema<Any>>? = mutableListOf(),
-        override var readHandler: PropertyReadHandler<List<*>>? = null,
-        override var writeHandler: PropertyWriteHandler<List<*>>? = null
+        override var items: List<DataSchema<Any>>? = mutableListOf()
     ) : ThingProperty<List<*>>, ArraySchema<Any>(items = items)
 
     data class NullProperty(
         override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
-        override var observable: Boolean = false,
-        override var readHandler: PropertyReadHandler<Any>? = null,
-        override var writeHandler: PropertyWriteHandler<Any>? = null
+        override var observable: Boolean = false
     ) : ThingProperty<Any>, NullSchema()
 
     data class ObjectProperty(
         override var forms: MutableList<Form> = mutableListOf(),
         override var uriVariables: MutableMap<String, DataSchema<Any>>? = mutableMapOf(),
-        override var observable: Boolean = false,
-        override var readHandler: PropertyReadHandler<Map<*, *>>? = null,
-        override var writeHandler: PropertyWriteHandler<Map<*, *>>? = null
+        override var observable: Boolean = false
     ) : ThingProperty<Map<*, *>>, ObjectSchema()
 }
 

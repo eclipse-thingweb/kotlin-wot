@@ -1,9 +1,6 @@
 package ai.ancf.lmos.wot.content
 
-import ai.ancf.lmos.wot.thing.schema.BooleanSchema
-import ai.ancf.lmos.wot.thing.schema.IntegerSchema
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
-import ai.ancf.lmos.wot.thing.schema.StringSchema
+import ai.ancf.lmos.wot.thing.schema.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -30,8 +27,10 @@ class JsonCodecTest {
         // Act
         val result = jsonCodec.bytesToValue(""""test"""".toByteArray(), StringSchema(), emptyMap())
 
+        result as DataSchemaValue.StringValue
+
         // Assert
-        assertEquals("test", result)
+        assertEquals("test", result.value)
     }
 
     @Test
@@ -40,8 +39,10 @@ class JsonCodecTest {
         // Act
         val result = jsonCodec.bytesToValue(""""true"""".toByteArray(), BooleanSchema(), emptyMap())
 
+        result as DataSchemaValue.BooleanValue
+
         // Assert
-        assertEquals(true, result)
+        assertEquals(true, result.value)
     }
 
     @Test
@@ -50,8 +51,10 @@ class JsonCodecTest {
         // Act
         val result = jsonCodec.bytesToValue(""""1"""".toByteArray(), IntegerSchema(), emptyMap())
 
+        result as DataSchemaValue.IntegerValue
+
         // Assert
-        assertEquals(1, result)
+        assertEquals(1, result.value)
     }
 
 
@@ -73,7 +76,9 @@ class JsonCodecTest {
         // Act
         val result = jsonCodec.bytesToValue(json, ObjectSchema(), emptyMap())
 
+        result as DataSchemaValue.ObjectValue
+
         // Assert
-        assertEquals("value", result["key"])
+        assertEquals("value", result.value["key"])
     }
 }

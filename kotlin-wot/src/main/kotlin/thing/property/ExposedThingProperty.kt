@@ -1,20 +1,7 @@
 package ai.ancf.lmos.wot.thing.property
 
 
-import ai.ancf.lmos.wot.thing.ExposedThingImpl
-import ai.ancf.lmos.wot.thing.property.ExposedThingProperty.*
-import ai.ancf.lmos.wot.thing.schema.PropertyAffordance
-import ai.ancf.lmos.wot.thing.schema.PropertyReadHandler
-import ai.ancf.lmos.wot.thing.schema.PropertyWriteHandler
-import ai.ancf.lmos.wot.thing.schema.ThingProperty
-import ai.ancf.lmos.wot.thing.schema.ThingProperty.*
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.serialization.Serializable
-
+/*
 @Serializable
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -114,3 +101,4 @@ sealed class ExposedThingProperty<T>(
         private val log: org.slf4j.Logger = org.slf4j.LoggerFactory.getLogger(ExposedThingProperty::class.java)
     }
 }
+*/

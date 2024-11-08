@@ -2,11 +2,11 @@ package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.thing.ExposedThingImpl
+import ai.ancf.lmos.wot.thing.Thing
 import ai.ancf.lmos.wot.thing.exposedThing
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.form.Operation.READ_PROPERTY
 import ai.ancf.lmos.wot.thing.form.Operation.WRITE_PROPERTY
-import ai.ancf.lmos.wot.thing.schema.PropertyReadHandler
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.schema.stringSchema
 import ai.anfc.lmos.wot.binding.ProtocolServerException
@@ -40,7 +40,6 @@ class HttpProtocolServerTest {
     private val exposedThing: ExposedThingImpl = exposedThing(servient) {
         intProperty(PROPERTY_NAME) {
             observable = true
-            readHandler = PropertyReadHandler { 2 }
         }
         action<String, String>(ACTION_NAME)
         {
@@ -146,7 +145,7 @@ class HttpProtocolServerTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
 
-        val things : List<ExposedThingImpl> = response.body()
+        val things : List<Thing> = response.body()
         assertEquals(1, things.size)
 
 
@@ -164,7 +163,7 @@ class HttpProtocolServerTest {
         // Perform GET request on "/test"
         val response = client.get("/${exposedThing.id}")
 
-        val thing : ExposedThingImpl = response.body()
+        val thing : Thing = response.body()
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(exposedThing.id, thing.id)

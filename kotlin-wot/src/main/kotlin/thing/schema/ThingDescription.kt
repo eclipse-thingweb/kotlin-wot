@@ -3,8 +3,6 @@ package ai.ancf.lmos.wot.thing.schema
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.Context
 import ai.ancf.lmos.wot.thing.Link
-import ai.ancf.lmos.wot.thing.action.ThingAction
-import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -76,7 +74,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of property affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var properties: MutableMap<String, ThingProperty<*>> // Optional: Map of PropertyAffordance
+    var properties: MutableMap<String, PropertyAffordance<*>> // Optional: Map of PropertyAffordance
 
     /**
      * All Action-based Interaction Affordances of the Thing.
@@ -84,7 +82,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of action affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var actions: MutableMap<String, ThingAction<*, *>> // Optional: Map of ActionAffordance
+    var actions: MutableMap<String, ActionAffordance<*, *>> // Optional: Map of ActionAffordance
 
     /**
      * All Event-based Interaction Affordances of the Thing.
@@ -92,7 +90,7 @@ interface ThingDescription : BaseSchema {
      * @return a map of event affordances.
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var events: MutableMap<String, ThingEvent<*, *, *>> // Optional: Map of EventAffordance
+    var events: MutableMap<String, EventAffordance<*, *, *>> // Optional: Map of EventAffordance
 
     /**
      * Provides Web links to arbitrary resources that relate to the specified Thing Description.

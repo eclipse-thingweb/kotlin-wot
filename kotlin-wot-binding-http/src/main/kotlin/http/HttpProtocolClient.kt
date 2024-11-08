@@ -108,7 +108,8 @@ class HttpProtocolClient(
         return when (response.status.value) {
             in HttpStatusCode.OK.value..<HttpStatusCode.MultipleChoices.value -> {
                 val body = response.readRawBytes()
-                Content(response.contentType().toString(), body)
+                val contentType = response.contentType() ?: ContentType.Application.Json
+                Content(contentType.toString(), body)
             }
             in HttpStatusCode.MultipleChoices.value..<HttpStatusCode.BadRequest.value -> {
                 throw ProtocolClientException("Received ${response.status.value} and cannot continue (not implemented)")
