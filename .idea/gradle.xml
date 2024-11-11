@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/kotlin-wot" />
             <option value="$PROJECT_DIR$/kotlin-wot-binding-http" />
+            <option value="$PROJECT_DIR$/kotlin-wot-binding-mqtt" />
             <option value="$PROJECT_DIR$/kotlin-wot-integration-tests" />
           </set>
         </option>

@@ -8,6 +8,7 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
+import http.HttpClientConfig
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -25,6 +26,7 @@ import java.util.*
  * Allows consuming Things via HTTP.
  */
 class HttpProtocolClient(
+    private val httpClientConfig: HttpClientConfig?,
     private val client: HttpClient = HttpClient(CIO)
 ) : ProtocolClient {
 
@@ -56,6 +58,14 @@ class HttpProtocolClient(
             }
         }
     }.flowOn(Dispatchers.IO) // Run the flow on IO thread, as it involves network operations
+
+    override suspend fun start() {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun stop() {
+        TODO("Not yet implemented")
+    }
 
     override fun setSecurity(metadata: List<SecurityScheme>, credentials: Map<String, String>): Boolean {
         if (metadata.isEmpty()) {

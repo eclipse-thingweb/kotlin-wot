@@ -317,33 +317,20 @@ fun integerSchema(initializer: IntegerSchema.() -> Unit): IntegerSchema {
  */
 @JsonTypeName("null")
 open class NullSchema(
-    @JsonInclude(NON_EMPTY)
     override var objectType: Type? = null,
     //@JsonInclude(NON_EMPTY)
     //override var type: String? = "null",
-    @JsonInclude(NON_EMPTY)
     override var title: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY)
     override var description: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var descriptions: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY)
     override var const: Any? = null,
-    @JsonInclude(NON_EMPTY)
     override var default: Any? = null,
-    @JsonInclude(NON_EMPTY)
     override var unit: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var oneOf: List<DataSchema<Any>>? = null,
-    @JsonInclude(NON_EMPTY)
     override var enum: List<Any>? = null,
-    @JsonInclude(NON_DEFAULT)
     override var readOnly: Boolean = false,
-    @JsonInclude(NON_DEFAULT)
     override var writeOnly: Boolean = false,
-    @JsonInclude(NON_NULL)
     override var format: String? = null
 ) : DataSchema<Any>{
 
@@ -401,43 +388,25 @@ open class NullSchema(
  */
 @JsonTypeName("number")
 open class NumberSchema(
-    @JsonInclude(NON_EMPTY)
     override var objectType: Type? = null,
     //@JsonInclude(NON_EMPTY)
     //override var type: String? = "null",
-    @JsonInclude(NON_EMPTY)
     override var title: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY)
     override var description: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var descriptions: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY)
     override var const: Number? = null,
-    @JsonInclude(NON_EMPTY)
     override var default: Number? = null,
-    @JsonInclude(NON_EMPTY)
     override var unit: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var oneOf: List<DataSchema<Any>>? = null,
-    @JsonInclude(NON_EMPTY)
     override var enum: List<Any>? = null,
-    @JsonInclude(NON_DEFAULT)
     override var readOnly: Boolean = false,
-    @JsonInclude(NON_DEFAULT)
     override var writeOnly: Boolean = false,
-    @JsonInclude(NON_NULL)
     override var format: String? = null,
-    @JsonInclude(NON_NULL)
     override var minimum: Number? = null,
-    @JsonInclude(NON_NULL)
     override var exclusiveMinimum: Number? = null,
-    @JsonInclude(NON_NULL)
     override var maximum: Number? = null,
-    @JsonInclude(NON_NULL)
     override var exclusiveMaximum: Number? = null,
-    @JsonInclude(NON_NULL)
     override var multipleOf: Number? = null
 ) : BaseNumberSchema<Number>{
 
@@ -515,35 +484,22 @@ fun numberSchema(initializer: NumberSchema.() -> Unit): NumberSchema {
  */
 @JsonTypeName("object")
 open class ObjectSchema(
-    @JsonInclude(NON_EMPTY) val properties: MutableMap<String, DataSchema<*>> = mutableMapOf(),
-    @JsonInclude(NON_EMPTY) val required: MutableList<String> = mutableListOf(),
-    @JsonInclude(NON_EMPTY)
+    @get:JsonInclude(NON_EMPTY) val properties: MutableMap<String, DataSchema<*>> = mutableMapOf(),
+    @get:JsonInclude(NON_EMPTY) val required: MutableList<String> = mutableListOf(),
     override var objectType: Type? = null,
     //@JsonInclude(NON_EMPTY)
     //override var type: String? = "object",
-    @JsonInclude(NON_EMPTY)
     override var title: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY)
     override var description: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var descriptions: MutableMap<String, String>? = null,
-    @JsonInclude(NON_EMPTY)
     override var const: Map<*, *>? = null,
-    @JsonInclude(NON_EMPTY)
     override var default: Map<*, *>? = null,
-    @JsonInclude(NON_EMPTY)
     override var unit: String? = null,
-    @JsonInclude(NON_EMPTY)
     override var oneOf: List<DataSchema<Any>>? = null,
-    @JsonInclude(NON_EMPTY)
     override var enum: List<Any>? = null,
-    @JsonInclude(NON_DEFAULT)
     override var readOnly: Boolean = false,
-    @JsonInclude(NON_DEFAULT)
     override var writeOnly: Boolean = false,
-    @JsonInclude(NON_NULL)
     override var format: String? = null
 ) : DataSchema<Map<*, *>>{
     override fun validate(value: Map<*, *>): List<ValidationException> {

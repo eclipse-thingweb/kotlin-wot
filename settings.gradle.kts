@@ -12,4 +12,5 @@ plugins {
 rootProject.name = "kotlin-wot"
 include("kotlin-wot")
 include("kotlin-wot-binding-http")
+include("kotlin-wot-binding-mqtt")
 include("kotlin-wot-integration-tests")

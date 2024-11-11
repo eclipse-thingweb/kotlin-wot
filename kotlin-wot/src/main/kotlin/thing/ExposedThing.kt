@@ -457,9 +457,20 @@ data class ExposedThing(
         return result
     }
 
+    fun toJson() : String?{
+        return try {
+            JsonMapper.instance.writeValueAsString(this)
+        } catch (e: JsonProcessingException) {
+            log.warn("Unable to write json", e)
+            null
+        }
+    }
+
 
     companion object {
         private val log = LoggerFactory.getLogger(ExposedThing::class.java)
+
+
 
         /**
          * Parses a JSON string into a Thing object.

@@ -34,7 +34,7 @@ interface ProtocolClient {
      * @param filter
      * @return
      */
-    fun discover(filter: ThingFilter): Flow<ExposedThing> {
+    suspend fun discover(filter: ThingFilter): Flow<ExposedThing> {
         throw ProtocolClientNotImplementedException(javaClass, "discover")
     }
 
@@ -99,4 +99,10 @@ interface ProtocolClient {
     suspend fun unlinkResource(form: Form) {
         throw ProtocolClientNotImplementedException(javaClass, "unlinkResource")
     }
+
+    /** start the client (ensure it is ready to send requests) */
+    suspend fun start()
+
+    /** stop the client */
+    suspend fun stop()
 }

@@ -4,7 +4,9 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
+import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.schema.*
+import integration.Agent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -12,7 +14,7 @@ import kotlinx.coroutines.runBlocking
 private const val PROPERTY_NAME = "property1"
 private const val PROPERTY_NAME_2 = "property2"
 
-private const val ACTION_NAME = "action1"
+private const val ACTION_NAME = "ask"
 
 private const val ACTION_NAME_2 = "action2"
 
@@ -38,22 +40,29 @@ fun main(): Unit = runBlocking {
     val wot = Wot.create(servient)
 
     val exposedThing = wot.produce {
-        id = "Foo"
+        id = "Agent"
+        objectType = Type("Agent")
         intProperty(PROPERTY_NAME) {
             observable = true
         }
         intProperty(PROPERTY_NAME_2) {
             observable = true
         }
-        action<String, String>(ACTION_NAME)
+        action<String, Map<*,*>>(ACTION_NAME)
         {
             title = ACTION_NAME
+            description = "Ask a question to the agent"
             input = stringSchema {
                 title = "Action Input"
+                description = "Question"
                 minLength = 10
                 default = "test"
             }
-            output = StringSchema()
+            output = objectSchema {
+                stringProperty("response") {
+                    description = "Answer of the agent"
+                }
+            }
         }
         action<String, String>(ACTION_NAME_2)
         {
@@ -74,13 +83,15 @@ fun main(): Unit = runBlocking {
         }
     }
 
+    val agent = Agent()
+
     exposedThing.setPropertyReadHandler(PROPERTY_NAME) {
         10.toInteractionInputValue()
     }.setPropertyReadHandler(PROPERTY_NAME_2) {
         5.toInteractionInputValue()
     }.setActionHandler(ACTION_NAME) { input, _->
         val inputString = input.value() as DataSchemaValue.StringValue
-        "${inputString.value} 10".toInteractionInputValue()
+        agent.ask(inputString.value).toInteractionInputValue()
     }.setPropertyWriteHandler(PROPERTY_NAME) { input, _->
         val inputInt = input.value() as DataSchemaValue.IntegerValue
         inputInt.value.toInteractionInputValue()
