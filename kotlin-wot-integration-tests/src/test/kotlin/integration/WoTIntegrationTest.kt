@@ -10,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 private const val PROPERTY_NAME = "property1"
+private const val PROPERTY_NAME_2 = "property2"
 
 private const val ACTION_NAME = "action1"
 
@@ -22,8 +23,6 @@ private const val ACTION_NAME_4 = "action4"
 private const val EVENT_NAME = "event1"
 
 class WoTIntegrationTest() {
-
-
     @Test
     fun `Should fetch thing`() = runTest {
 
@@ -35,7 +34,11 @@ class WoTIntegrationTest() {
 
         val exposedThing = wot.produce {
             id = "myid"
+            title = "MyThing"
             intProperty(PROPERTY_NAME) {
+                observable = true
+            }
+            intProperty(PROPERTY_NAME_2) {
                 observable = true
             }
             action<String, String>(ACTION_NAME)
@@ -67,6 +70,8 @@ class WoTIntegrationTest() {
             }
         }.setPropertyReadHandler(PROPERTY_NAME) {
             10.toInteractionInputValue()
+        }.setPropertyReadHandler(PROPERTY_NAME_2) {
+            5.toInteractionInputValue()
         }.setActionHandler(ACTION_NAME) { input, _->
             val inputString = input.value() as DataSchemaValue.StringValue
             "${inputString.value} 10".toInteractionInputValue()
@@ -79,6 +84,8 @@ class WoTIntegrationTest() {
             InteractionInput.Value(DataSchemaValue.NullValue)
         }.setActionHandler(ACTION_NAME_4) { _, _->
             InteractionInput.Value(DataSchemaValue.NullValue)
+        }.setPropertyObserveHandler(PROPERTY_NAME) {
+            10.toInteractionInputValue()
         }
 
         //exposedThing.setPropertyWriteHandler(PROPERTY_NAME) { input -> input }
@@ -111,5 +118,15 @@ class WoTIntegrationTest() {
         val actionResponse = output.value() as DataSchemaValue.StringValue
 
         assertEquals("actionInput 10", actionResponse.value)
+
+        val responseMap = consumedThing.readAllProperties()
+
+        assertEquals(2, responseMap.size)
+        assertEquals(DataSchemaValue.IntegerValue(10), responseMap[PROPERTY_NAME]?.value())
+        assertEquals(DataSchemaValue.IntegerValue(5), responseMap[PROPERTY_NAME_2]?.value())
+
+        consumedThing.observeProperty(PROPERTY_NAME, listener = { println("Property observed: $it") })
+
+        exposedThing.emitPropertyChange(PROPERTY_NAME, 30.toInteractionInputValue())
     }
 }

@@ -5,6 +5,14 @@ fun String.toInteractionInputValue(): InteractionInput.Value {
     return InteractionInput.Value(DataSchemaValue.StringValue(this))
 }
 
+fun MutableMap<*,*>.toInteractionInputValue(): InteractionInput.Value {
+    return InteractionInput.Value(DataSchemaValue.ObjectValue(this))
+}
+
+fun MutableList<*>.toInteractionInputValue(): InteractionInput.Value {
+    return InteractionInput.Value(DataSchemaValue.ArrayValue(this))
+}
+
 fun String.toDataSchemeValue(): DataSchemaValue {
     return DataSchemaValue.StringValue(this)
 }
@@ -31,10 +39,6 @@ fun Int.toInteractionInputValue(): InteractionInput.Value {
 
 fun Int.toDataSchemeValue(): DataSchemaValue {
     return DataSchemaValue.IntegerValue(this)
-}
-
-fun List<DataSchemaValue>.toInteractionInputValue(): InteractionInput.Value {
-    return InteractionInput.Value(DataSchemaValue.ArrayValue(this))
 }
 
 fun List<*>.toDataSchemeValue(): DataSchemaValue {

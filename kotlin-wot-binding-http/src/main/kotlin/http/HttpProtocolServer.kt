@@ -8,6 +8,8 @@ import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
+import ai.ancf.lmos.wot.thing.schema.ContentListener
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.ProtocolServer
@@ -219,31 +221,77 @@ fun Application.setupRouting(servient: Servient) {
                     call.response.status(HttpStatusCode.NotFound)
                 }
             }
-            route("/properties/{name}") {
-                /*
-                get("/observable") {
-                    call.respond("Observing property", typeInfo<String>())
+            route("/properties") {
+                get {
+                    val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
+                    val thing = servient.things[id] ?: return@get call.response.status(HttpStatusCode.NotFound)
+                    val properties : Map<String, Content> = thing.handleReadAllProperties()
+                    val response: MutableMap<String, Any?> = mutableMapOf()
+                    for ((key, value) in properties) {
+                        // Assuming content is not null as it's checked earlier
+                        when (val schemaValue: DataSchemaValue = ContentManager.contentToValue(value, null)) {
+                            is DataSchemaValue.BooleanValue -> {
+                                response[key] = schemaValue.value
+                            }
+                            is DataSchemaValue.IntegerValue -> {
+                                response[key] = schemaValue.value
+                            }
+                            is DataSchemaValue.NumberValue -> {
+                                response[key] = schemaValue.value
+                            }
+                            is DataSchemaValue.StringValue -> {
+                                response[key] = schemaValue.value
+                            }
+                            is DataSchemaValue.ObjectValue -> {
+                                response[key] = schemaValue.value
+                            }
+                            is DataSchemaValue.ArrayValue -> {
+                                response[key] = schemaValue.value
+                            }
+                            is DataSchemaValue.NullValue -> {
+                                response[key] = null
+                            }
+                        }
+                    }
+                    call.respond(response)
                 }
-                */
+            }
+            route("/properties/{name}") {
+                get("/observable") {
+                    val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
+                    val propertyName = call.parameters["name"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
+                    val thing = servient.things[id] ?: return@get call.response.status(HttpStatusCode.NotFound)
+                    val property = thing.properties[propertyName] ?: return@get call.response.status(HttpStatusCode.NotFound)
+                    val contentListener = ContentListener { content: Content ->
+                        call.respondBytes { content.body }
+                    }
+                    thing.handleObserveProperty(propertyName, contentListener)
+                }
+                delete("/observable") {
+                    val id = call.parameters["id"] ?: return@delete call.response.status(HttpStatusCode.BadRequest)
+                    val propertyName = call.parameters["name"] ?: return@delete call.response.status(HttpStatusCode.BadRequest)
+                    val thing = servient.things[id] ?: return@delete call.response.status(HttpStatusCode.NotFound)
+                    val property = thing.properties[propertyName] ?: return@delete call.response.status(HttpStatusCode.NotFound)
+                    val contentListener = ContentListener { content: Content ->
+                        call.respondBytes { content.body }
+                    }
+                    thing.handleUnobserveProperty(propertyName, contentListener)
+                }
                 get {
                     val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
                     val propertyName = call.parameters["name"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
                     val thing = servient.things[id] ?: return@get call.response.status(HttpStatusCode.NotFound)
-                    val property = thing.properties[propertyName]
-                    if (property != null) {
-                        if (!property.writeOnly) {
-                            try {
-                                val content = thing.handleReadProperty(propertyName)
-                                call.respondBytes { content.body }
-                            }
-                            catch (e: ContentCodecException) {
-                                call.response.status(HttpStatusCode.InternalServerError)
-                            }
-                        } else {
-                            call.response.status(HttpStatusCode.BadRequest)
+                    val property = thing.properties[propertyName] ?: return@get call.response.status(HttpStatusCode.NotFound)
+                    if (!property.writeOnly) {
+                        try {
+                            val content = thing.handleReadProperty(propertyName)
+                            call.respondBytes { content.body }
+                        }
+                        catch (e: ContentCodecException) {
+                            call.response.status(HttpStatusCode.InternalServerError)
                         }
                     } else {
-                        call.response.status(HttpStatusCode.NotFound)
+                        call.response.status(HttpStatusCode.BadRequest)
                     }
                 }
                 put {
@@ -271,7 +319,7 @@ fun Application.setupRouting(servient: Servient) {
                     call.response.status(HttpStatusCode.BadRequest)
                 }else{
                     val actionResult = thing.handleInvokeAction(actionName, content)
-                    if(actionResult != null && actionResult.body.isNotEmpty()) {
+                    if(actionResult.body.isNotEmpty()) {
                         call.respondBytes { actionResult.body }
                     } else{
                         call.response.status(HttpStatusCode.NoContent)
@@ -280,6 +328,25 @@ fun Application.setupRouting(servient: Servient) {
 
             }
             get("/events/{name}") {
+                val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
+                val eventName = call.parameters["name"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
+                val thing = servient.things[id] ?: return@get call.response.status(HttpStatusCode.NotFound)
+                val event = thing.events[eventName] ?: return@get call.response.status(HttpStatusCode.NotFound)
+                val contentListener = ContentListener { content: Content ->
+                    call.respondBytes { content.body }
+                }
+                thing.handleSubscribeEvent(eventName, contentListener)
+                call.response.status(HttpStatusCode.OK)
+            }
+            delete("/events/{name}") {
+                val id = call.parameters["id"] ?: return@delete call.response.status(HttpStatusCode.BadRequest)
+                val eventName = call.parameters["name"] ?: return@delete call.response.status(HttpStatusCode.BadRequest)
+                val thing = servient.things[id] ?: return@delete call.response.status(HttpStatusCode.NotFound)
+                val event = thing.events[eventName] ?: return@delete call.response.status(HttpStatusCode.NotFound)
+                val contentListener = ContentListener { content: Content ->
+                    call.respondBytes { content.body }
+                }
+                thing.handleUnsubscribeEvent(eventName, contentListener)
                 call.response.status(HttpStatusCode.OK)
             }
         }

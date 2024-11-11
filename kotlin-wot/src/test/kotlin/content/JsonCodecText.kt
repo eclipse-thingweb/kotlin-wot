@@ -37,7 +37,7 @@ class JsonCodecTest {
     fun `bytesToValue should decode JSON byte array to boolean successfully`() {
 
         // Act
-        val result = jsonCodec.bytesToValue(""""true"""".toByteArray(), BooleanSchema(), emptyMap())
+        val result = jsonCodec.bytesToValue("""true""".toByteArray(), BooleanSchema(), emptyMap())
 
         result as DataSchemaValue.BooleanValue
 
@@ -49,7 +49,7 @@ class JsonCodecTest {
     fun `bytesToValue should decode JSON byte array to integer successfully`() {
 
         // Act
-        val result = jsonCodec.bytesToValue(""""1"""".toByteArray(), IntegerSchema(), emptyMap())
+        val result = jsonCodec.bytesToValue("""1""".toByteArray(), IntegerSchema(), emptyMap())
 
         result as DataSchemaValue.IntegerValue
 

@@ -62,6 +62,8 @@ sealed interface BaseSchema {
 @WoTDSL
 sealed interface DataSchema<T> : BaseSchema {
 
+    fun validate(value: T): List<ValidationException>
+
     /**
      * Constant value.
      */
@@ -124,15 +126,15 @@ sealed interface DataSchema<T> : BaseSchema {
 sealed interface BaseNumberSchema<T> : DataSchema<T>{
 
     @get:JsonInclude(NON_NULL)
-    var minimum: Int?
+    var minimum: T?
     @get:JsonInclude(NON_NULL)
-    var exclusiveMinimum: Int?
+    var exclusiveMinimum: T?
     @get:JsonInclude(NON_NULL)
-    var maximum: Int?
+    var maximum: T?
     @get:JsonInclude(NON_NULL)
-    var exclusiveMaximum: Int?
+    var exclusiveMaximum: T?
     @get:JsonInclude(NON_NULL)
-    var multipleOf: Int?
+    var multipleOf: T?
 }
 
 /**
@@ -156,6 +158,11 @@ open class BooleanSchema(
     override var writeOnly: Boolean = false,
     override var format: String? = null
 ) : DataSchema<Boolean>{
+
+    // Validation function specific to BooleanSchema
+    override fun validate(value: Boolean): List<ValidationException> {
+        return Validators.validateConst(value, const)
+    }
 
     override val classType: Class<Boolean>
         get() = Boolean::class.java
@@ -237,6 +244,14 @@ open class IntegerSchema(
     override var exclusiveMaximum: Int? = null,
     override var multipleOf: Int? = null
 ) : BaseNumberSchema<Int>{
+
+    override fun validate(value: Int): List<ValidationException> {
+        val exceptions = mutableListOf<ValidationException>()
+        exceptions.addAll(Validators.validateBounds(value, minimum, maximum, exclusiveMinimum, exclusiveMaximum))
+        exceptions.addAll(Validators.validateMultipleOf(value, multipleOf))
+        exceptions.addAll(Validators.validateEnum(value, enum))
+        return exceptions
+    }
 
     override val classType: Class<Int>
         get() = Int::class.java
@@ -332,6 +347,10 @@ open class NullSchema(
     override var format: String? = null
 ) : DataSchema<Any>{
 
+    override fun validate(value: Any): List<ValidationException> {
+        return emptyList()
+    }
+
     override val classType: Class<Any>
         get() = Any::class.java
 
@@ -411,16 +430,24 @@ open class NumberSchema(
     @JsonInclude(NON_NULL)
     override var format: String? = null,
     @JsonInclude(NON_NULL)
-    override var minimum: Int? = null,
+    override var minimum: Number? = null,
     @JsonInclude(NON_NULL)
-    override var exclusiveMinimum: Int? = null,
+    override var exclusiveMinimum: Number? = null,
     @JsonInclude(NON_NULL)
-    override var maximum: Int? = null,
+    override var maximum: Number? = null,
     @JsonInclude(NON_NULL)
-    override var exclusiveMaximum: Int? = null,
+    override var exclusiveMaximum: Number? = null,
     @JsonInclude(NON_NULL)
-    override var multipleOf: Int? = null
+    override var multipleOf: Number? = null
 ) : BaseNumberSchema<Number>{
+
+    override fun validate(value: Number): List<ValidationException> {
+        val exceptions = mutableListOf<ValidationException>()
+        exceptions.addAll(Validators.validateBounds(value, minimum, maximum, exclusiveMinimum, exclusiveMaximum))
+        exceptions.addAll(Validators.validateMultipleOf(value, multipleOf))
+        exceptions.addAll(Validators.validateEnum(value, enum))
+        return exceptions
+    }
 
     override val classType: Class<Number>
         get() = Number::class.java
@@ -467,13 +494,15 @@ open class NumberSchema(
         result = 31 * result + readOnly.hashCode()
         result = 31 * result + writeOnly.hashCode()
         result = 31 * result + (format?.hashCode() ?: 0)
-        result = 31 * result + (minimum ?: 0)
-        result = 31 * result + (exclusiveMinimum ?: 0)
-        result = 31 * result + (maximum ?: 0)
-        result = 31 * result + (exclusiveMaximum ?: 0)
-        result = 31 * result + (multipleOf ?: 0)
+        result = 31 * result + (minimum?.hashCode() ?: 0)
+        result = 31 * result + (exclusiveMinimum?.hashCode() ?: 0)
+        result = 31 * result + (maximum?.hashCode() ?: 0)
+        result = 31 * result + (exclusiveMaximum?.hashCode() ?: 0)
+        result = 31 * result + (multipleOf?.hashCode() ?: 0)
         return result
     }
+
+
 }
 
 fun numberSchema(initializer: NumberSchema.() -> Unit): NumberSchema {
@@ -517,6 +546,23 @@ open class ObjectSchema(
     @JsonInclude(NON_NULL)
     override var format: String? = null
 ) : DataSchema<Map<*, *>>{
+    override fun validate(value: Map<*, *>): List<ValidationException> {
+        val exceptions = mutableListOf<ValidationException>()
+        properties.forEach { (key, schema) ->
+            val propValue = value[key]
+            val propExceptions = when (schema) {
+                is StringSchema -> if (propValue is String) schema.validate(propValue) else listOf(ArrayItemsException("Item $propValue is not a String"))
+                is IntegerSchema -> if (propValue is Int) schema.validate(propValue) else listOf(ArrayItemsException("Item $propValue is not an Integer"))
+                is BooleanSchema -> if (propValue is Boolean) schema.validate(propValue) else listOf(ArrayItemsException("Item $propValue is not a Boolean"))
+                is NumberSchema -> if (propValue is Number) schema.validate(propValue) else listOf(ArrayItemsException("Item $propValue is not a Number"))
+                is ObjectSchema -> if (propValue is Map<*, *>) schema.validate(propValue) else listOf(ArrayItemsException("Item $propValue is not an Object"))
+                is ArraySchema<*> -> if (propValue is List<*>) schema.validate(propValue) else listOf(ArrayItemsException("Item $propValue is not an Object"))
+                else -> listOf(ArrayItemsException("Unknown item type"))
+            }
+            exceptions.addAll(propExceptions)
+        }
+        return exceptions
+    }
 
     fun stringProperty(name: String, configure: StringSchema.() -> Unit) {
         this.properties[name] = StringSchema().apply(configure)
@@ -631,6 +677,15 @@ open class StringSchema(
     var contentMediaType: String? = null
 ) : DataSchema<String> {
 
+    // Validation function specific to StringSchema
+    override fun validate(value: String): List<ValidationException> {
+        val exceptions = mutableListOf<ValidationException>()
+        exceptions.addAll(Validators.validateStringLength(value, minLength, maxLength))
+        exceptions.addAll(Validators.validatePattern(value, pattern))
+        exceptions.addAll(Validators.validateEnum(value, enum))
+        return exceptions
+    }
+
     override val classType: Class<String>
         get() = String::class.java
 
@@ -717,6 +772,14 @@ open class ArraySchema<T>(
     @get:JsonInclude(NON_NULL)
     var maxItems: Int? = null           // Maximum number of items
 ) : DataSchema<List<*>> {
+
+    override fun validate(value: List<*>): List<ValidationException> {
+        val exceptions = mutableListOf<ValidationException>()
+        exceptions.addAll(Validators.validateArrayLength(value, minItems, maxItems))
+        exceptions.addAll(Validators.validateArrayItems(value, items))
+        return exceptions
+    }
+
     override val classType: Class<List<*>>
         get() = List::class.java
 

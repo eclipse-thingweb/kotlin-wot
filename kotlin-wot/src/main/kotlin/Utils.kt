@@ -27,7 +27,7 @@ fun parseInteractionOptions(
 
     val interactionUriVariables = ti.uriVariables ?: emptyMap()
     val thingUriVariables = thing.uriVariables ?: emptyMap()
-    val uriVariables = mutableMapOf<String, Any>()
+    val uriVariables = mutableMapOf<String, String>()
     options?.uriVariables?.let { userUriVariables ->
         userUriVariables.forEach { (key, value) ->
             if (key in interactionUriVariables || key in thingUriVariables) {
@@ -42,6 +42,7 @@ fun parseInteractionOptions(
         }
     }
     */
+
     return InteractionOptions(uriVariables = uriVariables.toMap())
 }
 

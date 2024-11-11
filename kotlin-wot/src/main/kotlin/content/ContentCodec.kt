@@ -25,7 +25,7 @@ interface ContentCodec {
      * @throws ContentCodecException
     </T> */
 
-    fun bytesToValue(body: ByteArray, schema: DataSchema<*>): DataSchemaValue {
+    fun bytesToValue(body: ByteArray, schema: DataSchema<*>?): DataSchemaValue {
         return bytesToValue(body, schema, emptyMap())
     }
 
@@ -43,7 +43,7 @@ interface ContentCodec {
     </T> */
     fun bytesToValue(
         body: ByteArray,
-        schema: DataSchema<*>,
+        schema: DataSchema<*>?,
         parameters: Map<String, String>
     ): DataSchemaValue
 

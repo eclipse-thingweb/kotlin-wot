@@ -11,7 +11,7 @@ open class TextCodec : ContentCodec {
     override val mediaType: String
         get() = "text/plain"
 
-    override fun bytesToValue(body: ByteArray, schema: DataSchema<*>, parameters: Map<String, String>): DataSchemaValue {
+    override fun bytesToValue(body: ByteArray, schema: DataSchema<*>?, parameters: Map<String, String>): DataSchemaValue {
         val parsed = parameters["charset"]?.let { charset ->
             String(body, Charset.forName(charset))
         } ?: String(body)
@@ -21,7 +21,7 @@ open class TextCodec : ContentCodec {
             is IntegerSchema -> IntegerValue(parsed.toInt())
             is NumberSchema -> IntegerValue(parsed.toInt())
             is StringSchema -> StringValue(parsed)
-            else -> throw IllegalArgumentException("Unsupported schema type: ${schema::class}")
+            else -> throw IllegalArgumentException("Unsupported schema type: ${schema.toString()}")
         }
     }
 

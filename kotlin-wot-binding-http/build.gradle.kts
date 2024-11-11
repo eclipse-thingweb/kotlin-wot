@@ -20,4 +20,5 @@ dependencies {
     //implementation("io.insert-koin:koin-ktor:4.0.0")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("ch.qos.logback:logback-classic:1.5.12")
+    testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
 }

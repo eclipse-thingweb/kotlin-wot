@@ -12,10 +12,20 @@ import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import com.fasterxml.jackson.annotation.JsonIgnore
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
-import javax.xml.transform.ErrorListener
+import java.net.MalformedURLException
+import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 
 /**
  * Represents an object that extends a Thing with methods for client interactions (send request for
@@ -27,6 +37,9 @@ data class ConsumedThing(
     private val servient: Servient,
     private val thingDescription: WoTThingDescription = ThingDescription(),
 ) : WoTConsumedThing, WoTThingDescription by thingDescription  {
+
+    private val subscribedEvents: ConcurrentMap<String, Subscription> = ConcurrentHashMap()
+    private val observedProperties: ConcurrentMap<String, Subscription> = ConcurrentHashMap()
 
     override suspend fun readProperty(propertyName: String, options: InteractionOptions?): WoTInteractionOutput {
         val property = this.properties[propertyName]
@@ -41,14 +54,14 @@ data class ConsumedThing(
             log.debug("ConsumedThing '{}' reading {}", this.title, form.href)
 
             // Handle URI variables if present
-            //val finalForm = handleUriVariables(this, property, form, options)
+            val finalForm = handleUriVariables(this, property, form, options)
 
             // Use the client to read the resource
-            val content = client.readResource(form)
+            val content = client.readResource(finalForm)
 
             // Process and handle the interaction output
 
-            handleInteractionOutput(content, form, property)
+            handleInteractionOutput(content, finalForm, property)
         } catch (e: Exception) {
             throw ConsumedThingException("Error while processing property for ${property.title}. ${e.message}", e)
         }
@@ -73,14 +86,57 @@ data class ConsumedThing(
     }
 
     override suspend fun readAllProperties(options: InteractionOptions?): PropertyReadMap {
-        TODO("Not yet implemented")
+        val propertyNames = mutableListOf<String>()
+
+        // Iterate over all properties
+        for ((propertyName, property) in properties) {
+            try {
+                // Get the form for the "readproperty" action
+                val form = getClientFor(property.forms, Operation.READ_PROPERTY)
+                // If a valid form is found, add the property name to the list
+                propertyNames.add(propertyName)
+            } catch (e: Exception) {
+                // Handle any error that might occur during processing
+                println("Error processing property $propertyName: ${e.message}")
+            }
+        }
+
+        // Call the internal function to read properties and return the result
+        return readProperties(propertyNames)
     }
 
-    override suspend fun readMultipleProperties(
-        propertyNames: List<String>,
-        options: InteractionOptions?
-    ): PropertyReadMap {
-        TODO("Not yet implemented")
+    private suspend fun readProperties(propertyNames: List<String>): PropertyReadMap {
+        // Create a list of promises (in Kotlin, this is coroutines)
+        val promises: List<Deferred<WoTInteractionOutput>> = propertyNames.map { propertyName ->
+            coroutineScope {
+                async { readProperty(propertyName) }
+            }
+        }
+
+        // Wait for all promises to complete and create the result map
+        val output = mutableMapOf<String, WoTInteractionOutput>()
+        try {
+            // Await all promises and collect the results
+            val results = promises.awaitAll()
+            propertyNames.forEachIndexed { index, propertyName ->
+                output[propertyName] = results[index]
+            }
+            return output
+        } catch (e: Exception) {
+            throw Exception("ConsumedThing '${title}', failed to read properties: $propertyNames.\n Error: ${e.message}")
+        }
+    }
+
+    // Function to read multiple properties
+    override suspend fun readMultipleProperties(propertyNames: List<String>, options: InteractionOptions?): PropertyReadMap {
+        return try {
+            // Simply call the internal function for reading the specified properties
+            readProperties(propertyNames)
+        } catch (e: Exception) {
+            // Handle error when reading multiple properties
+            println("Error reading multiple properties: ${e.message}")
+            throw e  // Propagate the error after logging
+        }
     }
 
     override suspend fun writeProperty(propertyName: String, value: InteractionInput, options: InteractionOptions?) {
@@ -96,11 +152,11 @@ data class ConsumedThing(
             log.debug("ConsumedThing '{}' reading {}", this.title, form.href)
 
             // Handle URI variables if present
-            //val finalForm = handleUriVariables(this, property, form, options)
+            val finalForm = handleUriVariables(this, property, form, options)
 
             val interactionValue = value as InteractionInput.Value
 
-            val content = ContentManager.valueToContent(interactionValue.value, form.contentType)
+            val content = ContentManager.valueToContent(interactionValue.value, finalForm.contentType)
 
             client.writeResource(form, content)
 
@@ -110,7 +166,21 @@ data class ConsumedThing(
     }
 
     override suspend fun writeMultipleProperties(valueMap: PropertyWriteMap, options: InteractionOptions?) {
-        TODO("Not yet implemented")
+        // Collect all deferred write operations into a list
+        val deferredWrites = mutableListOf<Deferred<Unit>>()
+
+        coroutineScope {
+            for ((propertyName, value) in valueMap) {
+                deferredWrites.add(async { writeProperty(propertyName, value) })
+            }
+        }
+
+        // Wait for all deferred operations to complete
+        try {
+            deferredWrites.awaitAll()
+        } catch (e: Exception) {
+            throw ConsumedThingException("ConsumedThing '$title', failed to write multiple properties. Error: ${e.message}", e)
+        }
     }
 
     override suspend fun invokeAction(
@@ -129,11 +199,11 @@ data class ConsumedThing(
             log.debug("ConsumedThing '{}' invoke {}", this.title, form.href)
 
             // Handle URI variables if present
-            //val finalForm = handleUriVariables(this, property, form, options)
+            val finalForm = handleUriVariables(this, action, form, options)
 
             val interactionValue = params as InteractionInput.Value
 
-            val content = ContentManager.valueToContent(interactionValue.value, form.contentType)
+            val content = ContentManager.valueToContent(interactionValue.value, finalForm.contentType)
 
             val response = client.invokeResource(form, content)
 
@@ -145,21 +215,83 @@ data class ConsumedThing(
     }
 
     override suspend fun observeProperty(
-        name: String,
+        propertyName: String,
         listener: InteractionListener,
-        onError: ErrorListener?,
+        errorListener: ErrorListener?,
         options: InteractionOptions?
     ): Subscription {
-        TODO("Not yet implemented")
+        val property = this.properties[propertyName]
+        requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
+
+        val (client, form) = getClientFor(property.forms, Operation.OBSERVE_PROPERTY)
+
+        if (observedProperties.containsKey(propertyName)) {
+            throw IllegalStateException("ConsumedThing '$title' already has a function subscribed to $property. You can only observe once.")
+        }
+
+        log.debug("ConsumedThing '$title' observing to ${form.href}")
+
+        // Process URI variables if present
+        val formWithoutURITemplates = handleUriVariables(this, property, form, options)
+
+        // Subscribe to the resource
+        client.subscribeResource(formWithoutURITemplates)
+            .map { content ->
+                // Process the content with `handleInteractionOutput`
+                handleInteractionOutput(content, form, property)
+            }
+            .onEach { result ->
+                // Pass each result to the listener
+                listener.handle(result)
+            }
+            .catch { error ->
+                // Handle any error by passing it to the errorListener if defined
+                errorListener?.handle(error)
+                log.warn("Error while processing observe property for ${property.title}: ${error.message}", error)
+            }
+
+        val subscription = InternalPropertySubscription(this, propertyName, client, form)
+        observedProperties[propertyName] = subscription
+        return subscription
     }
 
     override suspend fun subscribeEvent(
-        name: String,
+        eventName: String,
         listener: InteractionListener,
-        onError: ErrorListener?,
+        errorListener: ErrorListener?,
         options: InteractionOptions?
     ): Subscription {
-        TODO("Not yet implemented")
+        val eventAffordance = requireNotNull(events[eventName]) {
+            "ConsumedThing '$title', no event found for '$eventName'"
+        }
+
+        val (client, form) = getClientFor(eventAffordance.forms, Operation.SUBSCRIBE_EVENT)
+
+        if (subscribedEvents.containsKey(eventName)) {
+            throw IllegalStateException("ConsumedThing '$title' already has a function subscribed to $eventName. You can only subscribe once.")
+        }
+
+        log.debug("ConsumedThing '$title' subscribing to ${form.href}")
+
+        // Process URI variables if present
+        val formWithoutURITemplates = handleUriVariables(this, eventAffordance, form, options)
+
+        // Subscribe to the resource
+        client.subscribeResource(formWithoutURITemplates)
+            .map { content ->
+                handleInteractionOutput(content, form, eventAffordance.data)
+            }
+            .onEach { result ->
+                listener.handle(result)
+            }
+            .catch { error ->
+                errorListener?.handle(error)
+                log.warn("Error while processing observe property for ${eventAffordance.title}: ${error.message}", error)
+            }
+
+        val subscription = InternalEventSubscription(this, eventName, client, form)
+        subscribedEvents[eventName] = subscription
+        return subscription
     }
 
     @JsonIgnore
@@ -248,49 +380,12 @@ data class ConsumedThing(
             ?: throw NoFormForInteractionConsumedThingException(id, op)
     }
 
-    suspend fun readProperties(vararg names: String): Map<*, *> {
-        return readProperties(listOf(*names))
-    }
-
-    /**
-     * Returns the values of the properties contained in `names`.
-     *
-     * @param names
-     * @return
-     */
-    suspend fun readProperties(names: List<String>): Map<*, *> {
-        val values = readProperties()
-
-        return values.filter { (key, _) -> key in names }
-            .mapKeys { it.key }
-    }
-    /*
-
-    /**
-     * Returns the values of all properties.
-     *
-     * @return
-     */
-    suspend fun readProperties(): Map<*, *> {
-        val clientAndForm: Pair<ProtocolClient, Form> = getClientFor(forms, Operation.READ_ALL_PROPERTIES)
-        val client = clientAndForm.first
-        val form: Form = clientAndForm.second
-        log.debug("'{}' reading '{}'", id, form.href)
-        val result = client.readResource(form)
-        try {
-            return ContentManager.contentToValue(result, ObjectSchema())
-        } catch (e: ContentCodecException) {
-            throw CompletionException(ConsumedThingException("Received invalid writeResource from Thing: " + e.message))
-        }
-    }
-     */
-
     /**
      * Creates new form (if needed) for URI Variables http://192.168.178.24:8080/counter/actions/increment{?step}
      * with '{'step' : 3}' -&gt; http://192.168.178.24:8080/counter/actions/increment?step=3.<br></br>
      * see RFC6570 (https://tools.ietf.org/html/rfc6570) for URI Template syntax
      */
-    fun handleUriVariables(form: Form, parameters: Map<String, Any>): Form {
+    fun handleUriVariables(form: Form, parameters: Map<String, String>): Form {
         val href: String = form.href
         val uriTemplate: UriTemplate = UriTemplate.fromTemplate(href)
         val updatedHref: String = uriTemplate.expand(parameters)
@@ -381,6 +476,108 @@ data class ConsumedThing(
         return result
     }
 
+    abstract class InternalSubscription(
+        protected val thing: ConsumedThing,
+        protected val name: String,
+        protected val client: ProtocolClient
+    ) : Subscription
+
+    class InternalPropertySubscription(
+        thing: ConsumedThing,
+        name: String,
+        client: ProtocolClient,
+        form: Form,
+        override var active: Boolean = true
+    ) : InternalSubscription(thing, name, client) {
+
+        private var formIndex: Int = -1
+
+        init {
+            val index = thing.properties[name]?.forms?.indexOf(form)
+            if (index == null || index < 0) {
+                throw Error("Could not find form ${form.href} in property $name")
+            }
+            formIndex = index
+        }
+
+        override suspend fun stop(options: InteractionOptions) {
+            unobserveProperty(options)
+            thing.observedProperties.remove(name)
+        }
+
+        private suspend fun unobserveProperty(options: InteractionOptions = InteractionOptions()) {
+            val property = thing.properties[name]
+            requireNotNull(property) { "ConsumedThing '${thing.title}' does not have property $name" }
+            options.formIndex = options.formIndex ?: matchingUnsubscribeForm()
+            val ( client, form ) = thing.getClientFor(property.forms, Operation.UNOBSERVE_PROPERTY)
+
+
+            val formWithoutURIvariables = thing.handleUriVariables(thing, property, form, options)
+            log.debug("ConsumedThing '${thing.title}' unobserving to ${form.href}")
+            client.unlinkResource(formWithoutURIvariables)
+            active = false
+        }
+
+        private fun matchingUnsubscribeForm(): Int {
+            val refForm = thing.properties[name]?.forms?.get(formIndex)
+            return if (refForm?.op == null || refForm.op.contains(Operation.UNOBSERVE_PROPERTY)) {
+                formIndex
+            } else {
+                val bestFormMatch = findFormIndexWithScoring(formIndex, thing.properties[name]?.forms ?: emptyList(), Operation.UNOBSERVE_PROPERTY)
+                if (bestFormMatch == -1) throw Error("Could not find matching form for unsubscribe")
+                bestFormMatch
+            }
+        }
+    }
+
+    class InternalEventSubscription(
+        thing: ConsumedThing,
+        name: String,
+        client: ProtocolClient,
+        private val form: Form,
+        override var active: Boolean = true
+    ) : InternalSubscription(thing, name, client) {
+
+        private var formIndex: Int = -1
+
+        init {
+            val index = thing.events[name]?.forms?.indexOf(form)
+            if (index == null || index < 0) {
+                throw Error("Could not find form ${form.href} in event $name")
+            }
+            formIndex = index
+        }
+
+        override suspend fun stop(options: InteractionOptions) {
+            unsubscribeEvent(options)
+            thing.subscribedEvents.remove(name)
+        }
+
+        suspend fun unsubscribeEvent(options: InteractionOptions = InteractionOptions()){
+            val event = requireNotNull(thing.events[name]) {
+                "ConsumedThing '${thing.title}', no event found for '$name'"
+            }
+            options.formIndex = options.formIndex ?: matchingUnsubscribeForm()
+            val ( client, form ) = thing.getClientFor(event.forms, Operation.UNSUBSCRIBE_EVENT)
+
+            val formWithoutURIvariables = thing.handleUriVariables(thing, event, form, options)
+            log.debug("ConsumedThing '${thing.title}' unsubscribing to ${form.href}")
+            client.unlinkResource(formWithoutURIvariables)
+            active = false
+        }
+
+        private fun matchingUnsubscribeForm(): Int {
+            val refForm = thing.events[name]?.forms?.get(formIndex)
+            return if (refForm?.op == null || refForm.op.contains(Operation.UNSUBSCRIBE_EVENT)) {
+                formIndex
+            } else {
+                val bestFormMatch = findFormIndexWithScoring(formIndex, thing.events[name]?.forms ?: emptyList(), Operation.UNSUBSCRIBE_EVENT)
+                if (bestFormMatch == -1) throw Error("Could not find matching form for unsubscribe")
+                bestFormMatch
+            }
+        }
+
+    }
 
     companion object {
         private val log = LoggerFactory.getLogger(ConsumedThing::class.java)
@@ -442,3 +639,50 @@ open class ConsumedThingException : ServientException {
 
     constructor(message: String, cause: Throwable?) : super(cause)
 }
+
+
+fun findFormIndexWithScoring(
+    formIndex: Int,
+    forms: List<Form>,
+    operation: Operation
+): Int {
+    val refForm = forms[formIndex]
+    var maxScore = 0
+    var maxScoreIndex = -1
+
+    for (i in forms.indices) {
+        var score = 0
+        val form = forms[i]
+
+        // Check if the form's operation matches the desired operation
+        if ((form.op?.contains(operation) == true)) {
+            score += 1
+        }
+
+        // Compare the origins of the URLs
+        try {
+            val formUrl = URL(form.href)
+            val refFormUrl = URL(refForm.href)
+            if (formUrl.protocol == refFormUrl.protocol && formUrl.host == refFormUrl.host) {
+                score += 1
+            }
+        } catch (e: MalformedURLException) {
+            // Handle invalid URLs, if needed
+            e.printStackTrace()
+        }
+
+        // Compare the content types
+        if (form.contentType == refForm.contentType) {
+            score += 1
+        }
+
+        // Update max score and index if the current score is higher
+        if (score > maxScore) {
+            maxScore = score
+            maxScoreIndex = i
+        }
+    }
+
+    return maxScoreIndex
+}
+

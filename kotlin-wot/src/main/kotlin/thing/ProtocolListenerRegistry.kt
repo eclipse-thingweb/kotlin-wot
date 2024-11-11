@@ -1,11 +1,16 @@
 package ai.ancf.lmos.wot.thing
 
+import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.schema.ContentListener
+import ai.ancf.lmos.wot.thing.schema.DataSchema
 import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
+import ai.ancf.lmos.wot.thing.schema.InteractionInput
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 
 class ProtocolListenerRegistry {
 
-    private val listeners: MutableMap<InteractionAffordance, MutableMap<Int, MutableList<ContentListener>>> = mutableMapOf()
+    internal val listeners: ConcurrentMap<InteractionAffordance, MutableMap<Int, MutableList<ContentListener>>> = ConcurrentHashMap()
 
     fun register(affordance: InteractionAffordance, formIndex: Int, listener: ContentListener) {
         val form = affordance.forms.getOrNull(formIndex)
@@ -30,8 +35,8 @@ class ProtocolListenerRegistry {
         listeners.clear()
     }
 
-    /*
-    fun <T> notify(
+
+    suspend fun <T> notify(
         affordance: InteractionAffordance,
         data: InteractionInput,
         schema: DataSchema<T>? = null,
@@ -42,18 +47,16 @@ class ProtocolListenerRegistry {
         if (formIndex != null) {
             formMap[formIndex]?.let { listenersForIndex ->
                 val contentType = affordance.forms[formIndex].contentType
-                val content = ContentManager.valueToContent(data, schema)
-                listenersForIndex.forEach { it(content) }
+                val content = ContentManager.valueToContent(data, contentType)
+                listenersForIndex.forEach { it.handle(content) }
                 return
             }
         }
 
         formMap.forEach { (index, listenersForIndex) ->
             val contentType = affordance.forms[index].contentType
-            val content = ContentManager.valueToContent(data, schema)
-            listenersForIndex.forEach { it(content) }
+            val content = ContentManager.valueToContent(data, contentType)
+            listenersForIndex.forEach { it.handle(content) }
         }
     }
-
-     */
 }

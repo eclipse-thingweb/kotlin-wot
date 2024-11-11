@@ -86,13 +86,17 @@ interface ProtocolClient {
     }
 
     /**
-     * Create an observable for the resource defined in `form`. This resource can be, for
+     * Create a flow for the resource defined in `form`. This resource can be, for
      * example, an [ThingEvent] or an observable [ThingProperty].
      *
      * @param form
      * @return
      */
-    suspend fun observeResource(form: Form): Flow<Content> {
-        throw ProtocolClientNotImplementedException(javaClass, "observe")
+    suspend fun subscribeResource(form: Form): Flow<Content> {
+        throw ProtocolClientNotImplementedException(javaClass, "subscribeResource")
+    }
+
+    suspend fun unlinkResource(form: Form) {
+        throw ProtocolClientNotImplementedException(javaClass, "unlinkResource")
     }
 }

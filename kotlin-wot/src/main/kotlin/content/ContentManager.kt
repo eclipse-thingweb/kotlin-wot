@@ -77,7 +77,7 @@ object ContentManager {
     </T> */
     fun contentToValue(
         content: Content,
-        schema: DataSchema<*>
+        schema: DataSchema<*>?
     ): DataSchemaValue {
         // Get content type or use default
         val contentType = content.type
@@ -93,7 +93,7 @@ object ContentManager {
         }
         else {
             log.warn("Content passthrough due to unsupported media type '$mediaType'")
-            fallbackBytesToValue(content, schema)
+            fallbackBytesToValue(content, schema!!)
         }
     }
 

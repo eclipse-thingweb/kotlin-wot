@@ -42,7 +42,7 @@ class HttpProtocolClient(
         return resolveRequestToContent(form, HttpMethod.Post, content)
     }
 
-    override suspend fun observeResource(form: Form) = flow {
+    override suspend fun subscribeResource(form: Form) = flow {
         // Long-polling logic using Ktor client
         while (true) {
             try {

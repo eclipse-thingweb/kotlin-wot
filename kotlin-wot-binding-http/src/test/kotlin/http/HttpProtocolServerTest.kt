@@ -27,6 +27,8 @@ import kotlin.test.*
 
 private const val PROPERTY_NAME = "property1"
 
+private const val PROPERTY_NAME_2 = "property2"
+
 private const val ACTION_NAME = "action1"
 
 private const val ACTION_NAME_2 = "action2"
@@ -46,6 +48,9 @@ class HttpProtocolServerTest {
     private val mockServer: EmbeddedServer<*, *> = mockk()
     private val exposedThing: ExposedThing = exposedThing(servient, id="test") {
         intProperty(PROPERTY_NAME) {
+            observable = true
+        }
+        stringProperty(PROPERTY_NAME_2) {
             observable = true
         }
         action<String, String>(ACTION_NAME)
@@ -77,6 +82,8 @@ class HttpProtocolServerTest {
         }
     }.setPropertyReadHandler(PROPERTY_NAME) {
         10.toInteractionInputValue()
+    }.setPropertyReadHandler(PROPERTY_NAME_2) {
+        5.toInteractionInputValue()
     }.setActionHandler(ACTION_NAME) { input, _->
         val inputString = input.value() as StringValue
         "${inputString.value} 10".toInteractionInputValue()
@@ -236,6 +243,29 @@ class HttpProtocolServerTest {
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(10, response.body<Int>())
 
+    }
+
+    @Test
+    fun `GET all properties`() = testApplication {
+        application {
+            setupRouting(servient)
+        }
+        val client = httpClient()
+        // Setup test data for property
+        every { servient.things } returns mutableMapOf(exposedThing.id to exposedThing)
+
+        // Perform PUT request on property endpoint
+        val response = client.get("/test/properties") {
+            contentType(ContentType.Application.Json)
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        val responseMap = response.body<Map<*, *>>()
+
+        assertEquals(2, responseMap.entries.size)
+
+        assertEquals(10, responseMap[PROPERTY_NAME])
+        assertEquals(5, responseMap[PROPERTY_NAME_2])
     }
 
     @Test

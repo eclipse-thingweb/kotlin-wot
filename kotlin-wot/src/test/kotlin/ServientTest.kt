@@ -17,10 +17,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.assertThrows
 import java.net.URI
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class ServientTest {
 
@@ -43,6 +40,18 @@ class ServientTest {
         clientFactories = listOf(factoryMock),
         things = mutableMapOf("testThing" to mockThing)
     )
+
+    @BeforeTest
+    fun setUp() {
+        mockkObject(ContentManager)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        unmockkObject(ContentManager)
+        unmockkAll()
+    }
+
 
     @Test
     fun `start - should start all servers and clients`() = runTest {
@@ -145,7 +154,6 @@ class ServientTest {
         coEvery { mockClient.readResource(any()) } returns mockContent
 
         // Mock ContentManager to return a map from content
-        mockkObject(ContentManager)
         every { ContentManager.contentToValue(mockContent, ObjectSchema()) } returns DataSchemaValue.ObjectValue(thingAsMap)
 
         // Act
@@ -180,7 +188,6 @@ class ServientTest {
         val url = URI("http://example.com")
         coEvery { mockClient.readResource(any()) } returns mockContent
 
-        mockkObject(ContentManager)
         every { ContentManager.contentToValue(mockContent, ObjectSchema()) } throws ContentCodecException("Codec error")
 
         // Act & Assert

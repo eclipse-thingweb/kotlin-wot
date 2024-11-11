@@ -6,8 +6,6 @@ import ai.ancf.lmos.wot.thing.form.Operation
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import kotlinx.coroutines.flow.Flow
 import java.io.InputStream
-import javax.xml.transform.ErrorListener
-
 
 
 fun interface PropertyReadHandler {
@@ -22,9 +20,22 @@ fun interface ActionHandler {
     suspend fun handle(input: WoTInteractionOutput, options: InteractionOptions?): InteractionInput?
 }
 
+fun interface InteractionListener {
+    fun handle(data: WoTInteractionOutput)
+}
+
+// Functional interface for ErrorListener
+fun interface ErrorListener {
+    fun handle(error: Throwable)
+}
+
+fun interface ContentListener {
+    suspend fun handle(content: Content)
+}
+
+
 // Type Aliases for Mapping and Listener Types
 typealias PropertyContentMap = Map<String, Content>
-typealias ContentListener = (Content) -> Unit
 typealias PropertyHandlerMap = MutableMap<String, PropertyHandlers>
 typealias ActionHandlerMap = MutableMap<String, ActionHandler>
 typealias EventHandlerMap = MutableMap<String, EventHandlers>
@@ -33,14 +44,14 @@ typealias PropertyReadMap = Map<String, WoTInteractionOutput>
 typealias PropertyWriteMap = Map<String, InteractionInput>
 
 data class InteractionOptions(
-    val formIndex: Int? = null,
-    val uriVariables: Map<String, Any>? = null,
-    val data: Any? = null
+    var formIndex: Int? = null,
+    var uriVariables: Map<String, String>? = null,
+    var data: Any? = null
 )
 
 interface Subscription {
-    val active: Boolean
-    suspend fun stop(options: InteractionOptions? = null)
+    var active: Boolean
+    suspend fun stop(options: InteractionOptions)
 }
 
 // Data Structure for Handling Properties, Actions, and Events
@@ -61,8 +72,7 @@ data class ListenerItem(
 )
 
 interface EventSubscriptionHandler {
-    suspend fun subscribe()
-    suspend fun unsubscribe()
+    fun handle(options: InteractionOptions)
 }
 
 // Sealed class to represent either a stream or data schema value
@@ -74,8 +84,6 @@ sealed class InteractionInput {
     data class Value(val value: DataSchemaValue) : InteractionInput()
 }
 
-typealias InteractionListener = (data: WoTInteractionOutput) -> Unit
-
 // Interface for InteractionOutput
 interface WoTInteractionOutput {
     val data: Flow<ByteArray>? // assuming a stream of data, could be ReadableStream equivalent
@@ -86,8 +94,6 @@ interface WoTInteractionOutput {
     suspend fun value(): DataSchemaValue?
 }
 
-
-
 sealed class DataSchemaValue {
     data object NullValue : DataSchemaValue()
     data class BooleanValue(val value: Boolean) : DataSchemaValue()
@@ -96,6 +102,23 @@ sealed class DataSchemaValue {
     data class StringValue(val value: String) : DataSchemaValue()
     data class ObjectValue(val value: Map<*, *>) : DataSchemaValue()
     data class ArrayValue(val value: List<*>) : DataSchemaValue()
+
+    companion object {
+        fun toDataSchemaValue(value: Any?): DataSchemaValue {
+            return when (value) {
+                null -> NullValue
+                is Boolean -> BooleanValue(value)
+                is Int -> IntegerValue(value)
+                is Long -> NumberValue(value)
+                is Double -> NumberValue(value)
+                is Float -> NumberValue(value)
+                is String -> StringValue(value)
+                is Map<*, *> -> ObjectValue(value)
+                is List<*> -> ArrayValue(value)
+                else -> throw IllegalArgumentException("Unsupported type: ${value::class}")
+            }
+        }
+    }
 }
 
 
@@ -108,14 +131,14 @@ interface WoTExposedThing {
     fun setPropertyObserveHandler(propertyName: String, handler: PropertyReadHandler): WoTExposedThing
     fun setPropertyUnobserveHandler(propertyName: String, handler: PropertyReadHandler): WoTExposedThing
 
-    suspend fun emitPropertyChange(propertyName: String, data: InteractionInput? = null)
+    suspend fun emitPropertyChange(propertyName: String, data: InteractionInput)
 
     fun setActionHandler(actionName: String, handler: ActionHandler): WoTExposedThing
 
     fun setEventSubscribeHandler(eventName: String, handler: EventSubscriptionHandler): WoTExposedThing
     fun setEventUnsubscribeHandler(eventName: String, handler: EventSubscriptionHandler): WoTExposedThing
 
-    suspend fun emitEvent(eventName: String, data: InteractionInput? = null)
+    suspend fun emitEvent(eventName: String, data: InteractionInput)
 
     //suspend fun expose(): Unit
     //suspend fun destroy(): Unit
@@ -187,23 +210,23 @@ interface WoTConsumedThing {
 
     /**
      * Observes a property by its name, with a callback for each update.
-     * @param name The name of the property to observe.
+     * @param propertyName The name of the property to observe.
      * @param listener The listener for property changes.
      * @param onError The error listener, optional.
      * @param options Optional interaction options.
      * @return A subscription object for the property observation.
      */
-    suspend fun observeProperty(name: String, listener: InteractionListener, onError: ErrorListener? = null, options: InteractionOptions? = InteractionOptions()): Subscription
+    suspend fun observeProperty(propertyName: String, listener: InteractionListener, errorListener: ErrorListener? = null, options: InteractionOptions? = InteractionOptions()): Subscription
 
     /**
      * Subscribes to an event by its name, with a callback for each event occurrence.
-     * @param name The name of the event to subscribe to.
+     * @param eventName The name of the event to subscribe to.
      * @param listener The listener for event occurrences.
      * @param onError The error listener, optional.
      * @param options Optional interaction options.
      * @return A subscription object for the event subscription.
      */
-    suspend fun subscribeEvent(name: String, listener: InteractionListener, onError: ErrorListener? = null, options: InteractionOptions? = InteractionOptions()): Subscription
+    suspend fun subscribeEvent(eventName: String, listener: InteractionListener, errorListener: ErrorListener? = null, options: InteractionOptions? = InteractionOptions()): Subscription
 
     /**
      * Gets the Thing Description associated with this consumed thing.

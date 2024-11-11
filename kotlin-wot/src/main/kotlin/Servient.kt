@@ -327,8 +327,8 @@ class Servient(
         return discover(ThingFilter(method = ANY))
     }
 
-    fun getClientSchemes(): List<String> {
-        return clientFactories.keys.toMutableList()
+    fun getClientSchemes(): Set<String> {
+        return clientFactories.keys.toMutableSet()
     }
 
     /**

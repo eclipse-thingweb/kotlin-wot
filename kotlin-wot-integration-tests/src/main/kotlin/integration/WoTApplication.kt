@@ -1,4 +1,4 @@
-package integration
+package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 private const val PROPERTY_NAME = "property1"
+private const val PROPERTY_NAME_2 = "property2"
 
 private const val ACTION_NAME = "action1"
 
@@ -33,11 +34,15 @@ fun main(): Unit = runBlocking {
         launch { servient.shutdown() }
     })
 
+
     val wot = Wot.create(servient)
 
     val exposedThing = wot.produce {
         id = "Foo"
         intProperty(PROPERTY_NAME) {
+            observable = true
+        }
+        intProperty(PROPERTY_NAME_2) {
             observable = true
         }
         action<String, String>(ACTION_NAME)
@@ -71,6 +76,8 @@ fun main(): Unit = runBlocking {
 
     exposedThing.setPropertyReadHandler(PROPERTY_NAME) {
         10.toInteractionInputValue()
+    }.setPropertyReadHandler(PROPERTY_NAME_2) {
+        5.toInteractionInputValue()
     }.setActionHandler(ACTION_NAME) { input, _->
         val inputString = input.value() as DataSchemaValue.StringValue
         "${inputString.value} 10".toInteractionInputValue()

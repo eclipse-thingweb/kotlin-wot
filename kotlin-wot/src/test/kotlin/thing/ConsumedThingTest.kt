@@ -1,12 +1,159 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.Servient
+import ai.ancf.lmos.wot.content.Content
+import ai.ancf.lmos.wot.content.ContentManager
+import ai.ancf.lmos.wot.content.JsonCodec
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
+import ai.ancf.lmos.wot.thing.action.ThingAction
+import ai.ancf.lmos.wot.thing.event.ThingEvent
+import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.form.Operation
+import ai.ancf.lmos.wot.thing.schema.*
+import ai.anfc.lmos.wot.binding.ProtocolClient
+import ai.anfc.lmos.wot.binding.ProtocolClientFactory
+import io.mockk.*
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.runBlocking
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class ConsumedThingTest {
 
+    private lateinit var servient: Servient
+    private lateinit var protocolClient: ProtocolClient
+    private lateinit var protocolClientFactory: ProtocolClientFactory
+    private lateinit var consumedThing: ConsumedThing
+
+    @BeforeTest
+    fun setUp() {
+        protocolClient = mockk()
+        protocolClientFactory = mockk()
+        every { protocolClientFactory.scheme } returns "https"
+        every { protocolClientFactory.client } returns protocolClient
+        servient = Servient(clientFactories = listOf(protocolClientFactory))
+        val thingDescription = thingDescription {
+            title = "Test Thing"
+            properties = mutableMapOf(
+                "testProperty" to StringProperty(forms = mutableListOf(
+                    Form(
+                        href = "https://example.com/testProperty",
+                        contentType = "application/json",
+                        op = listOf(Operation.READ_PROPERTY, Operation.WRITE_PROPERTY, Operation.OBSERVE_PROPERTY, Operation.UNOBSERVE_PROPERTY)
+                    )
+                ))
+            )
+            actions = mutableMapOf(
+                "testAction" to ThingAction<String, String>("testAction", input = StringSchema(), output = StringSchema(), forms = mutableListOf(
+                    Form(
+                        href = "https://example.com/testAction",
+                        contentType = "application/json",
+                        op = listOf(Operation.INVOKE_ACTION)
+                    )
+                ))
+            )
+            events = mutableMapOf(
+                "testEvent" to ThingEvent<String, String, String> ("testEvent", data = StringSchema(), forms = mutableListOf(
+                    Form(
+                        href = "https://example.com/testEvent",
+                        contentType = "application/json",
+                        op = listOf(Operation.SUBSCRIBE_EVENT, Operation.UNSUBSCRIBE_EVENT)
+                    )
+                ))
+            )
+        }
+        consumedThing = ConsumedThing(servient, thingDescription)
+        ContentManager.addCodec(JsonCodec(), true)
+
+    }
+
+    @Test
+    fun `test readProperty`() = runBlocking {
+        val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
+        coEvery { protocolClient.readResource(any<Form>()) } returns content
+
+        val output = consumedThing.readProperty("testProperty")
+        assertNotNull(output)
+        val outputValue = output.value() as DataSchemaValue.ObjectValue
+        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+    }
+
+    @Test
+    fun `test readAllProperties`() = runBlocking {
+        val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
+        coEvery { protocolClient.readResource(any<Form>()) } returns content
+
+        val properties = consumedThing.readAllProperties()
+        assertNotNull(properties)
+        assertEquals(1, properties.size)
+        val outputValue = properties["testProperty"]?.value() as DataSchemaValue.ObjectValue
+        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+    }
+
+    @Test
+    fun `test readMultipleProperties`() = runBlocking {
+        val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
+        coEvery { protocolClient.readResource(any<Form>()) } returns content
+
+        val properties = consumedThing.readMultipleProperties(listOf("testProperty"))
+        assertNotNull(properties)
+        assertEquals(1, properties.size)
+        val outputValue = properties["testProperty"]?.value() as DataSchemaValue.ObjectValue
+        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+    }
+
+    @Test
+    fun `test writeProperty`() = runBlocking {
+        val value = InteractionInput.Value(DataSchemaValue.StringValue("newValue"))
+        coJustRun { protocolClient.writeResource(any<Form>(), any<Content>()) }
+
+        consumedThing.writeProperty("testProperty", value)
+        coVerify { protocolClient.writeResource(any<Form>(), any<Content>()) }
+    }
+
+    @Test
+    fun `test writeMultipleProperties`() = runBlocking {
+        val valueMap = mapOf(
+            "testProperty" to InteractionInput.Value(DataSchemaValue.StringValue("newValue"))
+        )
+        coJustRun { protocolClient.writeResource(any<Form>(), any<Content>()) }
+
+        consumedThing.writeMultipleProperties(valueMap)
+        coVerify(exactly = 1) { protocolClient.writeResource(any<Form>(), any<Content>()) }
+    }
+
+    @Test
+    fun `test invokeAction`() = runBlocking {
+        val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
+        coEvery { protocolClient.invokeResource(any<Form>(), any<Content>()) } returns content
+
+        val params = InteractionInput.Value(DataSchemaValue.StringValue("actionInput"))
+        val output = consumedThing.invokeAction("testAction", params)
+        assertNotNull(output)
+        val outputValue = output.value() as DataSchemaValue.ObjectValue
+        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+    }
+
+    @Test
+    fun `test observeProperty`(): Unit = runBlocking {
+        val listener = mockk<InteractionListener>(relaxed = true)
+        coEvery { protocolClient.subscribeResource(any<Form>()) } returns emptyFlow()
+
+        val subscription = consumedThing.observeProperty("testProperty", listener)
+        assertEquals(true, subscription.active)
+    }
+
+    @Test
+    fun `test subscribeEvent`(): Unit = runBlocking {
+        val listener = mockk<InteractionListener>(relaxed = true)
+        coEvery { protocolClient.subscribeResource(any<Form>()) } returns emptyFlow()
+
+        val subscription = consumedThing.subscribeEvent("testEvent", listener)
+        assertNotNull(subscription)
+        assertEquals(true, subscription.active)
+    }
 
     @Test
     fun testEquals() {
