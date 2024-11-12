@@ -10,6 +10,7 @@ import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
+import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.onCompletion
@@ -103,20 +104,11 @@ class MqttProtocolClient(
             log.debug(
                 "Publishing to topic '{}' on broker '{}' with response expected on '{}'",
                 topic,
-                client.config.serverHost,
+                "${client.config.serverHost}:${client.config.serverPort}",
                 responseTopic
             )
 
             val payload = content?.body
-
-            //Requester subscribes to response topic
-
-            // First, subscribe to the response topic to receive the reply
-            client.subscribeWith()
-                .topicFilter(responseTopic)
-                .qos(MqttQos.AT_LEAST_ONCE)  // QoS level 1 for reliability
-                .send()
-                .await()  // Await subscription completion
 
             // Prepare and send the publish message with a response topic
             val publishMessage = Mqtt5Publish.builder()
@@ -127,13 +119,15 @@ class MqttProtocolClient(
                 .build()
 
             // Publish the message and await reply on the response topic
-            return suspendCancellableCoroutine { continuation ->
-                client.publishes(MqttGlobalPublishFilter.SUBSCRIBED) { message ->
-                    if (message.topic.toString() == responseTopic) {
-                        log.debug("Received reply from '{}'", responseTopic)
+            return suspendCancellableCoroutine  { continuation ->
 
-                        // Convert the received message payload into Content and resume coroutine
-                        val replyContent = content?.type?.let { Content(it, message.payloadAsBytes) } ?: Content.EMPTY_CONTENT
+                client.subscribeWith()
+                    .topicFilter(responseTopic)
+                    .qos(MqttQos.AT_LEAST_ONCE)  // QoS level 1 for reliability
+                    .callback {
+                        response ->
+                        log.debug("Response message consumed from topic '$responseTopic'")
+                        val replyContent = content?.type?.let { Content(it, response.payloadAsBytes) } ?: Content.EMPTY_CONTENT
                         continuation.resume(replyContent)
 
                         // Unsubscribe from the response topic after receiving the response
@@ -141,6 +135,17 @@ class MqttProtocolClient(
                             .topicFilter(responseTopic)
                             .send()
                     }
+                    .send().thenAccept {
+                        log.debug("Subscribed to topic '$responseTopic'")
+                     }.exceptionally { e ->
+                        log.warn("Failed to subscribe to topic '$responseTopic': ${e.message}", e)
+                        continuation.resumeWithException(e)
+                        null
+                    }
+
+                // Ensure the subscription is canceled if the coroutine is canceled
+                continuation.invokeOnCancellation {
+                    client.unsubscribe(Mqtt5Unsubscribe.builder().topicFilter(responseTopic).build())
                 }
 
                 // Publish the request message and await
@@ -148,7 +153,7 @@ class MqttProtocolClient(
                     .thenAccept {
                         log.debug("Request message published to topic '$topic'")
                     }.exceptionally { e ->
-                        log.warn("Failed to publish message to topic '$topic': ${e.message}")
+                        log.warn("Failed to publish message to topic '$topic': ${e.message}", e)
                         continuation.resumeWithException(e)
                         null
                     }
