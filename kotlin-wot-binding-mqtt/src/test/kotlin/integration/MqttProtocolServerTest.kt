@@ -62,12 +62,15 @@ class MqttProtocolServerTest {
 
             brokerUrl = "mqtt://$host:${mappedPort}"
 
-            val config = MqttClientConfig(host, mappedPort, "testClient")
+            val clientConfig = MqttClientConfig(host, mappedPort, "client")
+            val serverConfig = MqttClientConfig(host, mappedPort, "server")
 
-            protocolClient = MqttProtocolClientFactory(config).client
-            protocolClient.start()
+            val clientFactory = MqttProtocolClientFactory(clientConfig)
+            clientFactory.init()
+            protocolClient = clientFactory.client
+
             val servient = Servient()
-            mqttServer = MqttProtocolServer(config)
+            mqttServer = MqttProtocolServer(serverConfig)
             mqttServer.start(servient)
             exposedThing = exposedThing(servient, id = "test") {
                 stringProperty(PROPERTY_NAME) {

@@ -57,12 +57,12 @@ class WoTMqttIntegrationTest() {
 
     @Test
     fun `Should fetch thing`() = runTest {
-        val config = MqttClientConfig(hiveMqContainer.host,
-            hiveMqContainer.getMappedPort(1883), "testClient")
+        val clientConfig = MqttClientConfig(hiveMqContainer.host, hiveMqContainer.getMappedPort(1883), "client")
+        val serverConfig = MqttClientConfig(hiveMqContainer.host, hiveMqContainer.getMappedPort(1883), "server")
 
         val servient = Servient(
-            servers = listOf(MqttProtocolServer(config)),
-            clientFactories = listOf(MqttProtocolClientFactory(config))
+            servers = listOf(MqttProtocolServer(serverConfig)),
+            clientFactories = listOf(MqttProtocolClientFactory(clientConfig))
         )
         val wot = Wot.create(servient)
 

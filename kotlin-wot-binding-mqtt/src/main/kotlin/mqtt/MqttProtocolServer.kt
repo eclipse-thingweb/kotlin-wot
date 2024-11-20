@@ -170,18 +170,30 @@ class MqttProtocolServer(
         }
     }
 
-    private fun exposeTD(thing: ExposedThing) = runBlocking {
+    private suspend fun exposeTD(thing: ExposedThing) {
         val topic = thing.id
         log.debug("Publishing Thing Description '{}' to topic '{}'", thing.id, topic)
 
         try {
-            val content = ContentManager.valueToContent(thing.toJson())
+            val content = ContentManager.valueToContent(thing.toJson(), "application/json")
+            val tdTopic = thing.id
+            client.subscribeWith()
+                .topicFilter(tdTopic)
+                .qos(MqttQos.AT_LEAST_ONCE) // Use AT_LEAST_ONCE QoS level
+                .callback { message ->
+                    CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
+                        respondToTopic(content, message.responseTopic.get())
+                    }
+                }
+                .send().await()  // Sending the subscription request
+            /*
             val publishMessage = Mqtt5Publish.builder()
                 .topic(topic)
                 .payload(content.body)
                 .retain(true)
                 .build()
             client.publish(publishMessage).await()
+            */
         } catch (e: Exception) {
             log.warn("Unable to publish thing description to topic '{}': {}", topic, e.message)
         }
