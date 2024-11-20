@@ -6,15 +6,14 @@ import app.cash.turbine.test
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,10 +31,13 @@ class MqttProtocolClientTest {
                 .withExposedPorts(1883)
             hiveMqContainer.start()
 
-            brokerUrl = "mqtt://${hiveMqContainer.host}:${hiveMqContainer.getMappedPort(1883)}"
+            val host = hiveMqContainer.host
+            val mappedPort = hiveMqContainer.getMappedPort(1883)
+
+            brokerUrl = "mqtt://$host:$mappedPort"
             mqttClient = Mqtt5Client.builder()
-                .serverHost(hiveMqContainer.host)
-                .serverPort(hiveMqContainer.getMappedPort(1883))
+                .serverHost(host)
+                .serverPort(mappedPort)
                 .buildAsync()
         }
 
@@ -47,92 +49,158 @@ class MqttProtocolClientTest {
     }
 
     private lateinit var client: MqttProtocolClient
-    private lateinit var form: Form
 
-    @BeforeEach
+    @BeforeTest
     fun setUp() = runTest {
         client = MqttProtocolClient(mqttClient, false)
         client.start()
     }
+    @AfterTest
+    fun tearDown() = runTest {
+        client.stop()
+    }
 
     @Test
     fun `invokeResource should publish null message to broker`() = runTest {
-        form = Form("$brokerUrl/thingId/actions/actionName", "application/json")
+        val form = Form("$brokerUrl/thingId/actions/actionName", "application/json")
 
-        client.invokeResource(form)
+        // Subscribe to the topic before publishing
 
-        // Verify that the message was published
+        mqttClient.subscribeWith()
+            .topicFilter("thingId/actions/actionName")
+            .callback { publish ->
+                println("Received message on topic: ${publish.topic}")
+                val receivedPayload = publish.payloadAsBytes
+                assertEquals(
+                    "".toByteArray().contentToString(),
+                    receivedPayload.contentToString(),
+                    "Received payload on request topic did not match expected request payload"
+                )
+                // Publish a response message on the response topic
+                mqttClient.publishWith()
+                    .topic(publish.responseTopic.get())
+                    .payload("\"Acknowledged\"".toByteArray())
+                    .send()
+            }
+            .send().await()
+        // Publish the message using invokeResource
+        val response = client.invokeResource(form)
+        assertEquals("application/json", response.type)
+        assertEquals("\"Acknowledged\"", response.body.decodeToString())
+
+        mqttClient.unsubscribeWith().topicFilter("thingId/actions/actionName").send().await()
     }
 
     @Test
     fun `invokeResource with content should publish given content to broker`() = runTest {
-        form = Form("$brokerUrl/thingId/actions/actionName", "application/json")
+        val form = Form("$brokerUrl/thingId/actions/actionName", "application/json")
         val testMessage = "\"Hello World\""
         val expectedPayload = testMessage.toByteArray()
         val responseMessage = "\"Acknowledged\""
         val responsePayload = responseMessage.toByteArray()
 
         // Subscribe to the topic before publishing
-        // Subscribe to the request topic and publish a response upon receiving the request
-        launch {
-            mqttClient.subscribeWith()
-                .topicFilter("thingId/actions/actionName")
-                .callback { publish ->
-                    println("Received message on topic: ${publish.topic}")
-                    val receivedPayload = publish.payloadAsBytes
-                    assertEquals(
-                        expectedPayload.contentToString(),
-                        receivedPayload.contentToString(),
-                        "Received payload on request topic did not match expected request payload"
-                    )
-                    // Publish a response message on the response topic
-                    mqttClient.publishWith()
-                        .topic(publish.responseTopic.get())
-                        .payload(responsePayload)
-                        .send()
-                }
-                .send().await()
-        }
+        mqttClient.subscribeWith()
+            .topicFilter("thingId/actions/actionName")
+            .callback { publish ->
+                println("Received message on topic: ${publish.topic}")
+                val receivedPayload = publish.payloadAsBytes
+                assertEquals(
+                    expectedPayload.contentToString(),
+                    receivedPayload.contentToString(),
+                    "Received payload on request topic did not match expected request payload"
+                )
+                // Publish a response message on the response topic
+                mqttClient.publishWith()
+                    .topic(publish.responseTopic.get())
+                    .payload(responsePayload)
+                    .send()
+            }
+            .send().await()
 
         // Publish the message using invokeResource
         val response = client.invokeResource(form, Content("application/json", expectedPayload))
         assertEquals("application/json", response.type)
         assertEquals("\"Acknowledged\"", response.body.decodeToString())
+
+        mqttClient.unsubscribeWith().topicFilter("thingId/actions/actionName").send().await()
     }
 
     @Test
     fun `subscribeResource should subscribe to broker and emit content via Flow`() = runTest {
+        val form = Form("$brokerUrl/thingId/events/eventName", "application/json")
+
         client.subscribeResource(form).test {
             mqttClient.publish(Mqtt5Publish.builder()
-                .topic("counter/events/change")
+                .topic("thingId/events/eventName")
                 .payload("Hello World".toByteArray())
                 .build()).await()
-
             val item = awaitItem()
             assertEquals("Hello World", item.body.decodeToString())
+
+            client.unlinkResource(form)
+
             awaitComplete()
         }
     }
 
     @Test
-    fun `subscribeResource should reuse existing broker subscriptions`() = runTest {
-        val existingFlow = flowOf(Content("application/json", "Existing Data".toByteArray()))
-        val topicSubjects = mutableMapOf("counter/events/change" to existingFlow)
-        client = MqttProtocolClient(mqttClient, false)
+    fun `writeResource should send content to broker and receive acknowledgment`() = runTest {
+        val form = Form("$brokerUrl/thingId/properties/propertyName", "application/json")
+        val content = Content("application/json", "\"New resource data\"".toByteArray())
 
-        client.subscribeResource(form).test {
-            val item = awaitItem()
-            assertEquals("Existing Data", item.body.decodeToString())
-            awaitComplete()
-        }
+        // Subscribe to the topic where the resource is expected to be written
+        mqttClient.subscribeWith()
+            .topicFilter("thingId/properties/propertyName")
+            .callback { publish ->
+                println("Received message on topic: ${publish.topic}")
+                val receivedPayload = publish.payloadAsBytes
+                // Check if the received payload matches the expected payload
+                assertEquals("\"New resource data\"".toByteArray().contentToString(), receivedPayload.contentToString(), "Received payload on write topic did not match expected payload")
+
+                // Publish a response message on the response topic
+                mqttClient.publishWith()
+                    .topic(publish.responseTopic.get())
+                    .payload("\"Acknowledged\"".toByteArray())
+                    .send()
+            }
+            .send().await()
+
+        // Call writeResource to simulate the write operation
+        client.writeResource(form, content)
+
+        // Unsubscribe from the topic after the test
+        mqttClient.unsubscribeWith().topicFilter("thingId/properties/propertyName").send().await()
     }
 
     @Test
-    fun `subscribeResource should unsubscribe from broker when no more subscriptions`() = runTest {
-        client.subscribeResource(form).test {
-            cancelAndIgnoreRemainingEvents()
-        }
+    fun `readResource should receive content from broker`() = runTest {
+        val form = Form("$brokerUrl/thingId/properties/propertyName", "application/json")
 
-        // Verify that the client unsubscribed from the topic
+        // Subscribe to the topic where the resource is expected to be published
+        mqttClient.subscribeWith()
+            .topicFilter("thingId/properties/propertyName")
+            .callback { publish ->
+                println("Received message on topic: ${publish.topic}")
+                val receivedPayload = publish.payloadAsBytes
+                // Check if the received payload matches the expected payload
+                assertEquals("".toByteArray().contentToString(), receivedPayload.contentToString(), "Received payload on read topic did not match expected payload")
+                // Publish a response message on the response topic
+                mqttClient.publishWith()
+                    .topic(publish.responseTopic.get())
+                    .payload("\"resource data\"".toByteArray())
+                    .send()
+            }
+            .send().await()
+
+        // Call readResource to simulate the read operation
+        val response = client.readResource(form)
+
+        // Check that the response matches the expected content
+        assertEquals("application/json", response.type)
+        assertEquals("\"resource data\"", response.body.decodeToString())
+
+        // Unsubscribe from the topic after the test
+        mqttClient.unsubscribeWith().topicFilter("thingId/properties/propertyName").send().await()
     }
 }

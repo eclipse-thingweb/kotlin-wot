@@ -22,7 +22,8 @@ open class JsonCodec : ContentCodec {
         parameters: Map<String, String>
     ): DataSchemaValue {
         return try {
-            DataSchemaValue.toDataSchemaValue(JsonMapper.instance.readValue(body))
+            val result : Any? = JsonMapper.instance.readValue(body)
+            DataSchemaValue.toDataSchemaValue(result)
         } catch (e: IOException) {
             throw ContentCodecException("Failed to decode $mediaType: ${e.message}", e)
         }
@@ -50,7 +51,7 @@ open class JsonCodec : ContentCodec {
             is BooleanValue -> JsonMapper.instance.writeValueAsBytes(value.value)
             is ArrayValue -> JsonMapper.instance.writeValueAsBytes(value.value)
             is ObjectValue -> JsonMapper.instance.writeValueAsBytes(value.value)
-            is NullValue -> JsonMapper.instance.writeValueAsBytes("")
+            is NullValue -> JsonMapper.instance.writeValueAsBytes(null)
         }
     }
 }

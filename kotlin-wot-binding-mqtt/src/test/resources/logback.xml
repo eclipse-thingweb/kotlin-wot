@@ -4,8 +4,9 @@
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="debug">
+    <root level="WARN">
         <appender-ref ref="STDOUT"/>
     </root>
-    <logger name="io.netty" level="INFO"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="ai.ancf.lmos.wot.binding.mqtt" level="DEBUG"/>
 </configuration>

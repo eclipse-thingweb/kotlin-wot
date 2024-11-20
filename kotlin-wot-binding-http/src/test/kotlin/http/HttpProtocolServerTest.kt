@@ -374,7 +374,7 @@ class HttpProtocolServerTest {
     }
 
     @Test
-    fun `expose should throw exception if server is not started`() {
+    fun `expose should throw exception if server is not started`() = runTest {
         // Arrange
         server.started = false // Set the server to not started
 
@@ -386,7 +386,7 @@ class HttpProtocolServerTest {
     }
 
     @Test
-    fun `expose should expose thing and add forms`() {
+    fun `expose should expose thing and add forms`() = runTest {
         // Arrange
         server.started = true
         // Act

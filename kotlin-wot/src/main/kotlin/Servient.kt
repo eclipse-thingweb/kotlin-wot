@@ -177,9 +177,6 @@ class Servient(
                     val dataSchemaValue = ContentManager.contentToValue(content, ObjectSchema())
                     dataSchemaValue as DataSchemaValue.ObjectValue
 
-                    val value = dataSchemaValue.value
-                    value.get("properties")
-
                     return ThingDescription.fromMap(dataSchemaValue.value)
                 } catch (e: ContentCodecException) {
                     throw ServientException("Error while fetching TD: ${e.message}", e)

@@ -30,7 +30,7 @@ interface ProtocolServer {
      * @param thing
      * @return
      */
-    fun expose(thing: ExposedThing)
+    suspend fun expose(thing: ExposedThing)
 
     /**
      * Stops the exposure of `thing` and allows no further interaction with the thing.

@@ -12,7 +12,8 @@ open class MqttProtocolClientFactory(private val mqttClientConfig: MqttClientCon
     override val client: MqttProtocolClient
         get() = MqttProtocolClient(Mqtt5Client.builder()
             .identifier(mqttClientConfig.clientId)
-            .serverHost(mqttClientConfig.broker)
+            .serverHost(mqttClientConfig.host)
+            .serverPort(mqttClientConfig.port)
             .automaticReconnect().applyAutomaticReconnect()
             .build().toAsync())
 

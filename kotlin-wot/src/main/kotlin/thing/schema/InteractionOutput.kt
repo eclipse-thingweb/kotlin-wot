@@ -20,7 +20,7 @@ class InteractionOutput(
         return content.body
     }
 
-    override suspend fun value(): DataSchemaValue? {
-        return lazyValue
+    override suspend fun value(): DataSchemaValue {
+        return ContentManager.contentToValue(content, schema)
     }
 }

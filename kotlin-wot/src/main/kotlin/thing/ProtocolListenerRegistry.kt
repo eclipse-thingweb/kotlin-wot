@@ -44,10 +44,12 @@ class ProtocolListenerRegistry {
     ) {
         val formMap = listeners[affordance] ?: emptyMap()
 
+        val interactionInputValue = data as InteractionInput.Value
+
         if (formIndex != null) {
             formMap[formIndex]?.let { listenersForIndex ->
                 val contentType = affordance.forms[formIndex].contentType
-                val content = ContentManager.valueToContent(data, contentType)
+                val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
                 listenersForIndex.forEach { it.handle(content) }
                 return
             }
@@ -55,7 +57,7 @@ class ProtocolListenerRegistry {
 
         formMap.forEach { (index, listenersForIndex) ->
             val contentType = affordance.forms[index].contentType
-            val content = ContentManager.valueToContent(data, contentType)
+            val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
             listenersForIndex.forEach { it.handle(content) }
         }
     }

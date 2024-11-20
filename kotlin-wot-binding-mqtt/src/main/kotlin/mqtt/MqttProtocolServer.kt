@@ -1,46 +1,55 @@
-package mqtt
+package ai.ancf.lmos.wot.binding.mqtt
 
 import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.binding.mqtt.MqttClientConfig
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.ActionAffordance
+import ai.ancf.lmos.wot.thing.schema.ContentListener
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
-import com.hivemq.client.mqtt.MqttGlobalPublishFilter
+import com.hivemq.client.mqtt.datatypes.MqttQos
+import com.hivemq.client.mqtt.datatypes.MqttTopic
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
+import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class MqttProtocolServer(
-    private val client : Mqtt5AsyncClient,
+    mqttClientConfig: MqttClientConfig
 ) : ProtocolServer {
+
+    private val client : Mqtt5AsyncClient = Mqtt5Client.builder()
+        .identifier(mqttClientConfig.clientId)
+        .serverHost(mqttClientConfig.host)
+        .serverPort(mqttClientConfig.port)
+        .automaticReconnect().applyAutomaticReconnect().buildAsync()
 
     private val log: Logger = LoggerFactory.getLogger(MqttProtocolServer::class.java)
     private val things = mutableMapOf<String, ExposedThing>()
     private var started = false
 
-    override suspend fun start(servient: Servient): Unit = coroutineScope {
-        log.info("Connect Mqtt server client")
-        started = true
-        client.connect().await()
+    val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        log.error("Caught exception: ${throwable.message}", throwable)
     }
 
-    override suspend fun stop(): Unit = coroutineScope {
+    override suspend fun start(servient: Servient)  {
+        log.info("Connect Mqtt server client")
+        client.connect().await()
+        started = true
+    }
+
+    override suspend fun stop() {
         log.info("Disconnect Mqtt server client")
         client.disconnect().await()
         started = false
     }
 
-    override fun expose(thing: ExposedThing) {
+    override suspend fun expose(thing: ExposedThing) {
         if (!started) throw ProtocolServerException("Server has not started yet")
 
         val baseUrl = createUrl()
@@ -51,7 +60,7 @@ class MqttProtocolServer(
         exposeActions(thing, baseUrl)
         exposeEvents(thing, baseUrl)
         exposeTD(thing)
-        listenOnMqttMessages()
+        listenOnMqttMessages(thing)
     }
 
     override suspend fun destroy(thing: ExposedThing) {
@@ -66,18 +75,56 @@ class MqttProtocolServer(
         return if (brokerUrl.endsWith("/")) brokerUrl else "$brokerUrl/"
     }
 
-    private fun exposeProperties(thing: ExposedThing, baseUrl: String) {
+    private suspend fun exposeProperties(thing: ExposedThing, baseUrl: String) {
         val properties = thing.properties
 
         properties.forEach { (name, property) ->
             val topic = "${thing.id}/properties/$name"
 
             val href = "$baseUrl$topic"
-            val form = Form(href= href,
-                contentType = ContentManager.DEFAULT,
-                op = listOf(Operation.OBSERVE_PROPERTY, Operation.UNOBSERVE_PROPERTY))
-            property.forms += (form)
-            log.debug("Assigned '{}' to Property '{}'", href, name)
+
+            // Determine the operations based on readOnly/writeOnly status
+            val operations = when {
+                property.readOnly -> listOf(Operation.READ_PROPERTY)
+                property.writeOnly -> listOf(Operation.WRITE_PROPERTY)
+                else -> listOf(Operation.READ_PROPERTY, Operation.WRITE_PROPERTY)
+            }
+
+            // Create the main form and add it to the property
+            val form = Form(
+                href = href,
+                contentType = "application/json",
+                op = operations
+            )
+            property.forms += form
+            log.debug("Assign '{}' to Property '{}'", href, name)
+
+            // If the property is observable, add an additional form with an observable href
+            if (property.observable) {
+                val observableTopic = "${thing.id}/properties/$name/observable"
+                val observableHref = "$baseUrl$observableTopic"
+
+                val observableForm = Form(
+                    href = observableHref,
+                    contentType = "application/json",
+                    op = listOf(Operation.OBSERVE_PROPERTY, Operation.UNOBSERVE_PROPERTY)
+                )
+                property.forms += observableForm
+                log.debug("Assign '{}' to observe Property '{}'", observableHref, name)
+
+                val observeListener: suspend (Content) -> Unit = suspend@{ content ->
+                    log.debug("MqttServer at $baseUrl publishing to Property topic '$observableTopic'")
+                    val buffer = content.body
+                    val publishMessage = Mqtt5Publish.builder()
+                        .topic(observableTopic)
+                        .payload(buffer)
+                        .qos(MqttQos.AT_LEAST_ONCE)
+                        .retain(false)
+                        .build()
+                    client.publish(publishMessage).await()
+                }
+                thing.handleObserveProperty(name, observeListener)
+            }
         }
     }
 
@@ -109,6 +156,17 @@ class MqttProtocolServer(
             )
             event.forms += (form)
             log.debug("Assigned '{}' to Event '{}'", href, name)
+
+            thing.handleSubscribeEvent(name, { content ->
+                log.debug("MqttServer at $baseUrl publishing to Events topic '$topic")
+                val publishMessage = Mqtt5Publish.builder()
+                    .topic(topic)
+                    .payload(content.body)
+                    .qos(MqttQos.AT_LEAST_ONCE)
+                    .retain(false)
+                    .build()
+                client.publish(publishMessage).await()
+            })
         }
     }
 
@@ -144,34 +202,127 @@ class MqttProtocolServer(
         }
     }
 
-    private fun listenOnMqttMessages() {
-        client.toAsync().publishes(MqttGlobalPublishFilter.SUBSCRIBED) { message ->
-            log.info("MqttServer received message for topic '{}'", message.topic.toString())
-            val segments = message.topic.toString().split("/")
-            if (segments.size >= 3) {
-                val thingId = segments[0]
-                val thing = things[thingId]
-                if (thing != null && segments[1] == "actions") {
-                    val actionName = segments[2]
-                    val action = thing.actions[actionName]
-                    actionMessageArrived(message, action)
+    private suspend fun listenOnMqttMessages(thing: ExposedThing) {
+        val sharedSubscriptionTopic = "\$share/server-group/${thing.id}/+/+"
+
+        val sharedSubscriptionTopicProperties = "\$share/server-group/${thing.id}/properties/+"
+        val sharedSubscriptionTopicActions = "\$share/server-group/${thing.id}/actions/+"
+
+        client.subscribeWith()
+            .topicFilter(sharedSubscriptionTopicProperties)
+            .qos(MqttQos.AT_LEAST_ONCE) // Use AT_LEAST_ONCE QoS level
+            .callback { message ->
+                val messageTopic = message.topic.toString()
+                log.info("MqttServer received message for topic '{}'", messageTopic)
+
+                val segments = messageTopic.split("/")
+                if (segments.size < 3) {
+                    log.info("Unexpected topic format '{}'", sharedSubscriptionTopic)
+                    return@callback
                 }
-            } else {
-                log.info("MqttServer received message for unexpected topic '{}'", message.topic.toString())
+
+                val thingId = segments[0]
+                val exposedThing = things[thingId]
+                if (exposedThing == null) {
+                    log.warn("Thing with id '{}' not found", thingId)
+                    return@callback
+                }
+
+                CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
+                    handlePropertyMessage(thing, segments, message)
+                }
+
             }
+            .send().await()  // Sending the subscription request
+
+        client.subscribeWith()
+            .topicFilter(sharedSubscriptionTopicActions)
+            .qos(MqttQos.AT_LEAST_ONCE) // Use AT_LEAST_ONCE QoS level
+            .callback { message ->
+                val messageTopic = message.topic.toString()
+                log.info("MqttServer received message for topic '{}'", messageTopic)
+
+                val segments = messageTopic.split("/")
+                if (segments.size < 3) {
+                    log.info("Unexpected topic format '{}'", sharedSubscriptionTopic)
+                    return@callback
+                }
+
+                val thingId = segments[0]
+                val exposedThing = things[thingId]
+                if (exposedThing == null) {
+                    log.warn("Thing with id '{}' not found", thingId)
+                    return@callback
+                }
+
+                CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
+                    handleActionMessage(thing, segments, message)
+                }
+
+            }
+            .send().await()  // Sending the subscription request
+    }
+
+    private suspend fun handlePropertyMessage(thing: ExposedThing, segments: List<String>, message: Mqtt5Publish) {
+        val propertyName = segments.getOrNull(2) ?: return log.warn("Property name missing in topic")
+        val property = thing.properties[propertyName]
+        if (property == null) {
+            log.warn("Property '{}' not found on thing '{}'", propertyName, thing.id)
+            return
+        }
+
+        if (message.payload.isEmpty) {
+            // If no payload, consider it a read request
+            val responseContent = thing.handleReadProperty(propertyName)
+            respondToTopic(responseContent, message.responseTopic.get())
+        } else {
+            // If payload is provided, consider it a write request
+            val inputContent = Content(ContentManager.DEFAULT, message.payloadAsBytes)
+            val responseContent = thing.handleWriteProperty(propertyName, inputContent)
+            respondToTopic(responseContent, message.responseTopic.get())
         }
     }
 
-    private fun actionMessageArrived(message: Mqtt5Publish, action: ActionAffordance<*, *>?) {
-        action?.let {
-            val inputContent = Content(ContentManager.DEFAULT, message.payloadAsBytes)
-            try {
-                val input = ContentManager.contentToValue(inputContent, action.input)
-                //action.invoke(input)
-            } catch (e: ContentCodecException) {
-                log.warn("Unable to parse input", e)
-            }
-        } ?: log.warn("Action not found for topic: '{}'", message.topic.toString())
+    private suspend fun handleActionMessage(thing: ExposedThing, segments: List<String>, message: Mqtt5Publish) {
+        val actionName = segments.getOrNull(2) ?: return log.warn("Action name missing in topic")
+        val action = thing.actions[actionName]
+        if (action == null) {
+            log.warn("Action '{}' not found on thing '{}'", actionName, thing.id)
+            return
+        }
+        val inputContent = Content(ContentManager.DEFAULT, message.payloadAsBytes)
+        val actionResult = thing.handleInvokeAction(actionName, inputContent)
+        respondToTopic(actionResult, message.responseTopic.get())
+    }
+
+    private fun handleEventSubscriptionMessage(thing: ExposedThing, segments: List<String>, message: Mqtt5Publish) {
+        val eventName = segments.getOrNull(2) ?: return log.warn("Event name missing in topic")
+        val event = thing.events[eventName]
+        if (event == null) {
+            log.warn("Event '{}' not found on thing '{}'", eventName, thing.id)
+            return
+        }
+
+        val contentListener = ContentListener { content ->
+            respondToTopic(content, message.topic)
+        }
+        thing.handleSubscribeEvent(eventName, contentListener)
+    }
+
+    private suspend fun respondToTopic(content: Content?, responseTopic: MqttTopic) {
+        try {
+            val payload = content?.body
+            val publishMessage = Mqtt5Publish.builder()
+                .topic(responseTopic)
+                .payload(payload)
+                .qos(MqttQos.AT_LEAST_ONCE)
+                .build()
+
+            client.publish(publishMessage).await()
+            log.info("Response sent to topic '{}'", responseTopic)
+        } catch (e: Exception) {
+            log.warn("Failed to send response to topic '{}': {}", responseTopic, e.message)
+        }
     }
 }
 

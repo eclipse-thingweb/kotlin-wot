@@ -26,7 +26,7 @@ import java.util.*
  * Allows consuming Things via HTTP.
  */
 class HttpProtocolClient(
-    private val httpClientConfig: HttpClientConfig?,
+    private val httpClientConfig: HttpClientConfig? = null,
     private val client: HttpClient = HttpClient(CIO)
 ) : ProtocolClient {
 

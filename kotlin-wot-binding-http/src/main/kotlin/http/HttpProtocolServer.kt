@@ -65,7 +65,7 @@ open class HttpProtocolServer(
     }
 
     // Expose a thing
-    override fun expose(thing: ExposedThing) {
+    override suspend fun expose(thing: ExposedThing) {
         if (!started) throw ProtocolServerException("Server has not started yet")
 
         log.info("Exposing thing '{}'", thing.id)
@@ -125,7 +125,7 @@ open class HttpProtocolServer(
                 val observableForm = Form(
                     href = observableHref,
                     contentType = contentType,
-                    op = listOf(Operation.OBSERVE_PROPERTY),
+                    op = listOf(Operation.OBSERVE_PROPERTY, Operation.UNOBSERVE_PROPERTY),
                     subprotocol = "longpoll"
                 )
                 property.forms += observableForm
