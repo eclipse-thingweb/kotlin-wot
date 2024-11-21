@@ -147,7 +147,7 @@ class MqttProtocolClient(
 
         try {
             log.debug(
-                "Publishing to topic '{}' on broker '{}' with response expected on '{}'",
+                "Publishing message to topic '{}' on broker '{}' with response expected on '{}'",
                 topic,
                 "${client.config.serverHost}:${client.config.serverPort}",
                 responseTopic

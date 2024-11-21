@@ -172,7 +172,7 @@ class MqttProtocolServer(
 
     private suspend fun exposeTD(thing: ExposedThing) {
         val topic = thing.id
-        log.debug("Publishing Thing Description '{}' to topic '{}'", thing.id, topic)
+        //log.debug("Publishing Thing Description '{}' to topic '{}'", thing.id, topic)
 
         try {
             val content = ContentManager.valueToContent(thing.toJson(), "application/json")
@@ -181,8 +181,10 @@ class MqttProtocolServer(
                 .topicFilter(tdTopic)
                 .qos(MqttQos.AT_LEAST_ONCE) // Use AT_LEAST_ONCE QoS level
                 .callback { message ->
+                    val responseTopic = message.responseTopic.get()
+                    log.debug("Sending Thing Description of thing '{}' to topic '{}'", thing.id, responseTopic)
                     CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-                        respondToTopic(content, message.responseTopic.get())
+                        respondToTopic(content, responseTopic)
                     }
                 }
                 .send().await()  // Sending the subscription request

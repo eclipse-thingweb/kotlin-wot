@@ -655,12 +655,12 @@ data class ThingDescription (
          * @param json JSON string to parse.
          * @return A Thing instance if parsing is successful, otherwise null.
          */
-        fun fromJson(json: String?): ThingDescription? {
+        fun fromJson(json: String): ThingDescription {
             return try {
                 JsonMapper.instance.readValue(json, ThingDescription::class.java)
             } catch (e: IOException) {
                 log.warn("Unable to read json", e)
-                null
+                throw e
             }
         }
 

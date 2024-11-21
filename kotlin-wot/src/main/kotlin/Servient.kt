@@ -8,7 +8,7 @@ import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
+import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.*
 import kotlinx.coroutines.async
@@ -166,18 +166,17 @@ class Servient(
      * @return
      */
      suspend fun fetch(url: URI): ThingDescription {
-        log.debug("Fetch thing from url '{}'", url)
+        log.debug("Fetching thing description from '{}'", url)
         val scheme = url.scheme
         try {
             val client = getClientFor(scheme)
             if (client != null) {
-                val form = Form(href = url.toString())
+                val form = Form(href = url.toString(), contentType = "application/json")
                 val content = client.readResource(form)
                 try {
-                    val dataSchemaValue = ContentManager.contentToValue(content, ObjectSchema())
-                    dataSchemaValue as DataSchemaValue.ObjectValue
-
-                    return ThingDescription.fromMap(dataSchemaValue.value)
+                    val dataSchemaValue = ContentManager.contentToValue(content, StringSchema())
+                    dataSchemaValue as DataSchemaValue.StringValue
+                    return ThingDescription.fromJson(dataSchemaValue.value)
                 } catch (e: ContentCodecException) {
                     throw ServientException("Error while fetching TD: ${e.message}", e)
                 }
