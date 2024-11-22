@@ -27,7 +27,8 @@ class MqttProtocolServer(
         .identifier(mqttClientConfig.clientId)
         .serverHost(mqttClientConfig.host)
         .serverPort(mqttClientConfig.port)
-        .automaticReconnect().applyAutomaticReconnect().buildAsync()
+        //.automaticReconnect().applyAutomaticReconnect()
+        .buildAsync()
 
     private val log: Logger = LoggerFactory.getLogger(MqttProtocolServer::class.java)
     private val things = mutableMapOf<String, ExposedThing>()
@@ -38,15 +39,17 @@ class MqttProtocolServer(
     }
 
     override suspend fun start(servient: Servient)  {
-        log.info("Connect Mqtt server client")
+        log.info("Starting MqttProtocolServer")
         client.connect().await()
         started = true
+        log.info("MqttProtocolServer started and connected to ${client.config.serverHost}:${client.config.serverPort} ")
     }
 
     override suspend fun stop() {
-        log.info("Disconnect Mqtt server client")
+        log.info("Stopping MqttProtocolServer")
         client.disconnect().await()
         started = false
+        log.info("MqttProtocolServer stopped")
     }
 
     override suspend fun expose(thing: ExposedThing) {

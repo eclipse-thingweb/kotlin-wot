@@ -17,6 +17,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.net.*
 import java.util.*
@@ -175,16 +176,20 @@ class Servient(
                 val content = client.readResource(form)
                 try {
                     val dataSchemaValue = ContentManager.contentToValue(content, StringSchema())
-                    dataSchemaValue as DataSchemaValue.StringValue
-                    return ThingDescription.fromJson(dataSchemaValue.value)
+                    return when (dataSchemaValue) {
+                        is DataSchemaValue.StringValue -> ThingDescription.fromJson(dataSchemaValue.value)
+                        is DataSchemaValue.ObjectValue -> ThingDescription.fromMap(dataSchemaValue.value)
+                        else -> {
+                            throw ServientException("Unexpected data type: $dataSchemaValue")}
+                    }
                 } catch (e: ContentCodecException) {
-                    throw ServientException("Error while fetching TD: ${e.message}", e)
+                    throw ServientException("Error while fetching thing description: ${e.message}", e)
                 }
             } else {
                 throw ServientException("Unable to fetch '$url'. Missing ClientFactory for scheme '$scheme'")
             }
         } catch (e: ProtocolClientException) {
-            throw ServientException("Unable to create client: ${e.message}", e)
+            throw ServientException("Unable to fetch thing description: ${e.message}", e)
         }
     }
 

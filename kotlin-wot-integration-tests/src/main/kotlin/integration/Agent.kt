@@ -1,4 +1,4 @@
-package integration
+package ai.ancf.lmos.wot.integration
 
 import dev.langchain4j.model.azure.AzureOpenAiChatModel
 

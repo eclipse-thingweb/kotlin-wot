@@ -10,6 +10,7 @@ import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.ContentListener
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
+import ai.ancf.lmos.wot.thing.schema.DataSchemaValue.*
 import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.ProtocolServer
@@ -230,25 +231,25 @@ fun Application.setupRouting(servient: Servient) {
                     for ((key, value) in properties) {
                         // Assuming content is not null as it's checked earlier
                         when (val schemaValue: DataSchemaValue = ContentManager.contentToValue(value, null)) {
-                            is DataSchemaValue.BooleanValue -> {
+                            is BooleanValue -> {
                                 response[key] = schemaValue.value
                             }
-                            is DataSchemaValue.IntegerValue -> {
+                            is IntegerValue -> {
                                 response[key] = schemaValue.value
                             }
-                            is DataSchemaValue.NumberValue -> {
+                            is NumberValue -> {
                                 response[key] = schemaValue.value
                             }
-                            is DataSchemaValue.StringValue -> {
+                            is StringValue -> {
                                 response[key] = schemaValue.value
                             }
-                            is DataSchemaValue.ObjectValue -> {
+                            is ObjectValue -> {
                                 response[key] = schemaValue.value
                             }
-                            is DataSchemaValue.ArrayValue -> {
+                            is ArrayValue -> {
                                 response[key] = schemaValue.value
                             }
-                            is DataSchemaValue.NullValue -> {
+                            is NullValue -> {
                                 response[key] = null
                             }
                         }
