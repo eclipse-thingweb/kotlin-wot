@@ -1,11 +1,14 @@
 package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.Wot
-import kotlinx.coroutines.*
+import ai.ancf.lmos.wot.reflection.annotations.ThingAgent
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 
 fun main(): Unit = runBlocking {
-    val agent = Agent()
+    val agent = ThingAgent()
 
     // Protocol can be "HTTP" or "MQTT"
     val servient = createServient("MQTT")

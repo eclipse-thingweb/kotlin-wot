@@ -590,6 +590,10 @@ open class ObjectSchema(
         result = 31 * result + (format?.hashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String {
+        return "ObjectSchema(properties=$properties, required=$required, objectType=$objectType, title=$title, titles=$titles, description=$description, descriptions=$descriptions, const=$const, default=$default, unit=$unit, oneOf=$oneOf, enum=$enum, readOnly=$readOnly, writeOnly=$writeOnly, format=$format)"
+    }
 }
 
 fun objectSchema(initializer: ObjectSchema.() -> Unit): ObjectSchema {

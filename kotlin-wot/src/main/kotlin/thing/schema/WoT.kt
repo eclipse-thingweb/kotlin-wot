@@ -21,12 +21,12 @@ fun interface ActionHandler {
 }
 
 fun interface InteractionListener {
-    fun handle(data: WoTInteractionOutput)
+    suspend fun handle(data: WoTInteractionOutput)
 }
 
 // Functional interface for ErrorListener
 fun interface ErrorListener {
-    fun handle(error: Throwable)
+    suspend fun handle(error: Throwable)
 }
 
 fun interface ContentListener {
@@ -71,8 +71,8 @@ data class ListenerItem(
     val formIndexListeners: Map<Int, List<ContentListener>>
 )
 
-interface EventSubscriptionHandler {
-    fun handle(options: InteractionOptions)
+fun  interface EventSubscriptionHandler {
+    suspend fun handle(options: InteractionOptions)
 }
 
 // Sealed class to represent either a stream or data schema value
@@ -115,6 +115,7 @@ sealed class DataSchemaValue {
                 is String -> StringValue(value)
                 is Map<*, *> -> ObjectValue(value)
                 is List<*> -> ArrayValue(value)
+                is Unit -> NullValue
                 else -> throw IllegalArgumentException("Unsupported type: ${value::class}")
             }
         }

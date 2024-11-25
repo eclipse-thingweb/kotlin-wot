@@ -27,3 +27,8 @@ data class Content(val type: String, val body: ByteArray = ByteArray(0)) {
         return result
     }
 }
+
+fun String.toJsonContent(): Content{
+    val jsonContent = """"$this""""
+    return Content(ContentManager.DEFAULT, jsonContent.toByteArray())
+}

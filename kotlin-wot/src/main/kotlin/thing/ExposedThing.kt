@@ -5,6 +5,7 @@ import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.WoTDSL
 import ai.ancf.lmos.wot.content.Content
+import ai.ancf.lmos.wot.content.Content.Companion.EMPTY_CONTENT
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
 import ai.ancf.lmos.wot.security.SecurityScheme
@@ -152,7 +153,7 @@ data class ExposedThing(
 
     suspend fun handleInvokeAction(
         name: String,
-        inputContent: Content,
+        inputContent: Content = EMPTY_CONTENT,
         options: InteractionOptions = InteractionOptions()
     ): Content {
         val action = requireNotNull(actions[name]) {
@@ -336,7 +337,7 @@ data class ExposedThing(
         propertyListeners.notify(property, data, property)
     }
 
-    fun handleSubscribeEvent(
+    suspend fun handleSubscribeEvent(
         eventName: String,
         listener: ContentListener,
         options: InteractionOptions = InteractionOptions()
@@ -365,7 +366,7 @@ data class ExposedThing(
         eventHandlers[eventName]?.subscribe?.handle(options)
     }
 
-    fun handleUnsubscribeEvent(
+    suspend fun handleUnsubscribeEvent(
         eventName: String,
         listener: ContentListener,
         options: InteractionOptions = InteractionOptions()

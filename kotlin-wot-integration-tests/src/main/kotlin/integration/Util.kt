@@ -6,6 +6,7 @@ import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
 import ai.ancf.lmos.wot.binding.mqtt.MqttClientConfig
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolServer
+import ai.ancf.lmos.wot.reflection.annotations.ThingAgent
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.schema.*
@@ -33,7 +34,7 @@ fun createServient(protocol: String): Servient {
     }
 }
 
-fun createExposedThing(wot: Wot, agent: Agent): ExposedThing {
+fun createExposedThing(wot: Wot, agent: ThingAgent): ExposedThing {
     return wot.produce {
         id = "agent"
         title = "Agent"

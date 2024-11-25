@@ -11,7 +11,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ThingAction<I, O>(
+data class ThingAction<I: Any, O: Any>(
     @JsonInclude(NON_EMPTY)
     override var title: String? = null,
 
