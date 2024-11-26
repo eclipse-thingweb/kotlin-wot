@@ -5,8 +5,8 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
+import ai.ancf.lmos.wot.reflection.ThingBuilder.createExposedThing
 import ai.ancf.lmos.wot.reflection.annotations.ThingAgent
-import ai.ancf.lmos.wot.reflection.annotations.ThingBuilder
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
 import kotlinx.coroutines.test.runTest
@@ -26,8 +26,7 @@ class AgentBuilderTest {
         servient.start()
 
         val wot = Wot.create(servient)
-        val exposedThing = ThingBuilder()
-            .createThingDescription(wot, ThingAgent(), ThingAgent::class)
+        val exposedThing = createExposedThing(wot, ThingAgent(), ThingAgent::class)
         if(exposedThing != null){
 
 

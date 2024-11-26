@@ -25,7 +25,7 @@ class ComplexThingTest {
         complexThing = ComplexThing()
 
         // Generate ThingDescription from the class
-        exposedThing = ThingBuilder.createThingDescription(wot, complexThing, ComplexThing::class) as WoTExposedThing
+        exposedThing = ThingBuilder.createExposedThing(wot, complexThing, ComplexThing::class) as WoTExposedThing
         thingDescription = exposedThing.getThingDescription()
     }
 
@@ -44,6 +44,16 @@ class ComplexThingTest {
         val exampleStringProperty = thingDescription.properties["exampleStringProperty"]
         assertNotNull(exampleStringProperty, "'exampleStringProperty' property should not be null")
         assertIs<StringProperty>(exampleStringProperty, "'exampleStringProperty' should be a StringProperty")
+        assertEquals("Hello World", exampleStringProperty.const)
+    }
+
+    @Test
+    fun `test constructorProperty in ThingDescription`() {
+        // Assertions for String Property
+        assertTrue(thingDescription.properties.containsKey("constructorProperty"), "ThingDescription should contain 'constructorProperty' property")
+        val exampleStringProperty = thingDescription.properties["constructorProperty"]
+        assertNotNull(exampleStringProperty, "'constructorProperty' property should not be null")
+        assertIs<StringProperty>(exampleStringProperty, "'constructorProperty' should be a StringProperty")
         assertEquals("Hello World", exampleStringProperty.const)
     }
 

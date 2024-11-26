@@ -40,7 +40,7 @@ class SimpleThingTest {
         simpleThing = SimpleThing()
 
         // Generate ThingDescription from the class
-        exposedThing = ThingBuilder.createThingDescription(wot, simpleThing, SimpleThing::class)!!
+        exposedThing = ThingBuilder.createExposedThing(wot, simpleThing, SimpleThing::class)!!
 
         servient.addThing(exposedThing)
         servient.expose("simpleThing")

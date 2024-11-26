@@ -44,7 +44,7 @@ object ThingBuilder {
      * @param clazz The KClass of the object to be described.
      * @return An [ExposedThing] or null if no description could be generated.
      */
-    fun <T : Any> createThingDescription(wot: Wot, instance: T, clazz: KClass<T>): ExposedThing? {
+    fun <T : Any> createExposedThing(wot: Wot, instance: T, clazz: KClass<T>): ExposedThing? {
         log.debug("Creating ThingDescription for class: ${clazz.simpleName}")
 
         // 1. Get the @Thing annotation from the class

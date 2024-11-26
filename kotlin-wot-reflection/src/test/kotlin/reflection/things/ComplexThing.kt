@@ -16,7 +16,7 @@ import kotlin.random.Random
     title = "Complex Thing",
     description = "A thing with complex properties, actions, and events."
 )
-class ComplexThing {
+class ComplexThing(@Property(name = "constructorProperty", readOnly = true) val constructorProperty: String = "Hello World") {
 
     private val statusChangedFlow = MutableSharedFlow<String>(replay = 1) // Replay last emitted value
 

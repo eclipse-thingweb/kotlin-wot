@@ -1,24 +1,34 @@
 package ai.ancf.lmos.wot.reflection.annotations
 
 import dev.langchain4j.model.azure.AzureOpenAiChatModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 
 @Thing(id= "agent", title="Agent",
     description= "A simple agent.")
-class ThingAgent() {
+class ThingAgent(@Property(name = "modelTemperature", readOnly = true)
+                 val modelConfiguration: ModelConfiguration = ModelConfiguration(0.5, 50)) {
+
+    private val messageFlow = MutableSharedFlow<String>(replay = 1) // Replay last emitted value
 
     private val model: AzureOpenAiChatModel = AzureOpenAiChatModel.builder()
         .apiKey("af12dab9c046453e82dcf4b24af90bca")
         .deploymentName("GPT35T-1106")
         .endpoint("https://gpt4-uk.openai.azure.com/")
+        .temperature(modelConfiguration.modelTemperature)
         .build();
 
-    @Property(name = "modelTemperature", readOnly = true)
-    var modelTemperature: ModelConfiguration = ModelConfiguration(0.5, 50)
+    @Action(name = "ask", title = "Ask", description = "Ask the agent a question.")
+    suspend fun  ask(message : String) : String {
+        val response = model.generate(message)
+        messageFlow.emit(response)
+        return model.generate(response)
+    }
 
-    @Action(name = "ask")
-    fun ask(message : String) : String {
-        return model.generate(message)
+    @Event(name = "messageGenerated", title = "Generated message")
+    fun messageGenerated() : Flow<String> {
+        return messageFlow
     }
 }
 
