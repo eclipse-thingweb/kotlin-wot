@@ -7,8 +7,8 @@ dependencies {
     implementation("ai.ancf.lmos:arc-agents:0.98.0")
     implementation("ai.ancf.lmos:arc-langchain4j-client:0.98.0")
 
-    implementation("dev.langchain4j:langchain4j-azure-open-ai:0.35.0")
-    implementation("dev.langchain4j:langchain4j:0.35.0")
+    implementation("dev.langchain4j:langchain4j-azure-open-ai:0.36.2")
+    implementation("dev.langchain4j:langchain4j:0.36.2")
     testImplementation("com.hivemq:hivemq-mqtt-client:1.3.3")
     implementation("org.testcontainers:testcontainers:1.20.3")
 }
