@@ -8,9 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
-import kotlin.reflect.KFunction
-import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KProperty1
+import kotlin.reflect.*
 import kotlin.test.Test
 
 class AddHandlerTest {
@@ -53,8 +51,12 @@ class AddHandlerTest {
         val exposedThing = mockk<ExposedThing>(relaxed = true)
         val readOnlyProperty = mockk<KProperty1<MyClass, *>>()
         val instance = MyClass("test")
+        val returnType = mockk<KType>()
+        val classifier = mockk<KClassifier>()
 
         // Mocking getter for property
+        every { readOnlyProperty.returnType } returns returnType
+        every { returnType.classifier } returns classifier
         every { readOnlyProperty.getter.call(instance) } returns "testValue"
 
         // Maps for read-only, write-only, and read-write properties

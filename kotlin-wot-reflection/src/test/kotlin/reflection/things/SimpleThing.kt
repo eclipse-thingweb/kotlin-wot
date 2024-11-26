@@ -5,6 +5,7 @@ import ai.ancf.lmos.wot.reflection.annotations.Event
 import ai.ancf.lmos.wot.reflection.annotations.Property
 import ai.ancf.lmos.wot.reflection.annotations.Thing
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 
 @Thing(
@@ -15,6 +16,9 @@ import kotlinx.coroutines.flow.flow
 class SimpleThing {
 
     var counter = 0
+
+    @Property(name = "observableProperty", title = "Observable Property", readOnly = true)
+    val observableProperty : MutableStateFlow<String> = MutableStateFlow("Hello World")
 
     @Property(name = "mutableProperty")
     var mutableProperty: String = "test"
@@ -29,6 +33,11 @@ class SimpleThing {
     fun voidAction() {
         println("Action executed")
         counter += 1
+    }
+
+    @Action(name = "changeObservableProperty")
+    fun changeObservableProperty(){
+        observableProperty.value = "Hello from action!"
     }
 
     @Action(name = "outputAction")

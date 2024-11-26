@@ -8,7 +8,13 @@ import ai.ancf.lmos.wot.reflection.annotations.Thing
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.*
 import ai.ancf.lmos.wot.thing.thingDescription
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.reflect.*
@@ -25,6 +31,10 @@ import kotlin.reflect.full.primaryConstructor
 object ThingBuilder {
 
     private val log: Logger = LoggerFactory.getLogger(ThingBuilder::class.java)
+
+    val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        log.error("Caught exception: ${throwable.message}", throwable)
+    }
 
     /**
      * Creates an ExposedThing description for the provided class.
@@ -75,99 +85,145 @@ object ThingBuilder {
                                 readWritePropertiesMap[property.name] = property as KMutableProperty1<T, *>
                             }
                         }
-                        when (property.returnType.classifier) {
+
+                        val returnType = property.returnType
+                        var showConstAndDefault = true
+                        var observableProperty = false
+                        val classifier = if(isStateFlow(returnType)){
+                            showConstAndDefault = false
+                            observableProperty = true
+                            property.returnType.arguments.firstOrNull()?.type?.classifier
+                                ?: throw IllegalArgumentException("StateFlow must have a type argument")
+                        }else{
+                            returnType.classifier
+                        }
+                        when (classifier) {
                             Int::class -> intProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
-                                if(propertyAnnotation.readOnly) {
-                                    const = property.get(instance) as Int
-                                } else{
-                                    default = property.get(instance) as Int
+                                title = propertyAnnotation.title
+                                observable = observableProperty
+                                if(showConstAndDefault){
+                                    if(propertyAnnotation.readOnly) {
+                                        const = property.get(instance) as Int
+                                    } else{
+                                        default = property.get(instance) as Int
+                                    }
                                 }
-                                property.get(instance)
                             }
                             Double::class -> numberProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
-                                if(propertyAnnotation.readOnly) {
-                                    const = property.get(instance) as Double
-                                } else{
-                                    default = property.get(instance) as Double
+                                title = propertyAnnotation.title
+                                observable = observableProperty
+                                if(showConstAndDefault){
+                                    if(propertyAnnotation.readOnly) {
+                                        const = property.get(instance) as Double
+                                    } else{
+                                        default = property.get(instance) as Double
+                                    }
                                 }
                             }
                             Float::class -> numberProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
-                                if(propertyAnnotation.readOnly) {
-                                    const = property.get(instance) as Float
-                                } else{
-                                    default = property.get(instance) as Float
+                                title = propertyAnnotation.title
+                                observable = observableProperty
+                                if(showConstAndDefault){
+                                    if(propertyAnnotation.readOnly) {
+                                        const = property.get(instance) as Float
+                                    } else{
+                                        default = property.get(instance) as Float
+                                    }
                                 }
                             }
                             Long::class -> numberProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
-                                if(propertyAnnotation.readOnly) {
-                                    const = property.get(instance) as Long
-                                } else{
-                                    default = property.get(instance) as Long
+                                title = propertyAnnotation.title
+                                observable = observableProperty
+                                if(showConstAndDefault){
+                                    if(propertyAnnotation.readOnly) {
+                                        const = property.get(instance) as Long
+                                    } else{
+                                        default = property.get(instance) as Long
+                                    }
                                 }
                             }
                             Number::class -> numberProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
-                                if(propertyAnnotation.readOnly) {
-                                    const = property.get(instance) as Number
-                                } else{
-                                    default = property.get(instance) as Number
+                                title = propertyAnnotation.title
+                                observable = observableProperty
+                                if(showConstAndDefault){
+                                    if(propertyAnnotation.readOnly) {
+                                        const = property.get(instance) as Number
+                                    } else{
+                                        default = property.get(instance) as Number
+                                    }
                                 }
                             }
                             String::class -> stringProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
-                                if(propertyAnnotation.readOnly) {
-                                    const = property.get(instance) as String
-                                } else{
-                                    default = property.get(instance) as String
+                                title = propertyAnnotation.title
+                                observable = observableProperty
+                                if(showConstAndDefault){
+                                    if(propertyAnnotation.readOnly) {
+                                        const = property.get(instance) as String
+                                    } else{
+                                        default = property.get(instance) as String
+                                    }
                                 }
                             }
                             Boolean::class -> booleanProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
-                                if(propertyAnnotation.readOnly) {
-                                    const = property.get(instance) as Boolean
-                                } else{
-                                    default = property.get(instance) as Boolean
+                                title = propertyAnnotation.title
+                                observable = observableProperty
+                                if(showConstAndDefault){
+                                    if(propertyAnnotation.readOnly) {
+                                        const = property.get(instance) as Boolean
+                                    } else{
+                                        default = property.get(instance) as Boolean
+                                    }
                                 }
                             }
                             List::class -> arrayProperty<Any>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
-                                writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                             }
                             IntArray::class -> arrayProperty<Int>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = IntegerSchema()
                             }
                             DoubleArray::class -> arrayProperty<Number>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = NumberSchema()
                             }
                             BooleanArray::class -> arrayProperty<Boolean>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = BooleanSchema()
 
                             }
@@ -175,41 +231,55 @@ object ThingBuilder {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = NumberSchema()
                             }
                             LongArray::class -> arrayProperty<Number>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = NumberSchema()
                             }
                             Array<String>::class -> arrayProperty<String>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = StringSchema()
                             }
                             Array<Number>::class -> arrayProperty<Number>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = NumberSchema()
                             }
                             Array<Boolean>::class -> arrayProperty<Boolean>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                                 items = BooleanSchema()
                             }
                             Set::class -> arrayProperty<Any>(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                             }
                             Unit::class -> nullProperty(property.name) {
                                 description = propertyAnnotation.description
                                 readOnly = propertyAnnotation.readOnly
                                 writeOnly = propertyAnnotation.writeOnly
+                                title = propertyAnnotation.title
+                                observable = observableProperty
                             }
                             else -> {
                                 // Handle ObjectProperty (sub-properties)
@@ -217,6 +287,8 @@ object ThingBuilder {
                                     description = propertyAnnotation.description
                                     readOnly = propertyAnnotation.readOnly
                                     writeOnly = propertyAnnotation.writeOnly
+                                    title = propertyAnnotation.title
+                                    observable = observableProperty
 
                                     // If the property is an object, add its properties recursively
                                     val subProperties = buildObjectSchema(property.returnType)
@@ -263,7 +335,6 @@ object ThingBuilder {
                 }
             })
 
-
             addPropertyHandler(readOnlyPropertiesMap, exposedThing, instance, writeOnlyPropertiesMap, readWritePropertiesMap)
             // Action handlers
             addActionHandler(actionsMap, exposedThing, instance)
@@ -273,6 +344,10 @@ object ThingBuilder {
         }
         log.warn("No @Thing annotation found on class: ${clazz.simpleName}")
         return null
+    }
+
+    private fun isStateFlow(type: KType): Boolean {
+        return type.classifier == StateFlow::class || type.classifier == MutableStateFlow::class
     }
 
     internal fun <T : Any> addEventHandler(
@@ -341,11 +416,9 @@ object ThingBuilder {
         name: String,
         instance: T
     ) {
-        property.setter.let { setter ->
-            exposedThing.setPropertyWriteHandler(name) { input, _ ->
-                setter.call(instance, toKotlinObject(input.value(), property.returnType))
-                InteractionInput.Value(input.value() ?: DataSchemaValue.NullValue)
-            }
+        exposedThing.setPropertyWriteHandler(name) { input, _ ->
+            property.setter.call(instance, toKotlinObject(input.value(), property.returnType))
+            InteractionInput.Value(input.value() ?: DataSchemaValue.NullValue)
         }
     }
 
@@ -355,9 +428,31 @@ object ThingBuilder {
         name: String,
         instance: T
     ) {
-        property.getter.let { getter ->
+        if(isStateFlow(property.returnType)){
+            // Access the property value
+            // Make the property accessible
+            val mutableStateFlow = property.getter.call(instance) as? MutableStateFlow<*>
+                ?: throw IllegalStateException("Not a MutableStateFlow")
+            log.debug("Setting property observe handler for: $name")
+            val scope = CoroutineScope(Dispatchers.IO + exceptionHandler)
+            exposedThing.setPropertyObserveHandler(name) { _ ->
+                scope.launch {
+                    mutableStateFlow.collect { value ->
+                        exposedThing.emitPropertyChange(
+                            name,
+                            InteractionInput.Value(DataSchemaValue.toDataSchemaValue(value))
+                        )
+                    }
+                }
+                InteractionInput.Value(DataSchemaValue.NullValue)
+            }
             exposedThing.setPropertyReadHandler(name) { _ ->
-                val value = getter.call(instance)
+                val value = mutableStateFlow.value
+                InteractionInput.Value(DataSchemaValue.toDataSchemaValue(value))
+            }
+        } else{
+            exposedThing.setPropertyReadHandler(name) { _ ->
+                val value = property.getter.call(instance)
                 InteractionInput.Value(DataSchemaValue.toDataSchemaValue(value))
             }
         }

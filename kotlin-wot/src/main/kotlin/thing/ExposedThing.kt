@@ -281,7 +281,7 @@ data class ExposedThing(
         if (formIndex != -1) {
             // Register the listener for the property
             propertyListeners.register(property, formIndex, listener)
-            println("ExposedThing '$title' subscribes to property '$propertyName'")
+            log.debug("Property listener registered for '$propertyName'")
         } else {
             throw IllegalArgumentException(
                 "ExposedThing '$title', no property listener found for '$propertyName' with form index '${options.formIndex}'"
@@ -312,7 +312,7 @@ data class ExposedThing(
         if (formIndex != -1) {
             // Register the listener for the property
             propertyListeners.unregister(property, formIndex, listener)
-            println("ExposedThing '$title' subscribes to property '$propertyName'")
+            log.debug("Property listener unregistered for '$propertyName'")
         } else {
             throw IllegalArgumentException(
                 "ExposedThing '$title', no property listener found for '$propertyName' with form index '${options.formIndex}'"

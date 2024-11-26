@@ -5,10 +5,14 @@ import ai.ancf.lmos.wot.thing.schema.ContentListener
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
 import ai.ancf.lmos.wot.thing.schema.InteractionInput
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
 class ProtocolListenerRegistry {
+
+    private val log: Logger = LoggerFactory.getLogger(ProtocolListenerRegistry::class.java)
 
     internal val listeners: ConcurrentMap<InteractionAffordance, MutableMap<Int, MutableList<ContentListener>>> = ConcurrentHashMap()
 
@@ -42,6 +46,7 @@ class ProtocolListenerRegistry {
         schema: DataSchema<T>? = null,
         formIndex: Int? = null
     ) {
+        log.debug("Notify listeners for affordance with title '${affordance.title}'")
         val formMap = listeners[affordance] ?: emptyMap()
 
         val interactionInputValue = data as InteractionInput.Value
@@ -49,16 +54,29 @@ class ProtocolListenerRegistry {
         if (formIndex != null) {
             formMap[formIndex]?.let { listenersForIndex ->
                 val contentType = affordance.forms[formIndex].contentType
-                val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
-                listenersForIndex.forEach { it.handle(content) }
-                return
+                try{
+                    val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
+                    listenersForIndex.forEach { it.handle(content) }
+                    return
+                }
+                catch (e: Exception){
+                    log.error("Error while notifying listeners", e)
+                }
             }
         }
 
         formMap.forEach { (index, listenersForIndex) ->
+            log.debug("Notify {} listeners for form {}", listenersForIndex.size, affordance.forms[index])
             val contentType = affordance.forms[index].contentType
-            val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
-            listenersForIndex.forEach { it.handle(content) }
+            try{
+                val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
+                listenersForIndex.forEach {
+                    it.handle(content)
+                }
+            }
+            catch (e: Exception){
+                log.error("Error while notifying listeners", e)
+            }
         }
     }
 }

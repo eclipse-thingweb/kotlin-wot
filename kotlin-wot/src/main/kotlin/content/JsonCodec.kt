@@ -44,6 +44,7 @@ open class JsonCodec : ContentCodec {
         value: DataSchemaValue,
         parameters: Map<String, String>
     ): ByteArray {
+        try{
         return when (value) {
             is StringValue -> JsonMapper.instance.writeValueAsBytes(value.value)
             is IntegerValue -> JsonMapper.instance.writeValueAsBytes(value.value)
@@ -52,6 +53,9 @@ open class JsonCodec : ContentCodec {
             is ArrayValue -> JsonMapper.instance.writeValueAsBytes(value.value)
             is ObjectValue -> JsonMapper.instance.writeValueAsBytes(value.value)
             is NullValue -> JsonMapper.instance.writeValueAsBytes(null)
+            }
+        } catch (e: JsonProcessingException) {
+            throw ContentCodecException("Failed to encode $mediaType: $e")
         }
     }
 }

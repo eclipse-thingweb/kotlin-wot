@@ -6,15 +6,15 @@ annotation class Thing(val id: String, val title: String, val description: Strin
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Property(val name: String, val description: String = "", val readOnly: Boolean = false, val writeOnly: Boolean = false)
+annotation class Property(val name: String, val title: String = "", val description: String = "", val readOnly: Boolean = false, val writeOnly: Boolean = false)
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Action(val name: String, val description: String = "")
+annotation class Action(val name: String, val title: String = "", val description: String = "")
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Event(val name: String, val description: String = "")
+annotation class Event(val name: String, val title: String = "", val description: String = "")
 
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)

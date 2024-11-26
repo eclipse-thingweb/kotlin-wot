@@ -6,6 +6,8 @@ import ai.ancf.lmos.wot.reflection.annotations.Property
 import ai.ancf.lmos.wot.reflection.annotations.Thing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlin.random.Random
 
@@ -15,6 +17,11 @@ import kotlin.random.Random
     description = "A thing with complex properties, actions, and events."
 )
 class ComplexThing {
+
+    private val statusChangedFlow = MutableSharedFlow<String>(replay = 1) // Replay last emitted value
+
+    @Property(name = "observableProperty", readOnly = true)
+    val observableProperty : MutableStateFlow<String> = MutableStateFlow("Hello World")
 
     // A nested configuration represented as a read-only property
     @Property(name = "nestedConfig", description = "A nested configuration object", readOnly = true)
@@ -110,9 +117,7 @@ class ComplexThing {
     // Event example for dynamic updates (optional for the test, but a useful addition)
     @Event(name = "statusChanged", description = "Fires when the status changes")
     fun statusChanged(): Flow<String> {
-        return flow {
-            emit("Status updated at ${System.currentTimeMillis()}") // Emit the result
-        }
+        return statusChangedFlow
     }
 
     // Event stream that emits computation results periodically

@@ -146,7 +146,7 @@ class MqttProtocolServer(
         }
     }
 
-    private fun exposeEvents(thing: ExposedThing, baseUrl: String) {
+    private suspend fun exposeEvents(thing: ExposedThing, baseUrl: String) {
         val events = thing.events
 
         events.forEach { (name, event) ->
@@ -312,7 +312,7 @@ class MqttProtocolServer(
         respondToTopic(actionResult, message.responseTopic.get())
     }
 
-    private fun handleEventSubscriptionMessage(thing: ExposedThing, segments: List<String>, message: Mqtt5Publish) {
+    private suspend fun handleEventSubscriptionMessage(thing: ExposedThing, segments: List<String>, message: Mqtt5Publish) {
         val eventName = segments.getOrNull(2) ?: return log.warn("Event name missing in topic")
         val event = thing.events[eventName]
         if (event == null) {

@@ -14,6 +14,8 @@ import ai.ancf.lmos.wot.thing.schema.StringSchema
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import reflection.things.SimpleThing
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,6 +51,33 @@ class SimpleThingTest {
         val content = exposedThing.handleReadProperty("mutableProperty")
         val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
         assertEquals("test", response.value)
+    }
+
+    @Test
+    fun `Read observable property`() = runTest {
+        val content = exposedThing.handleReadProperty("observableProperty")
+        val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
+        assertEquals("Hello World", response.value)
+        simpleThing.changeObservableProperty()
+        val updatedContent = exposedThing.handleReadProperty("observableProperty")
+        val updatedResponse = ContentManager.contentToValue(updatedContent, StringSchema()) as DataSchemaValue.StringValue
+        assertEquals("Hello from action!", updatedResponse.value)
+    }
+
+    @Test
+    fun `Get observable property update`() = runTest {
+        var lock = CountDownLatch(1);
+        val contentListener: ContentListener = (ContentListener { lock.countDown() })
+
+        exposedThing.handleObserveProperty("observableProperty", contentListener)
+
+        lock.await(2000, TimeUnit.MILLISECONDS);
+
+        lock = CountDownLatch(1);
+
+        simpleThing.changeObservableProperty()
+
+        lock.await(2000, TimeUnit.MILLISECONDS);
     }
 
     @Test

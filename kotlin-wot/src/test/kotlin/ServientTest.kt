@@ -177,7 +177,7 @@ class ServientTest {
         val exception = assertThrows<ServientException> {
             runBlocking { servient.fetch(url) }
         }
-        assertEquals("Unable to create client: Client error", exception.message)
+        assertEquals("Unable to fetch thing description: Client error", exception.message)
         verify { servient.getClientFor(scheme) }
         coVerify { mockClient.readResource(any()) }
     }

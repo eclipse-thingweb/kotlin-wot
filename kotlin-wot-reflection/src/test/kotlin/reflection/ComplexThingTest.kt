@@ -143,6 +143,16 @@ class ComplexThingTest {
     }
 
     @Test
+    fun `test observableProperty in ThingDescription`() {
+        // Assertions for Array<Number> Property
+        assertTrue(thingDescription.properties.containsKey("observableProperty"), "ThingDescription should contain 'observableProperty' property")
+        val observableProperty = thingDescription.properties["observableProperty"]
+        assertNotNull(observableProperty, "'observableProperty' property should not be null")
+        assertIs<StringSchema>(observableProperty, "'observableProperty' should be an StringSchema")
+        assertEquals(true, observableProperty.observable)
+    }
+
+    @Test
     fun `test complex properties in ThingDescription for ComplexThing`() {
         // Assertions for properties
         assertTrue(thingDescription.properties.containsKey("nestedConfig"), "ThingDescription should contain 'nestedConfig' property")

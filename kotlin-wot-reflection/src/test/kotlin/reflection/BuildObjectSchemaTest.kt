@@ -4,10 +4,8 @@ import ai.ancf.lmos.wot.reflection.ThingBuilder.buildObjectSchema
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import ai.ancf.lmos.wot.thing.schema.IntegerSchema
 import ai.ancf.lmos.wot.thing.schema.StringSchema
-import kotlin.reflect.KParameter
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class BuildObjectSchemaTest {
 
@@ -21,7 +19,7 @@ class BuildObjectSchemaTest {
     fun functionWithMixedParameters(id: Int, name: String?, age: Int = 30) {}
 
     // Function with a parameter having a default value (optional)
-    fun functionWithOptionalParameter(name: String = "Guest", age: Int = 30) {}
+    fun functionWithOptionalParameter(id: Int, name: String = "Guest", age: Int = 30) {}
 
     // Test case 1: Non-nullable parameters (myClass)
     @Test
@@ -79,16 +77,18 @@ class BuildObjectSchemaTest {
     @Test
     fun `test optional parameter`() {
         // Get the parameters of the 'greet' function using reflection
-        val parameters = ::functionWithOptionalParameter.parameters
+        val parameterTypes = ::functionWithOptionalParameter.parameters
 
-        val nameParameter: KParameter = parameters.first { it.name == "name" }
+        val schema = buildObjectSchema(parameterTypes)
 
-        // Test if 'name' parameter is optional (has a default value)
-        assertTrue(nameParameter.isOptional, "Expected 'name' parameter to be optional")
+        val expectedProperties: Map<String, DataSchema<*>> = mapOf(
+            "id" to IntegerSchema(),
+            "name" to StringSchema(),
+            "age" to IntegerSchema()
+        )
+        val expectedRequired = listOf("id")  // name is nullable, so not required
 
-        val ageParameter: KParameter = parameters.first { it.name == "age" }
-
-        // Test if 'age' parameter is optional (has a default value)
-        assertTrue(ageParameter.isOptional, "Expected 'age' parameter to be optional")
+        assertEquals(expectedProperties, schema.properties)
+        assertEquals(expectedRequired, schema.required)
     }
 }

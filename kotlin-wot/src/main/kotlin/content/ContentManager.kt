@@ -199,12 +199,10 @@ object ContentManager {
         val bytes: ByteArray = if (codec != null) {
             log.debug("Content serializing to '$mediaType'")
             codec.valueToBytes(value, parameters)
-            //codec.valueToBytes(value ?: throw IllegalArgumentException("Value cannot be null when codec is available."), parameters)
         } else {
             log.warn("Content passthrough due to unsupported serialization format '$mediaType'")
             fallbackValueToBytes(value)
         }
-
         return Content(contentType ?: DEFAULT, bytes)
     }
 
