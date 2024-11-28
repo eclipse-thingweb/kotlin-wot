@@ -13,5 +13,6 @@ rootProject.name = "kotlin-wot"
 include("kotlin-wot")
 include("kotlin-wot-binding-http")
 include("kotlin-wot-binding-mqtt")
+include("kotlin-wot-binding-websocket")
 include("kotlin-wot-integration-tests")
 include("kotlin-wot-reflection")

@@ -1,6 +1,6 @@
-package reflection
+package ai.ancf.lmos.wot.reflection
 
-import ai.ancf.lmos.wot.reflection.ThingBuilder.mapTypeToSchema
+import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.mapTypeToSchema
 import ai.ancf.lmos.wot.thing.schema.*
 import kotlin.reflect.typeOf
 import kotlin.test.Test

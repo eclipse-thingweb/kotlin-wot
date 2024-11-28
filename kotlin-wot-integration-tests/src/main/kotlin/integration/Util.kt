@@ -25,7 +25,7 @@ fun createServient(protocol: String): Servient {
             clientFactories = listOf(HttpProtocolClientFactory())
         )
         "MQTT" -> {
-            val mqttConfig = MqttClientConfig("localhost", 60234, "wotServer")
+            val mqttConfig = MqttClientConfig("localhost", 61890, "wotServer")
             Servient(
                 servers = listOf(MqttProtocolServer(mqttConfig))
             )

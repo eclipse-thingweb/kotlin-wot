@@ -1,10 +1,9 @@
-package reflection
+package ai.ancf.lmos.wot.reflection
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.ThingBuilder
+import ai.ancf.lmos.wot.reflection.things.ComplexThing
 import ai.ancf.lmos.wot.thing.schema.*
-import reflection.things.ComplexThing
 import kotlin.test.*
 
 class ComplexThingTest {
@@ -25,7 +24,7 @@ class ComplexThingTest {
         complexThing = ComplexThing()
 
         // Generate ThingDescription from the class
-        exposedThing = ThingBuilder.createExposedThing(wot, complexThing, ComplexThing::class) as WoTExposedThing
+        exposedThing = ExposedThingBuilder.createExposedThing(wot, complexThing, ComplexThing::class) as WoTExposedThing
         thingDescription = exposedThing.getThingDescription()
     }
 
@@ -35,6 +34,7 @@ class ComplexThingTest {
         assertEquals("complexThing", thingDescription.id, "ThingDescription ID should match the class ID")
         assertEquals("Complex Thing", thingDescription.title, "ThingDescription title should match")
         assertEquals("A thing with complex properties, actions, and events.", thingDescription.description, "ThingDescription description should match")
+        assertEquals("1.0.0", thingDescription.version?.instance)
     }
 
     @Test

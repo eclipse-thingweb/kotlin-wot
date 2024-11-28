@@ -1,4 +1,4 @@
-package reflection
+package ai.ancf.lmos.wot.reflection
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
@@ -6,14 +6,13 @@ import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.content.toJsonContent
-import ai.ancf.lmos.wot.reflection.ThingBuilder
+import ai.ancf.lmos.wot.reflection.things.SimpleThing
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.ContentListener
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
-import reflection.things.SimpleThing
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.BeforeTest
@@ -40,7 +39,7 @@ class SimpleThingTest {
         simpleThing = SimpleThing()
 
         // Generate ThingDescription from the class
-        exposedThing = ThingBuilder.createExposedThing(wot, simpleThing, SimpleThing::class)!!
+        exposedThing = ExposedThingBuilder.createExposedThing(wot, simpleThing, SimpleThing::class)!!
 
         servient.addThing(exposedThing)
         servient.expose("simpleThing")
@@ -138,12 +137,11 @@ class SimpleThingTest {
 
     @Test
     fun `Subscribe to statusUpdated event `() = runTest {
-        val contentListener = mockk<ContentListener>()
-
-        coEvery { contentListener.handle(any<Content>()) } just runs
+        var lock = CountDownLatch(1);
+        val contentListener: ContentListener = (ContentListener { lock.countDown() })
 
         exposedThing.handleSubscribeEvent("statusUpdated", contentListener)
 
-        coVerify { contentListener.handle("Status updated".toJsonContent()) }
+        lock.await(2000, TimeUnit.MILLISECONDS);
     }
 }

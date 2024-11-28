@@ -1,6 +1,6 @@
-package reflection
+package ai.ancf.lmos.wot.reflection
 
-import ai.ancf.lmos.wot.reflection.ThingBuilder.buildObjectSchema
+import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.buildObjectSchema
 import ai.ancf.lmos.wot.thing.schema.DataSchema
 import ai.ancf.lmos.wot.thing.schema.IntegerSchema
 import ai.ancf.lmos.wot.thing.schema.StringSchema

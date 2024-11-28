@@ -5,6 +5,7 @@ import ai.ancf.lmos.wot.reflection.annotations.Action
 import ai.ancf.lmos.wot.reflection.annotations.Event
 import ai.ancf.lmos.wot.reflection.annotations.Property
 import ai.ancf.lmos.wot.reflection.annotations.Thing
+import ai.ancf.lmos.wot.reflection.annotations.VersionInfo
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.*
 import ai.ancf.lmos.wot.thing.thingDescription
@@ -14,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,9 +30,9 @@ import kotlin.reflect.full.primaryConstructor
  * annotated with `@Thing`, `@Property` and `@Event` annotations. It maps class properties and methods
  * to a WoT (Web of Things) description and provides handlers for actions and properties.
  */
-object ThingBuilder {
+object ExposedThingBuilder {
 
-    private val log: Logger = LoggerFactory.getLogger(ThingBuilder::class.java)
+    private val log: Logger = LoggerFactory.getLogger(ExposedThingBuilder::class.java)
 
     val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         log.error("Caught exception: ${throwable.message}", throwable)
@@ -60,6 +62,10 @@ object ThingBuilder {
                 id = thingAnnotation.id
                 title = thingAnnotation.title
                 description = thingAnnotation.description
+                val versionInfoAnnotation = clazz.findAnnotation<VersionInfo>()
+                if(versionInfoAnnotation != null){
+                    version = ai.ancf.lmos.wot.thing.schema.VersionInfo(versionInfoAnnotation.instance, versionInfoAnnotation.model)
+                }
                 // 3. Inspect the properties of the class and find @Property annotations
                 clazz.memberProperties.forEach { property ->
                     val propertyAnnotation = property.findAnnotation<Property>()
@@ -316,6 +322,9 @@ object ThingBuilder {
                             input = inputSchema as DataSchema<Any>?
                             @Suppress("UNCHECKED_CAST")
                             output = outputSchema as DataSchema<Any>?
+                            safe = actionAnnotation.safe
+                            synchronous = actionAnnotation.synchronous
+                            idempotent = actionAnnotation.idempotent
                         }
                     } else if (eventAnnotation != null) {
                         log.debug("Found @Event annotation on function: ${function.name}")
@@ -357,11 +366,14 @@ object ThingBuilder {
     ) {
         for ((name, function) in eventsMap) {
             log.debug("Setting event handlers for: $name")
+            val scope = CoroutineScope(Dispatchers.IO + exceptionHandler)
             exposedThing.setEventSubscribeHandler(name) { _: InteractionOptions ->
                 val flow = function.call(instance) as Flow<*>
-                flow.collect { value ->
-                    val data = DataSchemaValue.toDataSchemaValue(value)
-                    exposedThing.emitEvent(name, InteractionInput.Value(data))
+                scope.launch {
+                    flow.collect { value ->
+                        val data = DataSchemaValue.toDataSchemaValue(value)
+                        exposedThing.emitEvent(name, InteractionInput.Value(data))
+                    }
                 }
             }
             exposedThing.setEventUnsubscribeHandler(name) {

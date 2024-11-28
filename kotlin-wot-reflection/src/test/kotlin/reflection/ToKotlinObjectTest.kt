@@ -1,6 +1,6 @@
-package reflection
+package ai.ancf.lmos.wot.reflection
 
-import ai.ancf.lmos.wot.reflection.ThingBuilder.toKotlinObject
+import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.toKotlinObject
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType

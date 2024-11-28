@@ -1,9 +1,6 @@
-package reflection.things
+package ai.ancf.lmos.wot.reflection.things
 
-import ai.ancf.lmos.wot.reflection.annotations.Action
-import ai.ancf.lmos.wot.reflection.annotations.Event
-import ai.ancf.lmos.wot.reflection.annotations.Property
-import ai.ancf.lmos.wot.reflection.annotations.Thing
+import ai.ancf.lmos.wot.reflection.annotations.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
@@ -13,6 +10,7 @@ import kotlinx.coroutines.flow.flow
     title = "Simple Thing",
     description = "A thing with complex properties, actions, and events."
 )
+@VersionInfo(instance = "1.0.0")
 class SimpleThing {
 
     var counter = 0

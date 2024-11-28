@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.ThingBuilder
+import ai.ancf.lmos.wot.reflection.ExposedThingBuilder
 import ai.ancf.lmos.wot.reflection.annotations.ThingAgent
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import kotlinx.coroutines.Job
@@ -22,7 +22,7 @@ fun main(): Unit = runBlocking {
     })
 
     val wot = Wot.create(servient)
-    val exposedThing = ThingBuilder.createExposedThing(wot, agent, ThingAgent::class)
+    val exposedThing = ExposedThingBuilder.createExposedThing(wot, agent, ThingAgent::class)
     // Start `servient` in a separate coroutine
     servient.start()
     // Add and expose the thing after `start()` has had time to begin

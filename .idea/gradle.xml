@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/kotlin-wot" />
             <option value="$PROJECT_DIR$/kotlin-wot-binding-http" />
             <option value="$PROJECT_DIR$/kotlin-wot-binding-mqtt" />
+            <option value="$PROJECT_DIR$/kotlin-wot-binding-websocket" />
             <option value="$PROJECT_DIR$/kotlin-wot-integration-tests" />
             <option value="$PROJECT_DIR$/kotlin-wot-reflection" />
           </set>

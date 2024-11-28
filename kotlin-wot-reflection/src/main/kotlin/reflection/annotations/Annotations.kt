@@ -1,8 +1,14 @@
 package ai.ancf.lmos.wot.reflection.annotations
 
+import ai.ancf.lmos.wot.thing.schema.VersionInfo
+
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Thing(val id: String, val title: String, val description: String)
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class VersionInfo(val instance : String, val model : String = "")
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
@@ -10,7 +16,9 @@ annotation class Property(val name: String, val title: String = "", val descript
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Action(val name: String, val title: String = "", val description: String = "")
+annotation class Action(val name: String, val title: String = "", val description: String = "",
+    val safe : Boolean = false, val idempotent : Boolean = false, val synchronous: Boolean = true
+)
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

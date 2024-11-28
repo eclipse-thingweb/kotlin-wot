@@ -3,10 +3,12 @@ package ai.ancf.lmos.wot.reflection.annotations
 import dev.langchain4j.model.azure.AzureOpenAiChatModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Thing(id= "agent", title="Agent",
     description= "A simple agent.")
+@VersionInfo(instance = "1.0.0")
 class ThingAgent(@Property(name = "modelTemperature", readOnly = true)
                  val modelConfiguration: ModelConfiguration = ModelConfiguration(0.5, 50)) {
 
@@ -18,6 +20,9 @@ class ThingAgent(@Property(name = "modelTemperature", readOnly = true)
         .endpoint("https://gpt4-uk.openai.azure.com/")
         .temperature(modelConfiguration.modelTemperature)
         .build();
+
+    @Property(name = "observableProperty", title = "Observable Property", readOnly = true)
+    val observableProperty : MutableStateFlow<String> = MutableStateFlow("Hello World")
 
     @Action(name = "ask", title = "Ask", description = "Ask the agent a question.")
     suspend fun  ask(message : String) : String {

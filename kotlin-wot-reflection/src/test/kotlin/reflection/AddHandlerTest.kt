@@ -1,8 +1,8 @@
-package reflection
+package ai.ancf.lmos.wot.reflection
 
-import ai.ancf.lmos.wot.reflection.ThingBuilder.addActionHandler
-import ai.ancf.lmos.wot.reflection.ThingBuilder.addEventHandler
-import ai.ancf.lmos.wot.reflection.ThingBuilder.addPropertyHandler
+import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.addActionHandler
+import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.addEventHandler
+import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.addPropertyHandler
 import ai.ancf.lmos.wot.thing.ExposedThing
 import io.mockk.every
 import io.mockk.mockk
