@@ -153,6 +153,83 @@ servient.expose("agent")
 
 With Kotlin-WoT, developers can focus on implementing business logic while the framework handles the complexities of protocol management and Thing Description generation.
 
+## Step-by-Step Guide to Consuming a Thing and Interacting with It
+
+Here’s how to consume a Thing and interact with its properties and actions in a Web of Things (WoT) setup. Below are the main steps extracted from the provided code:
+
+###  Create a WoT Object
+
+Example:
+   ```kotlin
+  // Create the WoT object which can make use of HTTP. You can also add other protocols.
+   val wot = Wot.create(Servient(clientFactories = listOf(HttpProtocolClientFactory()))) 
+    
+   ```
+
+###  **Obtain the Thing Description**
+- The first step in interacting with a Thing is to obtain its **Thing Description (TD)**, which describes the capabilities of the Thing (such as properties, actions, and events).
+- Use the `wot.requestThingDescription` function to fetch the TD of a Thing by its URL.
+
+Example:
+   ```kotlin
+   val thingDescription = wot.requestThingDescription("http://localhost:8080/${thingId}")
+   ```
+
+### **Consume the Thing**
+- Once you have the TD, you can consume the Thing using the `wot.consume` method. This will allow you to interact with its properties and actions.
+- The `consume` function returns a `ConsumedThing` object, which represents the Thing in your code and provides methods to interact with it.
+
+Example:
+   ```kotlin
+   val consumedThing = wot.consume(thingDescription)
+   ```
+
+### **Read a Property**
+- To interact with a property of the Thing, you can call the `readProperty` method on the `ConsumedThing` object.
+- This will return the current value of the property, which can be cast to the appropriate data type.
+
+Example:
+   ```kotlin
+   val readProperty = consumedThing.readProperty("property_name")
+   ```
+
+### **Write to a Property**
+- To modify the value of a property, you can use the `writeProperty` method on the `ConsumedThing` object.
+- You need to pass the updated value to this method. Ensure that the value is wrapped in the correct `InteractionInput.Value` type.
+
+Example:
+   ```kotlin
+   consumedThing.writeProperty("property_name", 20.toInteractionInputValue()) // Update the property value
+   ```
+
+### **Invoke an Action**
+- If the Thing exposes any actions, you can invoke them by calling the `invokeAction` method on the `ConsumedThing` object.
+- You need to provide the action name and any necessary input parameters.
+
+Example:
+   ```kotlin
+   val output = consumedThing.invokeAction(ACTION_NAME, "actionInput".toInteractionInputValue(), null)
+   ```
+
+### **Read All Properties**
+- You can read all the properties of the Thing at once using the `readAllProperties` method on the `ConsumedThing` object.
+- This method returns a map of property names to their respective values.
+
+Example:
+   ```kotlin
+   val responseMap = consumedThing.readAllProperties()
+   ```
+
+### **Observe Property Changes**
+- If the Thing supports property observation, you can use the `observeProperty` method to listen for updates to a property.
+- When a property changes, the listener will be triggered with the new value.
+
+Example:
+   ```kotlin
+   consumedThing.observeProperty(PROPERTY_NAME, listener = { println("Property observed: $it") })
+   ```
+
+
 For more details, refer to the official [W3C Web of Things](https://www.w3.org/WoT/) website.
 
 
