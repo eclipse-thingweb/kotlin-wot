@@ -3,6 +3,7 @@
 **kotlin-wot** is a framework designed to enable developers to implement [**Web of Things (WoT)**](https://www.w3.org/WoT/) servers and clients in Kotlin. Built from the ground up with Kotlin and leveraging modern coroutine-based architecture, it aims to provide a **fast, reliable, and extensible framework** for AI or IoT applications. By abstracting low-level details and protocols through the use of [**Thing Descriptions (TDs)**](https://www.w3.org/TR/wot-thing-description11/), Kotlin-WoT empowers developers to focus on creating complex business logic with ease.
 Thing Descriptions provide an excellent alternative to OpenAPI or AsyncAPI. Unlike these formats, Thing Descriptions are protocol-agnostic and utilize forms to remain independent of specific transport protocols, enabling greater flexibility and interoperability across diverse ecosystems.
 
+The implementation was inspired by the awesome [Eclipse Thingweb](https://thingweb.io/) and [node-wot](https://github.com/eclipse-thingweb/node-wot). There are also open-source implementations available for TypeScript, Dart, Rust and Python.
 
 ## Web of Things Principles in a Nutshell
 
@@ -10,12 +11,13 @@ The [**Web of Things (WoT)**](https://www.w3.org/WoT/) addresses the fragmentati
 
 At its core, the WoT defines an **information model** for describing Things and Services, including how to interact with them. This model is encapsulated in the **Thing Description (TD)**, a JSON-LD document that outlines the following:
 
+- Metadata about the Thing
 - The Thing’s **capabilities** (properties, actions, and events)
 - Its network services (APIs)
-- Security requirements
+- Security definitions
+- Web links to related Things or resources
 
 The **Thing Description** serves as the foundation of the Web of Things architecture.
-
 
 ## Thing Description (TD)
 
@@ -43,6 +45,93 @@ An **event** is a notification triggered by a specific occurrence. For example:
 - A **chatbot** might emit an event `conversationEnded` when the user ends the chat session.
 - An **AI monitoring system** might trigger an event `anomalyDetected` when it identifies unusual behavior in a monitored system.
 
+### Example of a Thing Description
+
+This example illustrates how a Weather Agent can be modeled using a Thing Description, with HTTP as the primary communication protocol, although alternative protocols may also be utilized. The Agent metadata describes that the agent uses the gpt-4o model from Azure and integrates with OpenWeatherMap API to provide weather information. The agent supports both text and voice interactions in English and German, adheres to GDPR compliance, and uses data anonymization. It offers a single action, "getWeather," which takes a natural language question and interaction mode as input and returns weather information in natural language. The service is secured using basic authentication and is accessed via a POST request to a specified endpoint, but other security schemes, such as OAuth2 tokens, can also be used.
+
+```json
+{
+    "@context": [
+        "https://www.w3.org/2022/wot/td/v1.1",
+        {
+            "htv": "http://www.w3.org/2011/http#",
+            "ex": "https://weatherai.example.com",
+        },
+        "https://schema.org/"
+    ],
+    "id": "urn:uuid:6f1d3a7a-1f97-4e6b-b45f-f3c2e1c84c77",
+    "title": "WeatherAgent",
+    "@type": "ex:Agent",
+    "ex:metadata": {
+        "ex:vendor": {
+            "ex:name": "WeatherAI Inc.",
+            "ex:url": "https://weatherai.example.com"
+        },
+        "ex:model": {
+            "ex:name": "gpt-4o",
+            "ex:provider": "Azure"
+        },
+        "ex:serviceIntegration": {
+            "ex:weatherAPI": "OpenWeatherMap",
+            "ex:apiVersion": "v2.5",
+            "ex:apiDocumentation": "https://openweathermap.org/api"
+        },
+        "ex:dataPrivacy": {
+            "ex:dataRetentionPeriod": "30 days",
+            "ex:anonymizationMethod": "HASHING"
+        },
+        "ex:interaction": {
+            "ex:supportedLanguages": ["en_US", "de_DE"],
+            "ex:interactionMode": ["text", "voice"]
+        },
+        "ex:compliance": {
+            "ex:regulatoryCompliance": "GDPR"
+        }
+    },
+    "securityDefinitions": {
+        "basic_sc": {
+            "scheme": "basic",
+            "in": "header"
+        }
+    },
+    "security": "basic_sc",
+    "actions": {
+        "getWeather": {
+            "description": "Fetches weather information based on user input.",
+            "safe": true, //  Used to signal that there is no internal state changed when invoking the action. 
+            "idempotent": false, // Informs whether the Action can be called repeatedly with the same result.
+            "synchronous": true,
+            "input": {
+               "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string"
+                    },
+                    "interactionMode": {
+                        "type": "string",
+                        "enum": ["text", "voice"]
+                    }
+                },
+                "required": ["question","interactionMode"]
+            },
+            "output": {
+                "type": "string",
+                "description": "Natural language output providing weather information."
+            },            
+            "forms": [
+                {
+                    "op": "invokeaction",
+                    "href": "https://weatherai.example.com/weather",
+                    "contentType": "application/json",
+                    "htv:methodName":"POST"
+                }
+            ]
+        }
+    }
+}
+
+```
+
 ## Advantages of Kotlin-WoT
 
 1. **Native Kotlin Implementation:**
@@ -52,11 +141,11 @@ An **event** is a notification triggered by a specific occurrence. For example:
 3. **Standards-Compliant:**
     - Fully adheres to the W3C WoT specifications, ensuring interoperability and reusability.
 4. **Extensibility:**
-    - Easy to extend and customize to fit specific IoT requirements.
+    - Easy to extend to support more protocols
 
 ## Example Thing
 
-The `SimpleThing` class defines a Web of Things (WoT) model with properties, actions, and events using annotations.  This structure allows external systems to interact with the Thing's state, invoke functionality, and subscribe to real-time notifications, all described in a Thing Description (TD), making it a flexible and extensible component for IoT applications.
+The `SimpleThing` class defines a Web of Things (WoT) model with properties, actions, and events using annotations.  This structure allows external systems to interact with the Thing's state, invoke functionality, and subscribe to real-time notifications, all described in a Thing Description (TD), making it a flexible and extensible component for AI/IoT applications.
 
 One of the key benefits of the Web of Things (WoT) framework is that developers can focus on building the core functionality of their applications without needing to delve into the low-level details of communication protocols like MQTT, WebSockets, or AMQP. By abstracting these protocols, kotlin-wot allows developers to use higher-level constructs such as coroutines and flows for managing asynchronous behavior and real-time interactions. With coroutines, developers can write non-blocking, concurrent code in a sequential and readable manner, simplifying the development of complex workflows. Flows, on the other hand, provide a powerful way to handle streams of data that can be emitted over time, making it easier to work with dynamic or event-driven environments. This abstraction minimizes the need for developers to manage protocol-specific intricacies and allows them to focus on implementing the logic and behavior of Things, enabling faster and more intuitive development.
 
@@ -163,7 +252,6 @@ Example:
    ```kotlin
   // Create the WoT object which can make use of HTTP. You can also add other protocols.
    val wot = Wot.create(Servient(clientFactories = listOf(HttpProtocolClientFactory()))) 
-    
    ```
 
 ###  **Obtain the Thing Description**
@@ -190,7 +278,7 @@ Example:
 
 Example:
    ```kotlin
-   val readProperty = consumedThing.readProperty("property_name")
+   val readProperty = consumedThing.readProperty("mutableProperty")
    ```
 
 ### **Write to a Property**
@@ -199,7 +287,7 @@ Example:
 
 Example:
    ```kotlin
-   consumedThing.writeProperty("property_name", 20.toInteractionInputValue()) // Update the property value
+   consumedThing.writeProperty("mutableProperty", 20.toInteractionInputValue()) // Update the property value
    ```
 
 ### **Invoke an Action**
@@ -208,7 +296,7 @@ Example:
 
 Example:
    ```kotlin
-   val output = consumedThing.invokeAction(ACTION_NAME, "actionInput".toInteractionInputValue(), null)
+   val output = consumedThing.invokeAction("inOutAction", "actionInput".toInteractionInputValue())
    ```
 
 ### **Read All Properties**
@@ -226,9 +314,21 @@ Example:
 
 Example:
    ```kotlin
-   consumedThing.observeProperty(PROPERTY_NAME, listener = { println("Property observed: $it") })
+   consumedThing.observeProperty("observableProperty", listener = { println("Property observed: $it") })
    ```
 
+### **Subscribe to Events**
+- If the Thing supports event subscription, you can use the `subscribeEvent` method to listen for events.
+- When an event is emitted, the listener will be triggered with the new value.
+
+Example:
+   ```kotlin
+   consumedThing.subscribeEvent("statusUpdated", listener = { println("Event received: $it") })
+   ```
+
+## Thing Description Discovery
+
+W3C Web of Things (WoT) offers a mechanism that things can propagate metadata using protocols like mDNS for local discovery and/or can register themselves on centralized directories for broader access. [W3C Web of Things (WoT) Discovery](https://www.w3.org/TR/wot-discovery/#architecture) describes how things can register themselves in a central directory, known as a Thing Description Directory (TDD), through a process that involves several steps:
 
 For more details, refer to the official [W3C Web of Things](https://www.w3.org/WoT/) website.
 
