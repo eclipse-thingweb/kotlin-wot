@@ -1,13 +1,15 @@
 # kotlin-wot: A Framework for implementing Web of Things in Kotlin
 
-**kotlin-wot** is a framework designed to enable developers to implement [**Web of Things (WoT)**](https://www.w3.org/WoT/) servers and clients in Kotlin. Built from the ground up with Kotlin and leveraging modern coroutine-based architecture, it aims to provide a **fast, reliable, and extensible framework** for AI or IoT applications. By abstracting low-level details and protocols through the use of [**Thing Descriptions (TDs)**](https://www.w3.org/TR/wot-thing-description11/), Kotlin-WoT empowers developers to focus on creating complex business logic with ease.
+**kotlin-wot** is a framework designed to enable developers to implement [**Web of Things (WoT)**](https://www.w3.org/WoT/) servers and clients in Kotlin. Built from the ground up with Kotlin and leveraging modern coroutine-based architecture, it aims to provide a **fast, reliable, and extensible framework for AI or IoT applications**. By abstracting low-level details and protocols through the use of [**Thing Descriptions (TDs)**](https://www.w3.org/TR/wot-thing-description11/), kotlin-wot empowers developers to focus on creating complex business logic with ease.
 Thing Descriptions provide an excellent alternative to OpenAPI or AsyncAPI. Unlike these formats, Thing Descriptions are protocol-agnostic and utilize forms to remain independent of specific transport protocols, enabling greater flexibility and interoperability across diverse ecosystems.
 
 The implementation was inspired by the awesome [Eclipse Thingweb](https://thingweb.io/) and [node-wot](https://github.com/eclipse-thingweb/node-wot). There are also open-source implementations available for TypeScript, Dart, Rust and Python.
 
 ## Web of Things Principles in a Nutshell
 
-The [**Web of Things (WoT)**](https://www.w3.org/WoT/) addresses the fragmentation in AI and IoT by extending standardized web technologies.  WoT builds on existing web standards, ensuring reuse, and introduces an abstract, adaptable architecture tailored to real-world use cases across various domains.
+The [**Web of Things (WoT)**](https://www.w3.org/WoT/) architecture bridges the gap between diverse technologies in AI, IoT, and traditional IT systems by leveraging and extending standardized web technologies. It introduces a unifying layer of abstraction that encapsulates agents, devices, services, and protocols, simplifying their integration and interaction. At its core, WoT employs the Thing Description (TD), a metadata-rich JSON-LD document that describes a Things's properties, actions, and events, along with protocol-specific details (forms) for seamless interaction. 
+
+This architecture is protocol-agnostic, supporting a wide array of communication standards (e.g., HTTP, MQTT, CoAP), which ensures flexibility and interoperability. By aligning with existing web standards, such as JSON, JSON Schema and Linked Data, WoT enables developers to create interoperable AI/IoT applications. WoT’s adaptable framework is designed to address diverse use cases—from AI agent systems, smart homes to industrial IoT — ensuring that the architecture works across domains.
 
 At its core, the WoT defines an **information model** for describing Things and Services, including how to interact with them. This model is encapsulated in the **Thing Description (TD)**, a JSON-LD document that outlines the following:
 
@@ -21,11 +23,11 @@ The **Thing Description** serves as the foundation of the Web of Things architec
 
 ## Thing Description (TD)
 
-The [**Thing Description (TD)**](https://www.w3.org/TR/wot-thing-description11/) is a standardized metadata format used to describe a Thing’s structure and interactions. Each TD is a machine-readable document that defines how to communicate with a Thing. Kotlin-WoT uses the TD abstraction to support developers in creating applications quickly and transport protocol-agnostic.
+The [**Thing Description (TD)**](https://www.w3.org/TR/wot-thing-description11/) is a standardized metadata format used to describe a Thing’s structure and interactions. Each TD is a machine-readable document that defines how to communicate with a Thing. kotlin-wot uses the TD abstraction to support developers in creating applications quickly and transport protocol-agnostic.
 
 ## Thing Capabilities (Affordances)
 
-Every Thing in Kotlin-WoT is modeled with the following capabilities, known as **affordances**:
+Every Thing in kotlin-wot is modeled with the following capabilities, known as **affordances**:
 
 ### ⚙️ **Properties**
 A **property** represents a value that can be read, written, or observed. For example:
@@ -137,7 +139,7 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
 }
 ```
 
-## Advantages of Kotlin-WoT
+## Advantages of kotlin-wot
 
 1. **Native Kotlin Implementation:**
     - Built with Kotlin, leveraging coroutine-based concurrency for seamless asynchronous programming.
@@ -190,7 +192,7 @@ class SimpleThing {
 }
 ```
 
-In **Kotlin-WoT**, you can easily configure the protocols through which a **Thing** should be exposed by specifying the appropriate protocol servers when creating the `Servient`. The `Servient` acts as the core orchestrator, managing both the exposure and interaction of Things across various protocols.
+In **kotlin-wot**, you can easily configure the protocols through which a **Thing** should be exposed by specifying the appropriate protocol servers when creating the `Servient`. The `Servient` acts as the core orchestrator, managing both the exposure and interaction of Things across various protocols.
 
 ### Configuring Protocols for Exposure
 
@@ -245,7 +247,7 @@ servient.expose("agent")
 - **Automatic TD Creation**: Save time and reduce errors with automatically generated Thing Descriptions.
 - **Standards Compliance**: Ensures all Things are described in a standardized format, promoting interoperability.
 
-With Kotlin-WoT, developers can focus on implementing business logic while the framework handles the complexities of protocol management and Thing Description generation.
+With kotlin-wot, developers can focus on implementing business logic while the framework handles the complexities of protocol management and Thing Description generation.
 
 ## Step-by-Step Guide to Consuming a Thing and Interacting with It
 
