@@ -62,6 +62,12 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
     "id": "urn:uuid:6f1d3a7a-1f97-4e6b-b45f-f3c2e1c84c77",
     "title": "WeatherAgent",
     "@type": "ex:Agent",
+    "links": [{
+      "rel": "service-doc",
+      "href": "https://weatherai.example.com/manual.pdf",
+      "type": "application/pdf",
+      "hreflang": "en"
+    }],
     "ex:metadata": {
         "ex:vendor": {
             "ex:name": "WeatherAI Inc.",
@@ -98,8 +104,8 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
     "actions": {
         "getWeather": {
             "description": "Fetches weather information based on user input.",
-            "safe": true, //  Used to signal that there is no internal state changed when invoking the action. 
-            "idempotent": false, // Informs whether the Action can be called repeatedly with the same result.
+            "safe": true,
+            "idempotent": false,
             "synchronous": true,
             "input": {
                "type": "object",
@@ -129,7 +135,6 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
         }
     }
 }
-
 ```
 
 ## Advantages of Kotlin-WoT
