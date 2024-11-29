@@ -8,7 +8,11 @@ path = [
     ".github/**",
     ".gitignore",
     "*.md",
-    ".devcontainer/**"
+    ".devcontainer/**",
+    "*.properties",
+    "*.kts",
+    "*.xml",
+    "*.kt"
 ]
 SPDX-FileCopyrightText = "2024 Robert Winkler"
 SPDX-License-Identifier = "Apache-2.0"
