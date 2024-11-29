@@ -37,20 +37,15 @@ class ThingAgentApplication : CommandLineRunner {
 
     @PreDestroy
     fun onExit() {
-        log.info("###STOPing###")
-        log.info("###STOP FROM THE LIFECYCLE###")
+        // Register a shutdown hook
+        log.debug("Application is shutting down. Performing cleanup...")
+        runBlocking { servient.shutdown() }
     }
 
     override fun run(vararg args: String?) = runBlocking {
 
         // Protocol can be "HTTP" or "MQTT"
         val servient = createServient("HTTP")
-
-        // Register a shutdown hook
-        Runtime.getRuntime().addShutdownHook(Thread {
-            println("Application is shutting down. Performing cleanup...")
-            runBlocking { servient.shutdown() }
-        })
 
         val wot = Wot.create(servient)
         val exposedThing = ExposedThingBuilder.createExposedThing(wot, agent, ThingAgent::class)

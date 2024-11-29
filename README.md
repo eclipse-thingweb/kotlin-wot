@@ -1,0 +1,159 @@
+# kotlin-wot: A Framework for implementing Web of Things in Kotlin
+
+**kotlin-wot** is a framework designed to enable developers to implement [**Web of Things (WoT)**](https://www.w3.org/WoT/) servers and clients in Kotlin. Built from the ground up with Kotlin and leveraging modern coroutine-based architecture, it aims to provide a **fast, reliable, and extensible framework** for AI or IoT applications. By abstracting low-level details and protocols through the use of [**Thing Descriptions (TDs)**](https://www.w3.org/TR/wot-thing-description11/), Kotlin-WoT empowers developers to focus on creating complex business logic with ease.
+Thing Descriptions provide an excellent alternative to OpenAPI or AsyncAPI. Unlike these formats, Thing Descriptions are protocol-agnostic and utilize forms to remain independent of specific transport protocols, enabling greater flexibility and interoperability across diverse ecosystems.
+
+
+## Web of Things Principles in a Nutshell
+
+The [**Web of Things (WoT)**](https://www.w3.org/WoT/) addresses the fragmentation in AI and IoT by extending standardized web technologies.  WoT builds on existing web standards, ensuring reuse, and introduces an abstract, adaptable architecture tailored to real-world use cases across various domains.
+
+At its core, the WoT defines an **information model** for describing Things and Services, including how to interact with them. This model is encapsulated in the **Thing Description (TD)**, a JSON-LD document that outlines the following:
+
+- The Thing’s **capabilities** (properties, actions, and events)
+- Its network services (APIs)
+- Security requirements
+
+The **Thing Description** serves as the foundation of the Web of Things architecture.
+
+
+## Thing Description (TD)
+
+The [**Thing Description (TD)**](https://www.w3.org/TR/wot-thing-description11/) is a standardized metadata format used to describe a Thing’s structure and interactions. Each TD is a machine-readable document that defines how to communicate with a Thing. Kotlin-WoT uses the TD abstraction to support developers in creating applications quickly and transport protocol-agnostic.
+
+## Thing Capabilities (Affordances)
+
+Every Thing in Kotlin-WoT is modeled with the following capabilities, known as **affordances**:
+
+### ⚙️ **Properties**
+A **property** represents a value that can be read, written, or observed. For example:
+- A **temperature sensor** may have a property that holds the current temperature.
+- An **AI chatbot** could have a property `modelConfiguration`, which shows the current configuration of an LLM model.
+- An **AI recommendation engine** might have a property `activeRecommendations` listing the recommendations being served.
+
+### 🦾 **Actions**
+An **action** represents an operation that can be invoked. For example:
+- A **smart light bulb** may have an action to turn it on or off.
+- A **chatbot** could have an action `generateReply(input: String)` to respond based on user input.
+- An **AI scheduling assistant** could provide an action `scheduleMeeting(date: String, participants: List<String>)` to book a meeting.
+
+### ⚡ **Events**
+An **event** is a notification triggered by a specific occurrence. For example:
+- A **motion sensor** may send an event notification when motion is detected.
+- A **chatbot** might emit an event `conversationEnded` when the user ends the chat session.
+- An **AI monitoring system** might trigger an event `anomalyDetected` when it identifies unusual behavior in a monitored system.
+
+## Advantages of Kotlin-WoT
+
+1. **Native Kotlin Implementation:**
+    - Built with Kotlin, leveraging coroutine-based concurrency for seamless asynchronous programming.
+2. **Abstracted Protocol Handling:**
+    - Developers can focus on business logic without worrying about low-level communication protocols.
+3. **Standards-Compliant:**
+    - Fully adheres to the W3C WoT specifications, ensuring interoperability and reusability.
+4. **Extensibility:**
+    - Easy to extend and customize to fit specific IoT requirements.
+
+## Example Thing
+
+The `SimpleThing` class defines a Web of Things (WoT) model with properties, actions, and events using annotations.  This structure allows external systems to interact with the Thing's state, invoke functionality, and subscribe to real-time notifications, all described in a Thing Description (TD), making it a flexible and extensible component for IoT applications.
+
+One of the key benefits of the Web of Things (WoT) framework is that developers can focus on building the core functionality of their applications without needing to delve into the low-level details of communication protocols like MQTT, WebSockets, or AMQP. By abstracting these protocols, kotlin-wot allows developers to use higher-level constructs such as coroutines and flows for managing asynchronous behavior and real-time interactions. With coroutines, developers can write non-blocking, concurrent code in a sequential and readable manner, simplifying the development of complex workflows. Flows, on the other hand, provide a powerful way to handle streams of data that can be emitted over time, making it easier to work with dynamic or event-driven environments. This abstraction minimizes the need for developers to manage protocol-specific intricacies and allows them to focus on implementing the logic and behavior of Things, enabling faster and more intuitive development.
+
+```kotlin
+@Thing(
+    id = "simpleThing",
+    title = "Simple Thing",
+    description = "A thing with complex properties, actions, and events."
+)
+@VersionInfo(instance = "1.0.0")
+class SimpleThing {
+
+
+    @Property(name = "observableProperty", title = "Observable Property", readOnly = true)
+    val observableProperty : MutableStateFlow<String> = MutableStateFlow("Hello World")
+
+    @Property(name = "mutableProperty")
+    var mutableProperty: String = "test"
+
+    @Property(name = "readyOnlyProperty", readOnly = true)
+    val readyOnlyProperty: String = "test"
+
+    @Property(name = "writeOnlyProperty", writeOnly = true)
+    var writeOnlyProperty: String = "test"
+
+    @Action(name = "inOutAction")
+    fun inOutAction(input : String) : String {
+        return "$input output"
+    }
+
+    @Event(name = "statusUpdated")
+    fun statusUpdated(): Flow<String> {
+        return flow {
+            emit("Status updated")
+        }
+    }
+}
+```
+
+In **Kotlin-WoT**, you can easily configure the protocols through which a **Thing** should be exposed by specifying the appropriate protocol servers when creating the `Servient`. The `Servient` acts as the core orchestrator, managing both the exposure and interaction of Things across various protocols.
+
+### Configuring Protocols for Exposure
+
+In the example provided:
+
+```kotlin
+val mqttConfig = MqttClientConfig("localhost", 61890, "wotServer")
+val servient = Servient(
+    servers = listOf(HttpProtocolServer(), MqttProtocolServer(mqttConfig)),
+    clientFactories = listOf(HttpProtocolClientFactory())
+)
+```
+
+Here’s what is happening:
+
+1. **`HttpProtocolServer`**: Enables HTTP-based interaction with the Thing.
+2. **`MqttProtocolServer`**: Configured with the MQTT broker details (`localhost:61890`) to enable MQTT-based communication.
+3. **`clientFactories`**: Specifies client protocols that the `Servient` can use to interact with other Things, such as HTTP clients.
+
+This flexible design allows you to mix and match protocols by adding or removing protocol servers in the configuration. For example, if you want only MQTT exposure, simply include `MqttProtocolServer` and omit the others.
+
+### Automatic Thing Description Generation
+
+The `ThingDescription (TD)` is **automatically generated** based on the class passed to the `ExposedThingBuilder`. This greatly simplifies the process of defining a Thing, as the framework introspects the provided class and maps its properties, actions, and events to the standard WoT affordances:
+
+- **Properties** are derived from readable or writable fields.
+- **Actions** are identified from callable methods.
+- **Events** can be generated and configured using Kotlin flows or reactive streams.
+
+```kotlin
+val wot = Wot.create(servient)
+val exposedThing = ExposedThingBuilder.createExposedThing(wot, agent, ThingAgent::class)
+```
+
+Here, the `ThingAgent` class is analyzed, and its capabilities (e.g., properties, actions, and events) are automatically included in the generated TD. Developers don’t need to write JSON-LD manually—the framework takes care of this, ensuring compliance with the WoT standard.
+
+### Dynamic Exposure
+
+After configuring the `Servient` and defining the Thing, it can be dynamically added and exposed:
+
+```kotlin
+servient.addThing(exposedThing as WoTExposedThing)
+servient.expose("agent")
+```
+
+- The `addThing` method registers the Thing with the servient.
+- The `expose` method starts exposing the Thing over the configured protocols, making it accessible via HTTP and MQTT in this case.
+
+### Key Benefits
+
+- **Protocol Flexibility**: Effortlessly configure and support multiple protocols for Thing exposure.
+- **Automatic TD Creation**: Save time and reduce errors with automatically generated Thing Descriptions.
+- **Standards Compliance**: Ensures all Things are described in a standardized format, promoting interoperability.
+
+With Kotlin-WoT, developers can focus on implementing business logic while the framework handles the complexities of protocol management and Thing Description generation.
+
+For more details, refer to the official [W3C Web of Things](https://www.w3.org/WoT/) website.
+
+
+
