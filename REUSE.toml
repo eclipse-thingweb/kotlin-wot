@@ -11,8 +11,9 @@ path = [
     ".devcontainer/**",
     "*.properties",
     "*.kts",
-    "*.xml",
-    "*.kt"
+    "**/*.kts",
+    "**/*.xml",
+    "**/*.kt"
 ]
 SPDX-FileCopyrightText = "2024 Robert Winkler"
 SPDX-License-Identifier = "Apache-2.0"
