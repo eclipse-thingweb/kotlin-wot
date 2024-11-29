@@ -1,13 +1,6 @@
 package ai.ancf.lmos.wot.integration
 
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder
-import ai.ancf.lmos.wot.reflection.annotations.ThingAgent
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-
+/*
 
 fun main(): Unit = runBlocking {
     val agent = ThingAgent()
@@ -33,3 +26,4 @@ fun main(): Unit = runBlocking {
     // Keep the application running until process is stopped
     Job().join()
 }
+ */

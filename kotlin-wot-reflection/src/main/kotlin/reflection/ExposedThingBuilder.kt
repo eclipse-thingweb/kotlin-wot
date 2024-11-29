@@ -1,13 +1,14 @@
 package ai.ancf.lmos.wot.reflection
 
 import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.annotations.Action
-import ai.ancf.lmos.wot.reflection.annotations.Event
-import ai.ancf.lmos.wot.reflection.annotations.Property
-import ai.ancf.lmos.wot.reflection.annotations.Thing
+import ai.ancf.lmos.wot.reflection.annotations.*
 import ai.ancf.lmos.wot.reflection.annotations.VersionInfo
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.*
+import ai.ancf.lmos.wot.thing.schema.ArraySchema
+import ai.ancf.lmos.wot.thing.schema.IntegerSchema
+import ai.ancf.lmos.wot.thing.schema.NumberSchema
+import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.thingDescription
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -15,15 +16,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.reflect.*
-import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.full.*
 
 /**
  * This utility class helps in constructing a [ExposedThing] for a given Kotlin class
@@ -393,9 +390,18 @@ object ExposedThingBuilder {
                 val args = function.parameters.associateWith { param ->
                     if (param.kind == KParameter.Kind.INSTANCE) instance
                     else toKotlinObject(input.value(), param.type)
+                }.toMutableMap()
+                // Check if the function is a suspending function
+                if (function.isSuspend) {
+                    // Call the suspending function with the continuation
+                    val result = function.callSuspendBy(args)
+                    // Return the result from the continuation
+                    InteractionInput.Value(DataSchemaValue.toDataSchemaValue(result))
+                } else {
+                    // Regular function call
+                    val result = function.callBy(args)
+                    InteractionInput.Value(DataSchemaValue.toDataSchemaValue(result))
                 }
-                val result = function.callBy(args)
-                InteractionInput.Value(DataSchemaValue.toDataSchemaValue(result))
             }
         }
     }

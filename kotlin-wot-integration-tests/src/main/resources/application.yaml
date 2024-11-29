@@ -1,0 +1,8 @@
+arc:
+  ai:
+    clients:
+      - id: GPT-4o
+        model-name: GPT35T-1106
+        api-key: af12dab9c046453e82dcf4b24af90bca
+        client: azure
+        url: https://gpt4-uk.openai.azure.com
