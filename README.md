@@ -5,6 +5,8 @@ Thing Descriptions provide an excellent alternative to OpenAPI or AsyncAPI. Unli
 
 The implementation was inspired by the awesome [Eclipse Thingweb](https://thingweb.io/) and [node-wot](https://github.com/eclipse-thingweb/node-wot). There are also open-source implementations available for TypeScript, Dart, Rust and Python.
 
+NOTE: The library is still under development
+
 ## Web of Things Principles in a Nutshell
 
 The [**Web of Things (WoT)**](https://www.w3.org/WoT/) architecture bridges the gap between diverse technologies in AI, IoT, and traditional IT systems by leveraging and extending standardized web technologies. It introduces a unifying layer of abstraction that encapsulates agents, devices, services, and protocols, simplifying their integration and interaction. At its core, WoT employs the Thing Description (TD), a metadata-rich JSON-LD document that describes a Things's properties, actions, and events, along with protocol-specific details (forms) for seamless interaction. 
