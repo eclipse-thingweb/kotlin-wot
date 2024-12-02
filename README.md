@@ -1,6 +1,6 @@
 # kotlin-wot: A Framework for implementing Web of Things in Kotlin
 
-**kotlin-wot** is a framework designed to enable developers to implement [**Web of Things (WoT)**](https://www.w3.org/WoT/) servers and clients in Kotlin. Built from the ground up with Kotlin and leveraging modern coroutine-based architecture, it aims to provide a **fast, reliable, and extensible framework for AI or IoT applications**. By abstracting low-level details and protocols through the use of [**Thing Descriptions (TDs)**](https://www.w3.org/TR/wot-thing-description11/), kotlin-wot empowers developers to focus on creating complex business logic with ease.
+**kotlin-wot** is a framework designed to enable developers to implement [**Web of Things (WoT)**](https://www.w3.org/WoT/) servers and clients in Kotlin. Built from the ground up with Kotlin and leveraging modern coroutine-based architecture, it aims to provide a **fast, reliable, and extensible framework for AI or IoT applications**. By abstracting low-level details and protocols through the use of [**Thing Descriptions (TDs)**](https://www.w3.org/TR/wot-thing-description11/), kotlin-wot empowers developers to focus on creating business logic.
 Thing Descriptions provide an excellent alternative to OpenAPI or AsyncAPI. Unlike these formats, Thing Descriptions are protocol-agnostic and utilize forms to remain independent of specific transport protocols, enabling greater flexibility and interoperability across diverse ecosystems.
 
 The implementation was inspired by the awesome [Eclipse Thingweb](https://thingweb.io/) and [node-wot](https://github.com/eclipse-thingweb/node-wot). There are also open-source implementations available for TypeScript, Dart, Rust and Python.
@@ -11,7 +11,7 @@ NOTE: The library is still under development
 
 The [**Web of Things (WoT)**](https://www.w3.org/WoT/) architecture bridges the gap between diverse technologies in AI, IoT, and traditional IT systems by leveraging and extending standardized web technologies. It introduces a unifying layer of abstraction that encapsulates agents, devices, services, and protocols, simplifying their integration and interaction. At its core, WoT employs the Thing Description (TD), a metadata-rich JSON-LD document that describes a Things's properties, actions, and events, along with protocol-specific details (forms) for seamless interaction. 
 
-This architecture is protocol-agnostic, supporting a wide array of communication standards (e.g., HTTP, MQTT, CoAP), which ensures flexibility and interoperability. By aligning with existing web standards, such as JSON, JSON Schema and Linked Data, WoT enables developers to create interoperable AI/IoT applications. WoT’s adaptable framework is designed to address diverse use cases—from AI agent systems, smart homes to industrial IoT — ensuring that the architecture works across domains.
+WoT is protocol-agnostic, supporting a wide array of communication standards (e.g., HTTP, MQTT, CoAP). By aligning with existing web standards, such as JSON, JSON Schema and Linked Data, WoT enables developers to create interoperable AI/IoT applications. WoT’s adaptable framework is designed to address diverse use cases—from AI agent systems, smart homes to industrial IoT — ensuring that the architecture works across domains.
 
 At its core, the WoT defines an **information model** for describing Things and Services, including how to interact with them. This model is encapsulated in the **Thing Description (TD)**, a JSON-LD document that outlines the following:
 
@@ -20,8 +20,6 @@ At its core, the WoT defines an **information model** for describing Things and 
 - Its network services (APIs)
 - Security definitions
 - Web links to related Things or resources
-
-The **Thing Description** serves as the foundation of the Web of Things architecture.
 
 ## Thing Description (TD)
 
