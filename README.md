@@ -154,7 +154,7 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
 
 The `SimpleThing` class defines a Web of Things (WoT) model with properties, actions, and events using annotations.  This structure allows external systems to interact with the Thing's state, invoke functionality, and subscribe to real-time notifications, all described in a Thing Description (TD), making it a flexible and extensible component for AI/IoT applications.
 
-One of the key benefits of the Web of Things (WoT) framework is that developers can focus on building the core functionality of their applications without needing to delve into the low-level details of communication protocols like MQTT, WebSockets, or AMQP. By abstracting these protocols, kotlin-wot allows developers to use higher-level constructs such as coroutines and flows for managing asynchronous behavior and real-time interactions. With coroutines, developers can write non-blocking, concurrent code in a sequential and readable manner, simplifying the development of complex workflows. Flows, on the other hand, provide a powerful way to handle streams of data that can be emitted over time, making it easier to work with dynamic or event-driven environments. This abstraction minimizes the need for developers to manage protocol-specific intricacies and allows them to focus on implementing the logic and behavior of Things, enabling faster and more intuitive development.
+One of the key benefits of the Web of Things (WoT) framework is that developers can focus on building the core functionality of their applications without needing to delve into the low-level details of communication protocols like MQTT, WebSockets, or AMQP. By abstracting these protocols, kotlin-wot allows developers to use constructs such as coroutines and flows for managing asynchronous behavior and real-time interactions. With coroutines, developers can write non-blocking, concurrent code in a sequential and readable manner, simplifying the development of complex workflows. Flows, on the other hand, provide a powerful way to handle streams of data that can be emitted over time, making it easier to work with dynamic or event-driven environments. This abstraction minimizes the need for developers to manage protocol-specific intricacies and allows them to focus on implementing the logic and behavior of Things, enabling faster and more intuitive development.
 
 ```kotlin
 @Thing(
@@ -220,7 +220,7 @@ The `ThingDescription (TD)` is **automatically generated** based on the class pa
 
 - **Properties** are derived from readable or writable fields.
 - **Actions** are identified from callable methods.
-- **Events** can be generated and configured using Kotlin flows or reactive streams.
+- **Events** can be generated and configured using Kotlin flows.
 
 ```kotlin
 val wot = Wot.create(servient)
@@ -246,8 +246,6 @@ servient.expose("agent")
 - **Protocol Flexibility**: Effortlessly configure and support multiple protocols for Thing exposure.
 - **Automatic TD Creation**: Save time and reduce errors with automatically generated Thing Descriptions.
 - **Standards Compliance**: Ensures all Things are described in a standardized format, promoting interoperability.
-
-With kotlin-wot, developers can focus on implementing business logic while the framework handles the complexities of protocol management and Thing Description generation.
 
 ## Step-by-Step Guide to Consuming a Thing and Interacting with It
 
