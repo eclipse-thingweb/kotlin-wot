@@ -11,7 +11,7 @@ NOTE: The library is still under development
 
 The [**Web of Things (WoT)**](https://www.w3.org/WoT/) architecture bridges the gap between diverse technologies in AI, IoT, and traditional IT systems by leveraging and extending standardized web technologies. It introduces a unifying layer of abstraction that encapsulates agents, devices, services, and protocols, simplifying their integration and interaction. At its core, WoT employs the Thing Description (TD), a metadata-rich JSON-LD document that describes a Things's properties, actions, and events, along with protocol-specific details (forms) for seamless interaction. 
 
-WoT supportd a wide array of communication standards (e.g., HTTP, MQTT, CoAP) via protocol bindings. By aligning with existing web standards, such as JSON, JSON Schema and Linked Data, WoT enables developers to create interoperable AI/IoT applications. WoT’s adaptable framework is designed to address diverse use cases—from AI agent systems, smart homes to industrial IoT — ensuring that the architecture works across domains.
+WoT supports a wide array of communication standards (e.g., HTTP, WebSocketd, MQTT, CoAP) via protocol bindings. By aligning with existing web standards, such as JSON, JSON Schema and Linked Data, WoT enables developers to create interoperable AI/IoT applications. WoT’s adaptable framework is designed to address diverse use cases—from AI agent systems, smart homes to industrial IoT — ensuring that the architecture works across domains.
 
 At its core, the WoT defines an **information model** for describing Things and Services, including how to interact with them. This model is encapsulated in the **Thing Description (TD)**, a JSON-LD document that outlines the following:
 
