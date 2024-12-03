@@ -5,9 +5,6 @@
 WoT also provides a flexible, and standardized architecture for server-to-server communication, addressing the challenges of interoperability and protocol diversity. WoT is not only suitable for IoT applications.
 Thing Descriptions provide an **excellent alternative to OpenAPI or AsyncAPI**. Unlike these formats, Thing Descriptions are protocol-agnostic and utilize forms to remain independent of specific transport protocols, enabling greater flexibility and interoperability across diverse platforms.
 
-<img src="https://github.com/user-attachments/assets/5a1a4fc4-0cca-4290-b4b7-96309f723b0c" width="60%">
-
-<br><br>
 The implementation was inspired by the awesome [Eclipse Thingweb](https://thingweb.io/) and [node-wot](https://github.com/eclipse-thingweb/node-wot). There are also open-source implementations available for TypeScript, Dart, Rust and Python.
 
 NOTE: The library is still under development
@@ -19,6 +16,7 @@ NOTE: The library is still under development
 WoT provides a protocol-agnostic architecture that supports an array of standards such as HTTP, WebSockets, MQTT, CoAP, and more, using protocol bindings to decouple application logic from transport-layer specifics. By leveraging widely adopted web standards like JSON, JSON Schema, and Linked Data, WoT ensures data and metadata are both interoperable and semantically rich, enabling intelligent systems to discover, understand, and communicate with Things efficiently.
 Designed for flexibility, WoT is applicable across a broad spectrum of domains, including AI-driven multi-agent systems, smart homes, and industrial IoT ecosystems. 
 
+<img src="https://github.com/user-attachments/assets/5a1a4fc4-0cca-4290-b4b7-96309f723b0c" width="60%">
 
 ## Thing Description (TD)
 
