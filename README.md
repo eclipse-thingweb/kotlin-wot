@@ -351,6 +351,7 @@ If you don't like annotations and prefer to build Thing Descriptions in code, yo
             maximum = 100
             observable = true
             unit = "percent"
+            readOnly = true
         }
         stringSchema("propertyName2") {
             title = "Property 2"
@@ -373,10 +374,10 @@ If you don't like annotations and prefer to build Thing Descriptions in code, yo
     }.apply {
         setPropertyReadHandler("propertyName1") { ... }
         setPropertyReadHandler("propertyName2") { ... }
-        setPropertyWriteHandler("inOutAction") { input, _ ->
+        setPropertyWriteHandler("propertyName2") { input, _ ->
             ...
         }
-        setActionHandler(ACTION_NAME) { input, _ ->
+        setActionHandler("inOutAction") { input, _ ->
             ...
         }
     }
