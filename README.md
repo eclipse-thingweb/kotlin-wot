@@ -337,5 +337,49 @@ W3C Web of Things (WoT) offers a mechanism that things can propagate metadata us
 
 For more details, refer to the official [W3C Web of Things](https://www.w3.org/WoT/) website.
 
+## Kotlin TD DSL
+
+If you don't like annotations and prefer to build Thing Descriptions in code, you can also make use of a type-safe Kotlin DSL to define Thing Descriptions.
+
+```
+ wot.produce {
+        id = "agent"
+        title = "Agent"
+        objectType = Type("Agent")
+        intProperty("propertyName1") {
+            minimum = 0
+            maximum = 100
+            observable = true
+            unit = "percent"
+        }
+        stringSchema("propertyName2") {
+            title = "Property 2"
+            minLength = 5
+            maxLength = 10
+        }
+        action<String, Map<*, *>>("inOutAction") {
+            title = "title"
+            description = "Description of an action"
+            input = stringSchema {
+                title = "Action Input"
+                minLength = 10
+                default = "test"
+            }
+            output = objectSchema {
+                stringProperty("output")
+            }
+        }
+        event<String, Nothing, Nothing>("statusUpdated") { data = StringSchema() }
+    }.apply {
+        setPropertyReadHandler(propertyName1) { 10.toInteractionInputValue() }
+        setPropertyReadHandler(propertyName2) { 5.toInteractionInputValue() }
+        setPropertyWriteHandler(inOutAction) { input, _ ->
+        }
+        setActionHandler(ACTION_NAME) { input, _ ->
+        }
+    }
+}
+```
+
 
 
