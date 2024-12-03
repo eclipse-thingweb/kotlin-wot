@@ -333,7 +333,7 @@ Example:
 
 ## Thing Description Discovery
 
-W3C Web of Things (WoT) offers a mechanism that things can propagate metadata using protocols like mDNS for local discovery and/or can register themselves on centralized directories for broader access. [W3C Web of Things (WoT) Discovery](https://www.w3.org/TR/wot-discovery/#architecture) describes how things can register themselves in a central directory, known as a Thing Description Directory (TDD), through a process that involves several steps:
+W3C Web of Things (WoT) offers a mechanism that things can propagate metadata using protocols like mDNS for local discovery and/or can register themselves on centralized directories for broader access. [W3C Web of Things (WoT) Discovery](https://www.w3.org/TR/wot-discovery/#architecture) describes how things can register themselves in a central directory, known as a Thing Description Directory (TDD).
 
 For more details, refer to the official [W3C Web of Things](https://www.w3.org/WoT/) website.
 
@@ -371,11 +371,13 @@ If you don't like annotations and prefer to build Thing Descriptions in code, yo
         }
         event<String, Nothing, Nothing>("statusUpdated") { data = StringSchema() }
     }.apply {
-        setPropertyReadHandler(propertyName1) { 10.toInteractionInputValue() }
-        setPropertyReadHandler(propertyName2) { 5.toInteractionInputValue() }
-        setPropertyWriteHandler(inOutAction) { input, _ ->
+        setPropertyReadHandler("propertyName1") { ... }
+        setPropertyReadHandler("propertyName2") { ... }
+        setPropertyWriteHandler("inOutAction") { input, _ ->
+            ...
         }
         setActionHandler(ACTION_NAME) { input, _ ->
+            ...
         }
     }
 }
