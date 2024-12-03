@@ -2,7 +2,7 @@
 
 **kotlin-wot** is a framework designed to enable developers to implement [**Web of Things (WoT)**](https://www.w3.org/WoT/documentation/) servers and clients in Kotlin. Built from the ground up with Kotlin and leveraging modern coroutine-based architecture, it aims to provide a **fast, reliable, and extensible framework for AI or IoT applications**. By abstracting low-level details and protocols through the use of [**Thing Descriptions (TDs)**](https://www.w3.org/TR/wot-thing-description11/), kotlin-wot empowers developers to focus on creating business logic. 
 
-WoT also provides a flexible, and standardized architecture for server-to-server communication, addressing the challenges of interoperability and protocol diversity. WoT is not only suitable for IoT applications.
+WoT also provides a flexible, and standardized architecture for service-to-service communication, addressing the challenges of interoperability and protocol diversity. WoT is not only suitable for IoT applications.
 Thing Descriptions provide an **excellent alternative to OpenAPI or AsyncAPI**. Unlike these formats, Thing Descriptions are protocol-agnostic and utilize forms to remain independent of specific transport protocols, enabling greater flexibility and interoperability across diverse platforms.
 
 The implementation was inspired by the awesome [Eclipse Thingweb](https://thingweb.io/) and [node-wot](https://github.com/eclipse-thingweb/node-wot). There are also open-source implementations available for TypeScript, Dart, Rust and Python.
