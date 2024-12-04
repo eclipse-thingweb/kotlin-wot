@@ -1,18 +1,8 @@
 package ai.ancf.lmos.wot.integration
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
-import jakarta.annotation.PreDestroy
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import spring.ThingRuntime
 
 
 fun main(args: Array<String>) {
@@ -20,44 +10,6 @@ fun main(args: Array<String>) {
 }
 
 @SpringBootApplication
-class ThingAgentApplication : CommandLineRunner {
+class ThingAgentApplication : ThingRuntime() {
 
-    @Autowired
-    private lateinit var servient: Servient
-
-    @Autowired
-    private lateinit var wot: Wot
-
-    @Autowired
-    private lateinit var agent: ThingAgent
-
-    companion object {
-        private val log: Logger = LoggerFactory.getLogger(ThingAgentApplication::class.java)
-    }
-
-    @PreDestroy
-    fun onExit() {
-        // Register a shutdown hook
-        log.debug("Application is shutting down. Performing cleanup...")
-        runBlocking { servient.shutdown() }
-    }
-
-    override fun run(vararg args: String?) = runBlocking {
-
-        // Protocol can be "HTTP" or "MQTT"
-        val servient = createServient("HTTP")
-
-        val wot = Wot.create(servient)
-        val exposedThing = ExposedThingBuilder.createExposedThing(wot, agent, ThingAgent::class)
-
-        // Start `servient` in a separate coroutine
-        servient.start()
-        // Add and expose the thing after `start()` has had time to begin
-        servient.addThing(exposedThing as WoTExposedThing)
-        servient.expose("agent")
-
-        println("Exposed Agent on HTTP Server")
-        Job().join()
-    }
 }
-

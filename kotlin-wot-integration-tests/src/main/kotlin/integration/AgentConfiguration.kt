@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.arc.spring.Agents
-import ai.ancf.lmos.wot.Wot
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -15,12 +14,4 @@ class AgentConfiguration {
         prompt { "you are a helpful weather agent." }
         model = { "GPT-4o" }
     }
-
-    @Bean
-    fun servient() = createServient("HTTP")
-
-    @Bean
-    fun wot() = Wot.create(servient())
-
-
 }

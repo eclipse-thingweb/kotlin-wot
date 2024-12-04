@@ -6,3 +6,17 @@ arc:
         api-key: af12dab9c046453e82dcf4b24af90bca
         client: azure
         url: https://gpt4-uk.openai.azure.com
+
+wot:
+  servient:
+    mqtt:
+      server:
+        enabled: false
+        host: localhost
+        port: 54801
+        clientId: wot-servient
+      client:
+        enabled: false
+        host: localhost
+        port: 54801
+        clientId: wot-client

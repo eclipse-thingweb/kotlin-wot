@@ -6,11 +6,14 @@ plugins {
 
 dependencies {
     api(project(":kotlin-wot"))
-    api(project(":kotlin-wot-binding-http"))
-    api(project(":kotlin-wot-binding-mqtt"))
-    api(project(":kotlin-wot-reflection"))
-    api(project(":kotlin-wot-spring-boot-starter"))
-    implementation("ai.ancf.lmos:arc-azure-client:0.111.0")
+    compileOnly(project(":kotlin-wot-binding-http"))
+    compileOnly(project(":kotlin-wot-binding-mqtt"))
+    implementation(project(":kotlin-wot-reflection"))
+    implementation("ai.ancf.lmos:arc-agents:0.111.0")
+    //implementation("ai.ancf.lmos:arc-langchain4j-client:0.111.0")
+    api("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-logging")
+    api("ai.ancf.lmos:arc-spring-boot-starter:0.111.0")
 
     //implementation("dev.langchain4j:langchain4j-azure-open-ai:0.35.0")
     //implementation("dev.langchain4j:langchain4j:0.35.0")

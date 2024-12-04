@@ -1,14 +1,16 @@
 package integration
 
 
+import ai.ancf.lmos.arc.agents.AgentProvider
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
+import ai.ancf.lmos.wot.integration.ThingAgent
 import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.createExposedThing
-import ai.ancf.lmos.wot.reflection.annotations.ThingAgent
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -26,7 +28,7 @@ class AgentBuilderTest {
         servient.start()
 
         val wot = Wot.create(servient)
-        val exposedThing = createExposedThing(wot, ThingAgent(), ThingAgent::class)
+        val exposedThing = createExposedThing(wot, ThingAgent(mockk<AgentProvider>()), ThingAgent::class)
         if(exposedThing != null){
 
 

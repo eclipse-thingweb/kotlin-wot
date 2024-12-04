@@ -60,7 +60,7 @@ open class HttpProtocolServer(
     // Stop the server
     override suspend fun stop() {
         if (!started) throw ProtocolServerException("Server has not started yet")
-        log.info("Stopping on '{}' port '{}'", bindHost, bindPort)
+        log.info("Stopping HttpProtocolServer")
         server?.stop(1000, 2000)
         started = false
     }
@@ -69,7 +69,7 @@ open class HttpProtocolServer(
     override suspend fun expose(thing: ExposedThing) {
         if (!started) throw ProtocolServerException("Server has not started yet")
 
-        log.info("Exposing thing '{}'", thing.id)
+        log.info("Exposing thing '{}' on HttpProtocolServer", thing.id)
         things[thing.id] = thing
 
         for (address in actualAddresses) {

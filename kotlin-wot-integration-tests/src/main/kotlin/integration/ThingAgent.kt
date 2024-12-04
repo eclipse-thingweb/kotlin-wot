@@ -2,10 +2,9 @@ package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.arc.agents.AgentProvider
 import ai.ancf.lmos.arc.agents.ChatAgent
-import ai.ancf.lmos.arc.agents.User
 import ai.ancf.lmos.arc.agents.conversation.AssistantMessage
+import ai.ancf.lmos.arc.agents.conversation.Conversation
 import ai.ancf.lmos.arc.agents.conversation.latest
-import ai.ancf.lmos.arc.agents.conversation.toConversation
 import ai.ancf.lmos.arc.agents.getAgentByName
 import ai.ancf.lmos.arc.core.getOrThrow
 import ai.ancf.lmos.wot.reflection.annotations.*
@@ -19,11 +18,12 @@ import org.springframework.stereotype.Component
     description= "A simple agent.")
 @VersionInfo(instance = "1.0.0")
 @Component
-class ThingAgent(val agentProvider: AgentProvider, @Property(name = "modelTemperature", readOnly = true)
+class ThingAgent(agentProvider: AgentProvider, @Property(name = "modelTemperature", readOnly = true)
                  val modelConfiguration: ModelConfiguration = ModelConfiguration(0.5, 50)) {
 
     private val messageFlow = MutableSharedFlow<String>(replay = 1) // Replay last emitted value
 
+    val agent = agentProvider.getAgentByName("My Agent") as ChatAgent
 
     /*
     private val model: AzureOpenAiChatModel = AzureOpenAiChatModel.builder()
@@ -38,9 +38,7 @@ class ThingAgent(val agentProvider: AgentProvider, @Property(name = "modelTemper
     val observableProperty : MutableStateFlow<String> = MutableStateFlow("Hello World")
 
     @Action(name = "ask", title = "Ask", description = "Ask the agent a question.")
-    suspend fun ask(message : String) : String {
-        val agent = agentProvider.getAgentByName("My Agent") as ChatAgent? ?: error("Agent not found!")
-        val conversation = message.toConversation(User("anonymous"))
+    suspend fun ask(conversation : Conversation) : String {
         val assistantMessage = agent.execute(conversation).getOrThrow().latest<AssistantMessage>() ?:
             throw RuntimeException("No Assistant response")
         messageFlow.emit(assistantMessage.content)

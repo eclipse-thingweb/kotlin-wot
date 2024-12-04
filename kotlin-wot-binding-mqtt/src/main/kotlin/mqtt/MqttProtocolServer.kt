@@ -56,7 +56,7 @@ class MqttProtocolServer(
         if (!started) throw ProtocolServerException("Server has not started yet")
 
         val baseUrl = createUrl()
-        log.info("MqttServer exposes '{}' at '{}{}/*'", thing.id, baseUrl, thing.id)
+        log.debug("MqttServer exposes '{}' at '{}{}/*'", thing.id, baseUrl, thing.id)
 
         things[thing.id] = thing
         exposeProperties(thing, baseUrl)

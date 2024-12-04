@@ -17,7 +17,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.net.*
 import java.util.*
@@ -58,6 +57,7 @@ class Servient(
 
         // Wait for all jobs to complete
         (serverJobs + clientJobs).awaitAll() // Awaits completion of all the coroutines
+        log.info("Servient started")
     }
 
     /**
