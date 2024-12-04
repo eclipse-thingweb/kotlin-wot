@@ -54,7 +54,13 @@ An **event** is a notification triggered by a specific occurrence. For example:
 
 ### Example of a Thing Description
 
-This example illustrates how a Weather Agent can be modeled using a Thing Description, with HTTP as the primary communication protocol, although alternative protocols may also be utilized. The Agent metadata describes that the agent uses the gpt-4o model from Azure and integrates with OpenWeatherMap API to provide weather information. The agent supports both text and voice interactions in English and German, adheres to GDPR compliance, and uses data anonymization. It offers a single action, "getWeather," which takes a natural language question and interaction mode as input and returns weather information in natural language. The service is secured using basic authentication and is accessed via a POST request to a specified endpoint, but other security schemes, such as OAuth2 tokens, can also be used.
+This example illustrates how a Weather Agent can be modeled using a Thing Description (TD), with HTTP as the primary communication protocol, while supporting the possibility of alternative protocols. The agent metadata specifies that it integrates with the OpenWeatherMap API to deliver accurate weather information.
+
+The agent supports both text and voice interactions in English and German, complies with GDPR regulations, and employs data anonymization techniques to ensure privacy. It includes a read-only property, modelConfiguration, that details the model's name, temperature, and token limits. The agent also offers a single action, getWeather, which takes a natural language query and interaction mode as input and returns weather information in natural language.
+
+Additionally, the agent emits an event, userFeedbackReceived, whenever a user provides feedback, including a rating (1–5) and an optional comment.
+
+The AI agent is secured using basic authentication. However, WoT supports other security schemes, such as OAuth2 tokens, to enhance security as needed.
 
 ```json
 {
