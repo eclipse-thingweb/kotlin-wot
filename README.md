@@ -34,21 +34,23 @@ Every Thing in kotlin-wot is modeled with the following capabilities, known as *
 
 ### ⚙️ **Properties**
 A **property** represents a value that can be read, written, or observed. For example:
-- A **temperature sensor** may have a property that holds the current temperature.
-- An **AI chatbot** could have a property `modelConfiguration`, which shows the current configuration of an LLM model.
-- An **AI recommendation engine** might have a property `activeRecommendations` listing the recommendations being served.
+- **Smart Home**: A thermostat could have a property `currentTemperature` that holds the current room temperature.  
+- **AI Applications**: A recommendation engine could have a property `recommendationModel` showing which model version is currently in use.  
+- **Industrial IoT**: A factory machine could have a property `operationalStatus` indicating if the machine is running, idle, or under maintenance.  
+
 
 ### 🦾 **Actions**
 An **action** represents an operation that can be invoked. For example:
-- A **smart light bulb** may have an action to turn it on or off.
-- A **chatbot** could have an action `generateReply(input: String)` to respond based on user input.
-- An **AI scheduling assistant** could provide an action `scheduleMeeting(date: String, participants: List<String>)` to book a meeting.
+- **Smart Home**: A washing machine could have an action `startCycle(program: String)` to begin a specific washing program.  
+- **AI Applications**: An AI assistant could provide an action `generateSummary(text: String)` to summarize user-provided content.  
+- **Industrial IoT**: A robotic arm on a production line could have an action `moveToPosition(x: Float, y: Float, z: Float)` to reposition the arm.  
+
 
 ### ⚡ **Events**
 An **event** is a notification triggered by a specific occurrence. For example:
-- A **motion sensor** may send an event notification when motion is detected.
-- A **chatbot** might emit an event `conversationEnded` when the user ends the chat session.
-- An **AI monitoring system** might trigger an event `anomalyDetected` when it identifies unusual behavior in a monitored system.
+- **Smart Home**: A smoke detector may send an event `smokeDetected` when smoke is identified.  
+- **AI Applications**: A chatbot might emit an event `userFeedbackReceived` when a user provides a rating or comment.  
+- **Industrial IoT**: A conveyor belt system might trigger an event `jamDetected` if it identifies a blockage in the production line.  
 
 ### Example of a Thing Description
 
