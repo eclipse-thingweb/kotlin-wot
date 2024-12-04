@@ -80,10 +80,6 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
             "ex:name": "WeatherAI Inc.",
             "ex:url": "https://weatherai.example.com"
         },
-        "ex:model": {
-            "ex:name": "gpt-4o",
-            "ex:provider": "Azure"
-        },
         "ex:serviceIntegration": {
             "ex:weatherAPI": "OpenWeatherMap",
             "ex:apiVersion": "v2.5",
@@ -108,6 +104,36 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
         }
     },
     "security": "basic_sc",
+    "properties": {
+        "modelConfiguration": {
+            "description": "Current configuration of the underlying LLM, including version, temperature, and maximum tokens.",
+            "type": "object",
+            "readOnly": true,
+            "properties": {
+                "modelName": {
+                    "type": "string",
+                    "description": "Name of the model in use, e.g., gpt-4o."
+                },
+                "temperature": {
+                    "type": "number",
+                    "description": "Temperature setting for controlling response randomness.",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "maxTokens": {
+                    "type": "integer",
+                    "description": "Maximum number of tokens the model is allowed to generate."
+                }
+            },
+            "forms": [
+                {
+                    "op": "readproperty",
+                    "href": "https://weatherai.example.com/things/urn:uuid:6f1d3a7a-1f97-4e6b-b45f-f3c2e1c84c77/properties/modelConfiguration",
+                    "contentType": "application/json"
+                }
+            ]
+        }
+    },
     "actions": {
         "getWeather": {
             "description": "Fetches weather information based on user input.",
@@ -134,9 +160,37 @@ This example illustrates how a Weather Agent can be modeled using a Thing Descri
             "forms": [
                 {
                     "op": "invokeaction",
-                    "href": "https://weatherai.example.com/weather",
+                    "href": "https://weatherai.example.com/things/urn:uuid:6f1d3a7a-1f97-4e6b-b45f-f3c2e1c84c77/actions/getWeather",
                     "contentType": "application/json",
                     "htv:methodName":"POST"
+                }
+            ]
+        }
+    },
+    "events": {
+        "userFeedbackReceived": {
+            "description": "Emitted when a user provides feedback on the service, with a rating from 1 to 5.",
+            "data": {
+                "type": "object",
+                "properties": {
+                    "rating": {
+                        "type": "integer",
+                        "description": "User rating, where 1 is the lowest and 5 is the highest.",
+                        "minimum": 1,
+                        "maximum": 5
+                    },
+                    "comment": {
+                        "type": "string",
+                        "description": "Optional user comment providing additional feedback."
+                    }
+                },
+                "required": ["rating"]
+            },
+            "forms": [
+                {
+                    "op": "subscribeevent",
+                    "href": "https://weatherai.example.com/things/urn:uuid:6f1d3a7a-1f97-4e6b-b45f-f3c2e1c84c77/events/userFeedbackReceived",
+                    "contentType": "application/json"
                 }
             ]
         }
