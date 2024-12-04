@@ -16,7 +16,7 @@ NOTE: The library is still under development
 WoT provides a protocol-agnostic architecture that supports an array of standards such as HTTP, WebSockets, MQTT, CoAP, and more, using protocol bindings to decouple application logic from transport-layer specifics. By leveraging widely adopted web standards like JSON, JSON Schema, and Linked Data, WoT ensures data and metadata are both interoperable and semantically rich, enabling intelligent systems to discover, understand, and communicate with Things efficiently.
 Designed for flexibility, WoT is applicable across a broad spectrum of domains, including AI-driven multi-agent systems, smart homes, and industrial IoT ecosystems. 
 
-<img src="https://github.com/user-attachments/assets/5a1a4fc4-0cca-4290-b4b7-96309f723b0c" width="60%">
+<img src="https://github.com/user-attachments/assets/5a1a4fc4-0cca-4290-b4b7-96309f723b0c" width="80%">
 
 ## Thing Description (TD)
 
