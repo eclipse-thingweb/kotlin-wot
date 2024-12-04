@@ -14,7 +14,7 @@ NOTE: The library is still under development
 [**Web of Things (WoT)**](https://www.w3.org/WoT/) is a W3C standard designed to simplify the integration and interaction of things (e.g. AI agents, devices, services) in a highly interoperable and extensible manner. At its core lies the [**Thing Description (TD)**](https://www.w3.org/TR/wot-thing-description11/), a metadata-rich, machine-readable document based on JSON-LD that describes a Thing's properties (state variables), actions (invocable functions), and events (notifications). The TD also incorporates protocol-specific details via forms, allowing seamless interaction across diverse communication technologies.
 
 WoT provides a protocol-agnostic architecture that supports an array of standards such as HTTP, WebSockets, MQTT, CoAP, and more, using protocol bindings to decouple application logic from transport-layer specifics. By leveraging widely adopted web standards like JSON, JSON Schema, and Linked Data, WoT ensures data and metadata are both interoperable and semantically rich, enabling intelligent systems to discover, understand, and communicate with Things efficiently.
-Designed for flexibility, WoT is applicable across a broad spectrum of domains, including AI-driven multi-agent systems, smart homes, and industrial IoT ecosystems. 
+Designed for flexibility, WoT is applicable across a broad spectrum of domains, including AI-driven multi-agent systems, smart homes, and industrial IoT ecosystems. By using the [WoT Scripting API](https://www.w3.org/TR/wot-scripting-api/) you can directly communicate with Things via the Browser.
 
 <img src="https://github.com/user-attachments/assets/5a1a4fc4-0cca-4290-b4b7-96309f723b0c" width="80%">
 
