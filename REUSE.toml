@@ -15,7 +15,8 @@ path = [
     "**/*.xml",
     "**/*.kt",
     "**/*.conf",
-    "**/*.yaml"
+    "**/*.yaml",
+    "**/*.imports"
 ]
 SPDX-FileCopyrightText = "2024 Robert Winkler"
 SPDX-License-Identifier = "Apache-2.0"
