@@ -6,17 +6,9 @@ plugins {
 
 dependencies {
     api(project(":kotlin-wot"))
+    implementation(project(":kotlin-wot-reflection"))
+    api("org.springframework.boot:spring-boot-starter")
+    api("org.springframework.boot:spring-boot-starter-logging")
     compileOnly(project(":kotlin-wot-binding-http"))
     compileOnly(project(":kotlin-wot-binding-mqtt"))
-    implementation(project(":kotlin-wot-reflection"))
-    implementation("ai.ancf.lmos:arc-agents:0.111.0")
-    //implementation("ai.ancf.lmos:arc-langchain4j-client:0.111.0")
-    api("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-logging")
-    api("ai.ancf.lmos:arc-spring-boot-starter:0.111.0")
-
-    //implementation("dev.langchain4j:langchain4j-azure-open-ai:0.35.0")
-    //implementation("dev.langchain4j:langchain4j:0.35.0")
-    testImplementation("com.hivemq:hivemq-mqtt-client:1.3.3")
-    implementation("org.testcontainers:testcontainers:1.20.3")
 }
