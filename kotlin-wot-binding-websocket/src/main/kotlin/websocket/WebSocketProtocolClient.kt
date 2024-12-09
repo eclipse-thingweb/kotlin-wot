@@ -1,4 +1,4 @@
-package websocket
+package ai.ancf.lmos.wot.binding.websocket
 
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import io.ktor.client.*

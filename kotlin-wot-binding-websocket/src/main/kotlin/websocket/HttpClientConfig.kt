@@ -1,4 +1,4 @@
-package websocket
+package ai.ancf.lmos.wot.binding.websocket
 
 import ai.ancf.lmos.wot.security.SecurityScheme
 

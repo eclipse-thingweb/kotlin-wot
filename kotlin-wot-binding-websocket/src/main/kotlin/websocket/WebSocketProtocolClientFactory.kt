@@ -1,7 +1,6 @@
-package websocket
+package ai.ancf.lmos.wot.binding.websocket
 
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
-import io.ktor.client.*
 
 /**
  * Creates new [WebSocketProtocolClient] instances.

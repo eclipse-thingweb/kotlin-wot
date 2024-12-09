@@ -4,6 +4,7 @@ import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.anfc.lmos.wot.binding.ProtocolClient
+import com.fasterxml.jackson.annotation.JsonCreator
 import kotlinx.coroutines.flow.Flow
 import java.io.InputStream
 
@@ -104,6 +105,7 @@ sealed class DataSchemaValue {
     data class ArrayValue(val value: List<*>) : DataSchemaValue()
 
     companion object {
+        @JsonCreator
         fun toDataSchemaValue(value: Any?): DataSchemaValue {
             return when (value) {
                 null -> NullValue

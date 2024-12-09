@@ -189,8 +189,6 @@ class HttpProtocolServerTest {
 
         val thingDescriptions = response.body<List<ThingDescription>>()
         assertEquals(1, thingDescriptions.size)
-
-
     }
 
     @Test
