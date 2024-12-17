@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
-import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URISyntaxException
@@ -22,7 +21,6 @@ import java.net.URISyntaxException
  * @property subprotocol Indicates the exact mechanism by which an interaction will be accomplished for a given protocol when there are multiple options (e.g., longpoll, websub, or sse). Optional.
  * @property op Indicates the semantic intention of performing the operation(s) described by the form. Default is "readproperty". Optional.
  */
-@Serializable
 @JsonInclude(NON_EMPTY)
 data class Form(
     @JsonInclude(Include.ALWAYS)
@@ -72,7 +70,6 @@ data class Form(
     }
 
     @JsonInclude(NON_EMPTY)
-    @Serializable
     data class ExpectedResponse(
         @JsonInclude(Include.ALWAYS)
         val contentType: String // Assign a content type based on a media type. Mandatory
@@ -87,7 +84,6 @@ data class Form(
      * @property schema Used to define the output data schema for an additional response
      * if it differs from the default output data schema. Optional.
      */
-    @Serializable
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     data class AdditionalExpectedResponse(
         @JsonInclude(JsonInclude.Include.NON_EMPTY)

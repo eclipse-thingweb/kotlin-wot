@@ -7,9 +7,7 @@ import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class ProtocolListenerRegistryTest {
 
@@ -20,7 +18,7 @@ class ProtocolListenerRegistryTest {
         val listener = ContentListener { content -> println(content) }
 
         registry.register(affordance, 0, listener)
-        assertTrue(registry.listeners[affordance]?.get(0)?.contains(listener) == true)
+        assertNotNull(registry.listeners[affordance]?.get(0))
     }
 
     @Test
@@ -41,8 +39,8 @@ class ProtocolListenerRegistryTest {
         val listener = ContentListener { content -> println(content) }
 
         registry.register(affordance, 0, listener)
-        registry.unregister(affordance, 0, listener)
-        assertTrue(registry.listeners[affordance]?.get(0)?.contains(listener) == false)
+        registry.unregister(affordance, 0,)
+        assertNull(registry.listeners[affordance]?.get(0))
     }
 
     @Test
@@ -52,7 +50,7 @@ class ProtocolListenerRegistryTest {
         val listener = ContentListener { content -> println(content) }
 
         assertFailsWith<IllegalStateException> {
-            registry.unregister(affordance, 0, listener)
+            registry.unregister(affordance, 0)
         }
     }
 

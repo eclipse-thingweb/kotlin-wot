@@ -6,12 +6,14 @@ import ai.ancf.lmos.wot.thing.schema.InteractionOptions
 import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
 import ai.ancf.lmos.wot.thing.validateInteractionOptions
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 object JsonMapper {
     val instance: ObjectMapper = jacksonObjectMapper().apply {
         registerKotlinModule()
+        registerModule(JavaTimeModule())
     }
 }
 

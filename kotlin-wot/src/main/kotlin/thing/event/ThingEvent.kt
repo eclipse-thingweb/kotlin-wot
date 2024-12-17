@@ -9,17 +9,12 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 import com.fasterxml.jackson.annotation.JsonProperty
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ThingEvent<T, S, C>(
     @JsonInclude(NON_EMPTY)
     override var title: String? = null,
 
-    @SerialName("@type")
     @JsonProperty("@type")
     @JsonInclude(NON_NULL)
     override var objectType: Type? = null,
@@ -34,16 +29,16 @@ data class ThingEvent<T, S, C>(
     override var descriptions: MutableMap<String, String>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null,
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = null,
 
     @JsonInclude(NON_EMPTY)
     override var forms: MutableList<Form> = mutableListOf(),
 
     @JsonInclude(NON_EMPTY)
-    override var subscription: DataSchema<@Contextual S>? = null,
+    override var subscription: DataSchema<S>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var cancellation: DataSchema<@Contextual C>? = null,
+    override var cancellation: DataSchema<C>? = null,
 
     @JsonInclude(NON_EMPTY)
     override var titles: MutableMap<String, String>? = null

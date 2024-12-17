@@ -14,32 +14,53 @@ class ProtocolListenerRegistry {
 
     private val log: Logger = LoggerFactory.getLogger(ProtocolListenerRegistry::class.java)
 
-    internal val listeners: ConcurrentMap<InteractionAffordance, MutableMap<Int, MutableList<ContentListener>>> = ConcurrentHashMap()
+    // Map affordances to form indices and their associated listener
+    internal val listeners: ConcurrentMap<InteractionAffordance, MutableMap<Int, ContentListener>> = ConcurrentHashMap()
 
+    /**
+     * Registers a listener for a specific affordance and form index.
+     * If a listener already exists for the specified form index, it will be replaced.
+     *
+     * @param affordance The interaction affordance.
+     * @param formIndex The index of the form.
+     * @param listener The listener to register.
+     */
     fun register(affordance: InteractionAffordance, formIndex: Int, listener: ContentListener) {
         val form = affordance.forms.getOrNull(formIndex)
             ?: throw IllegalArgumentException("Can't register listener; no form at index $formIndex for the affordance")
 
         val formMap = listeners.getOrPut(affordance) { mutableMapOf() }
-        val listenersForIndex = formMap.getOrPut(formIndex) { mutableListOf() }
-
-        listenersForIndex.add(listener)
+        formMap[formIndex] = listener // Replaces any existing listener for the form index
     }
 
-    fun unregister(affordance: InteractionAffordance, formIndex: Int, listener: ContentListener) {
+    /**
+     * Unregisters the listener for a specific affordance and form index.
+     *
+     * @param affordance The interaction affordance.
+     * @param formIndex The index of the form.
+     * @throws IllegalStateException if no listener is found for the affordance or form index.
+     */
+    fun unregister(affordance: InteractionAffordance, formIndex: Int) {
         val formMap = listeners[affordance] ?: throw IllegalStateException("Listener not found for affordance")
-
-        val listenersForIndex = formMap[formIndex] ?: throw IllegalStateException("Form not found at index $formIndex")
-
-        val wasRemoved = listenersForIndex.remove(listener)
-        if (!wasRemoved) throw IllegalStateException("Listener not found in the specified form index")
+        val wasRemoved = formMap.remove(formIndex) != null
+        if (!wasRemoved) throw IllegalStateException("Listener not found at form index $formIndex")
     }
 
+    /**
+     * Unregisters all listeners for all affordances.
+     */
     fun unregisterAll() {
         listeners.clear()
     }
 
-
+    /**
+     * Notifies the listener for a given affordance and optional form index.
+     *
+     * @param affordance The interaction affordance.
+     * @param data The input data.
+     * @param schema The schema for validation (optional).
+     * @param formIndex The index of the form to notify the listener for (optional).
+     */
     suspend fun <T> notify(
         affordance: InteractionAffordance,
         data: InteractionInput,
@@ -52,30 +73,26 @@ class ProtocolListenerRegistry {
         val interactionInputValue = data as InteractionInput.Value
 
         if (formIndex != null) {
-            formMap[formIndex]?.let { listenersForIndex ->
+            formMap[formIndex]?.let { listener ->
                 val contentType = affordance.forms[formIndex].contentType
-                try{
+                try {
                     val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
-                    listenersForIndex.forEach { it.handle(content) }
-                    return
-                }
-                catch (e: Exception){
-                    log.error("Error while notifying listeners", e)
+                    listener.handle(content)
+                } catch (e: Exception) {
+                    log.error("Error while notifying listener", e)
                 }
             }
+            return
         }
 
-        formMap.forEach { (index, listenersForIndex) ->
-            log.debug("Notify {} listeners for form {}", listenersForIndex.size, affordance.forms[index])
+        formMap.forEach { (index, listener) ->
+            log.debug("Notify listener for form {}", affordance.forms[index])
             val contentType = affordance.forms[index].contentType
-            try{
+            try {
                 val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
-                listenersForIndex.forEach {
-                    it.handle(content)
-                }
-            }
-            catch (e: Exception){
-                log.error("Error while notifying listeners", e)
+                listener.handle(content)
+            } catch (e: Exception) {
+                log.error("Error while notifying listener", e)
             }
         }
     }

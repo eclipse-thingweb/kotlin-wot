@@ -7,10 +7,7 @@ import ai.ancf.lmos.wot.thing.schema.DataSchema
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 import com.fasterxml.jackson.annotation.JsonProperty
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class ThingAction<I: Any, O: Any>(
     @JsonInclude(NON_EMPTY)
     override var title: String? = null,
@@ -22,7 +19,7 @@ data class ThingAction<I: Any, O: Any>(
     override var descriptions: MutableMap<String, String>? = null,
 
     @JsonInclude(NON_EMPTY)
-    override var uriVariables: MutableMap<String, DataSchema<@Contextual Any>>? = null,
+    override var uriVariables: MutableMap<String, DataSchema<Any>>? = null,
 
     @JsonInclude(NON_EMPTY)
     override var forms: MutableList<Form> = mutableListOf(),

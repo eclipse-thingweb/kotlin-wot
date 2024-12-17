@@ -266,7 +266,7 @@ fun Application.setupRouting(servient: Servient) {
                     val contentListener = ContentListener { content: Content ->
                         call.respondBytes { content.body }
                     }
-                    thing.handleObserveProperty(propertyName, contentListener)
+                    thing.handleObserveProperty(propertyName = propertyName, listener = contentListener)
                 }
                 delete("/observable") {
                     val id = call.parameters["id"] ?: return@delete call.response.status(HttpStatusCode.BadRequest)
@@ -276,7 +276,7 @@ fun Application.setupRouting(servient: Servient) {
                     val contentListener = ContentListener { content: Content ->
                         call.respondBytes { content.body }
                     }
-                    thing.handleUnobserveProperty(propertyName, contentListener)
+                    thing.handleUnobserveProperty(propertyName = propertyName)
                 }
                 get {
                     val id = call.parameters["id"] ?: return@get call.response.status(HttpStatusCode.BadRequest)
@@ -336,7 +336,7 @@ fun Application.setupRouting(servient: Servient) {
                 val contentListener = ContentListener { content: Content ->
                     call.respondBytes { content.body }
                 }
-                thing.handleSubscribeEvent(eventName, contentListener)
+                thing.handleSubscribeEvent(eventName = eventName, listener = contentListener)
                 call.response.status(HttpStatusCode.OK)
             }
             delete("/events/{name}") {
@@ -347,7 +347,7 @@ fun Application.setupRouting(servient: Servient) {
                 val contentListener = ContentListener { content: Content ->
                     call.respondBytes { content.body }
                 }
-                thing.handleUnsubscribeEvent(eventName, contentListener)
+                thing.handleUnsubscribeEvent(eventName = eventName)
                 call.response.status(HttpStatusCode.OK)
             }
         }

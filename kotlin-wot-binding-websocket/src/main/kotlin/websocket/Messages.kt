@@ -1,11 +1,29 @@
 package ai.ancf.lmos.wot.binding.websocket
 
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.JsonNode
 import java.time.Instant
+
+object MessageTypes {
+    const val READ_PROPERTY = "readProperty"
+    const val WRITE_PROPERTY = "writeProperty"
+    const val OBSERVE_PROPERTY = "observeProperty"
+    const val UNOBSERVE_PROPERTY = "unobserveProperty"
+    const val READ_ALL_PROPERTIES = "readAllProperties"
+    const val WRITE_ALL_PROPERTIES = "writeAllProperties"
+    const val READ_MULTIPLE_PROPERTIES = "readMultipleProperties"
+    const val WRITE_MULTIPLE_PROPERTIES = "writeMultipleProperties"
+    const val PROPERTY_READING = "propertyReading"
+    const val PROPERTY_READINGS = "propertyReadings"
+    const val INVOKE_ACTION = "invokeAction"
+    const val ACTION_STATUS = "actionStatus"
+    const val ACTION_STATUSES = "actionStatuses"
+    const val SUBSCRIBE_EVENT = "subscribeevent"
+    const val ACKNOWLEDGEMENT = "acknowledgement"
+    const val UNSUBSCRIBE_EVENT = "unsubscribeEvent"
+    const val EVENT = "event"
+    const val ERROR = "error"
+}
 
 // Base class for all message types
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,158 +33,178 @@ import java.time.Instant
     property = "messageType"
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = ReadPropertyMessage::class, name = "readProperty"),
-    JsonSubTypes.Type(value = WritePropertyMessage::class, name = "writeProperty"),
-    JsonSubTypes.Type(value = ObservePropertyMessage::class, name = "observeProperty"),
-    JsonSubTypes.Type(value = UnobservePropertyMessage::class, name = "unobserveProperty"),
-    JsonSubTypes.Type(value = ReadAllPropertiesMessage::class, name = "readAllProperties"),
-    JsonSubTypes.Type(value = WriteAllPropertiesMessage::class, name = "writeAllProperties"),
-    JsonSubTypes.Type(value = ReadMultiplePropertiesMessage::class, name = "readMultipleProperties"),
-    JsonSubTypes.Type(value = WriteMultiplePropertiesMessage::class, name = "writeMultipleProperties"),
-    JsonSubTypes.Type(value = PropertyReadingMessage::class, name = "propertyReading"),
-    JsonSubTypes.Type(value = PropertyReadingsMessage::class, name = "propertyReadings"),
-    JsonSubTypes.Type(value = InvokeActionMessage::class, name = "invokeAction"),
-    JsonSubTypes.Type(value = ActionStatusMessage::class, name = "actionStatus"),
-    JsonSubTypes.Type(value = ActionStatusesMessage::class, name = "actionStatuses"),
-    JsonSubTypes.Type(value = SubscribeEventMessage::class, name = "subscribeevent"),
-    JsonSubTypes.Type(value = UnsubscribeEventMessage::class, name = "unsubscribeEvent"),
-    JsonSubTypes.Type(value = EventMessage::class, name = "event"),
-    JsonSubTypes.Type(value = ErrorMessage::class, name = "error")
+    JsonSubTypes.Type(value = ReadPropertyMessage::class, name = MessageTypes.READ_PROPERTY),
+    JsonSubTypes.Type(value = WritePropertyMessage::class, name = MessageTypes.WRITE_PROPERTY),
+    JsonSubTypes.Type(value = ObservePropertyMessage::class, name = MessageTypes.OBSERVE_PROPERTY),
+    JsonSubTypes.Type(value = UnobservePropertyMessage::class, name = MessageTypes.UNOBSERVE_PROPERTY),
+    JsonSubTypes.Type(value = ReadAllPropertiesMessage::class, name = MessageTypes.READ_ALL_PROPERTIES),
+    JsonSubTypes.Type(value = WriteAllPropertiesMessage::class, name = MessageTypes.WRITE_ALL_PROPERTIES),
+    JsonSubTypes.Type(value = ReadMultiplePropertiesMessage::class, name = MessageTypes.READ_MULTIPLE_PROPERTIES),
+    JsonSubTypes.Type(value = WriteMultiplePropertiesMessage::class, name = MessageTypes.WRITE_MULTIPLE_PROPERTIES),
+    JsonSubTypes.Type(value = PropertyReadingMessage::class, name = MessageTypes.PROPERTY_READING),
+    JsonSubTypes.Type(value = PropertyReadingsMessage::class, name = MessageTypes.PROPERTY_READINGS),
+    JsonSubTypes.Type(value = InvokeActionMessage::class, name = MessageTypes.INVOKE_ACTION),
+    JsonSubTypes.Type(value = ActionStatusMessage::class, name = MessageTypes.ACTION_STATUS),
+    JsonSubTypes.Type(value = ActionStatusesMessage::class, name = MessageTypes.ACTION_STATUSES),
+    JsonSubTypes.Type(value = SubscribeEventMessage::class, name = MessageTypes.SUBSCRIBE_EVENT),
+    JsonSubTypes.Type(value = UnsubscribeEventMessage::class, name = MessageTypes.UNSUBSCRIBE_EVENT),
+    JsonSubTypes.Type(value = EventMessage::class, name = MessageTypes.EVENT),
+    JsonSubTypes.Type(value = ErrorMessage::class, name = MessageTypes.ERROR),
+    JsonSubTypes.Type(value = Acknowledgement::class, name = MessageTypes.ACKNOWLEDGEMENT)
 )
 sealed interface WoTMessage {
     var thingId: String
-    var messageType: String
+    @get:JsonIgnore // Ignore the type property in the interface itself
+    val messageType: String
 }
 
-data class InvokeActionMessage(
+class Acknowledgement(
     override var thingId: String,
-    var action: String,
-    var input: DataSchemaValue? = null
+    var message: String
 ) : WoTMessage {
-    override var messageType: String = "invokeAction"
+    override val messageType: String = MessageTypes.ACKNOWLEDGEMENT
 }
 
-// Subclass for subscribeEvent message
-data class SubscribeEventMessage(
-    override var thingId: String,
-    var event: String,
-    var lastEvent: Instant
-) : WoTMessage {
-    override var messageType: String = "subscribeevent"
-}
-
-// Subclass for unsubscribeEvent message
-data class UnsubscribeEventMessage(
-    override var thingId: String,
-    var event: String
-) : WoTMessage {
-    override var messageType: String = "unsubscribeEvent"
-}
-
-// Subclass for event message
-data class EventMessage(
-    override var thingId: String,
-    var event: String,
-    var href: String,
-    var data: DataSchemaValue,
-    var timestamp: Instant = Instant.now()
-) : WoTMessage {
-    override var messageType: String = "event"
-}
-
-// Subclass for readProperty message
 data class ReadPropertyMessage(
     override var thingId: String,
     var property: String
 ) : WoTMessage {
-    override var messageType: String = "readProperty"
+    override val messageType: String = MessageTypes.READ_PROPERTY
 }
 
-// Subclass for writeProperty message
 data class WritePropertyMessage(
     override var thingId: String,
     var property: String,
-    var data: DataSchemaValue
+    var data: JsonNode
 ) : WoTMessage {
-    override var messageType: String = "writeProperty"
+    override val messageType: String = MessageTypes.WRITE_PROPERTY
 }
 
-// Subclass for observeAllProperties message
-data class ObserveAllPropertiesMessage(
-    override var thingId: String,
-    var lastPropertyReading: Instant
-) : WoTMessage {
-    override var messageType: String = "observeAllProperties"
-}
-
-// Subclass for observeProperty message
 data class ObservePropertyMessage(
     override var thingId: String,
     var property: String,
-    var lastPropertyReading: Instant
+    var lastPropertyReading: Instant = Instant.now()
 ) : WoTMessage {
-    override var messageType: String = "observeProperty"
+    override val messageType: String = MessageTypes.OBSERVE_PROPERTY
 }
 
-// Subclass for unobserveProperty message
 data class UnobservePropertyMessage(
     override var thingId: String,
     var property: String
 ) : WoTMessage {
-    override var messageType: String = "unobserveProperty"
+    override val messageType: String = MessageTypes.UNOBSERVE_PROPERTY
 }
 
-// Subclass for readAllProperties message
 data class ReadAllPropertiesMessage(
     override var thingId: String
 ) : WoTMessage {
-    override var messageType: String = "readAllProperties"
+    override val messageType: String = MessageTypes.READ_ALL_PROPERTIES
 }
 
-// Subclass for writeAllProperties message
 data class WriteAllPropertiesMessage(
     override var thingId: String,
-    var data: Map<String, DataSchemaValue>
+    var data: Map<String, JsonNode>
 ) : WoTMessage {
-    override var messageType: String = "writeAllProperties"
+    override val messageType: String = MessageTypes.WRITE_ALL_PROPERTIES
 }
 
-// Subclass for readMultipleProperties message
 data class ReadMultiplePropertiesMessage(
     override var thingId: String,
     var properties: List<String>
 ) : WoTMessage {
-    override var messageType: String = "readMultipleProperties"
+    override val messageType: String = MessageTypes.READ_MULTIPLE_PROPERTIES
 }
 
-// Subclass for writeMultipleProperties message
 data class WriteMultiplePropertiesMessage(
     override var thingId: String,
-    var data: Map<String, DataSchemaValue>
+    var data: Map<String, JsonNode>
 ) : WoTMessage {
-    override var messageType: String = "writeMultipleProperties"
+    override val messageType: String = MessageTypes.WRITE_MULTIPLE_PROPERTIES
 }
 
-// Subclass for propertyReading message
 data class PropertyReadingMessage(
     override var thingId: String,
     var property: String,
     var data: JsonNode,
     var timestamp: Instant = Instant.now()
 ) : WoTMessage {
-    override var messageType: String = "propertyReading"
+    override val messageType: String = MessageTypes.PROPERTY_READING
 }
 
-// Subclass for propertyReadings message
 data class PropertyReadingsMessage(
     override var thingId: String,
-    var data: Map<String, DataSchemaValue>,
+    var data: Map<String, JsonNode>,
     var timestamp: Instant = Instant.now()
 ) : WoTMessage {
-    override var messageType: String = "propertyReadings"
+    override val messageType: String = MessageTypes.PROPERTY_READINGS
 }
 
-// Subclass for error message
+data class InvokeActionMessage(
+    override var thingId: String,
+    var action: String,
+    var input: JsonNode? = null
+) : WoTMessage {
+    override val messageType: String = MessageTypes.INVOKE_ACTION
+}
+
+enum class ActionStatus(val status: String) {
+    PENDING("pending"),
+    COMPLETED("completed"),
+    FAILED("failed");
+
+    @JsonValue
+    override fun toString(): String = status
+}
+
+data class ActionStatusMessage(
+    override var thingId: String,
+    var action: String,
+    var status: ActionStatus = ActionStatus.COMPLETED, // Example: "pending", "completed", "failed"
+    var output: JsonNode?
+) : WoTMessage {
+    override val messageType: String = MessageTypes.ACTION_STATUS
+}
+
+data class ActionStatusesMessage(
+    override var thingId: String,
+    var statuses: Map<String, String> // Map of action names to their statuses
+) : WoTMessage {
+    override val messageType: String = MessageTypes.ACTION_STATUSES
+}
+
+data class Subscription(
+    override var thingId: String,
+    var event: String,
+    var lastEvent: Instant = Instant.now()
+) : WoTMessage {
+    override val messageType: String = MessageTypes.SUBSCRIBE_EVENT
+}
+
+data class SubscribeEventMessage(
+    override var thingId: String,
+    var event: String,
+    var lastEvent: Instant = Instant.now()
+) : WoTMessage {
+    override val messageType: String = MessageTypes.SUBSCRIBE_EVENT
+}
+
+data class UnsubscribeEventMessage(
+    override var thingId: String,
+    var event: String
+) : WoTMessage {
+    override val messageType: String = MessageTypes.UNSUBSCRIBE_EVENT
+}
+
+data class EventMessage(
+    override var thingId: String,
+    var event: String,
+    var href: String? = null,
+    var data: JsonNode,
+    var timestamp: Instant = Instant.now()
+) : WoTMessage {
+    override val messageType: String = MessageTypes.EVENT
+}
+
 data class ErrorMessage(
     override var thingId: String,
     var type: String, // URI reference to the type of error
@@ -175,22 +213,5 @@ data class ErrorMessage(
     var detail: String, // Detailed explanation of the error
     var instance: String // URI reference to the specific occurrence of the problem
 ) : WoTMessage {
-    override var messageType: String = "error"
-}
-
-// Subclass for actionStatus message
-data class ActionStatusMessage(
-    override var thingId: String,
-    var action: String,
-    var status: String // Example: "pending", "completed", "failed", etc.
-) : WoTMessage {
-    override var messageType: String = "actionStatus"
-}
-
-// Subclass for actionStatuses message
-data class ActionStatusesMessage(
-    override var thingId: String,
-    var statuses: Map<String, String> // Map of action names to their statuses
-) : WoTMessage {
-    override var messageType: String = "actionStatuses"
+    override val messageType: String = MessageTypes.ERROR
 }

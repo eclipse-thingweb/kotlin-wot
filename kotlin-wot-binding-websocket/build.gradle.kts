@@ -12,6 +12,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio")
     implementation("io.ktor:ktor-client-auth")
     implementation("io.ktor:ktor-client-logging")
+    implementation("io.ktor:ktor-server-call-logging")
     implementation("io.ktor:ktor-serialization-jackson")
     //implementation("io.insert-koin:koin-ktor:4.0.0")
     testImplementation("io.ktor:ktor-server-test-host")

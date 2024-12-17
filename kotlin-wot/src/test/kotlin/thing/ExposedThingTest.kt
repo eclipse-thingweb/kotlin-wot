@@ -321,7 +321,7 @@ class ExposedThingTest {
         coEvery { contentListener.handle(any<Content>()) } just runs
 
         exposedThing.setPropertyObserveHandler("testProperty", propertyReadHandler)
-        exposedThing.handleObserveProperty("testProperty", listener = contentListener)
+        exposedThing.handleObserveProperty(propertyName = "testProperty", listener = contentListener)
 
         exposedThing.emitPropertyChange("testProperty", data)
 
@@ -329,7 +329,7 @@ class ExposedThingTest {
         coVerify { contentListener.handle(any<Content>()) }
 
         exposedThing.setPropertyUnobserveHandler("testProperty", propertyReadHandler)
-        exposedThing.handleUnobserveProperty("testProperty", contentListener)
+        exposedThing.handleUnobserveProperty(propertyName = "testProperty")
 
         coVerify { propertyReadHandler.handle(any()) }
         coVerify { contentListener.handle(any<Content>()) }
@@ -362,14 +362,14 @@ class ExposedThingTest {
         coEvery { contentListener.handle(any<Content>()) } just runs
 
         exposedThing.setEventSubscribeHandler("testEvent", eventSubscriptionHandler)
-        exposedThing.handleSubscribeEvent("testEvent", contentListener)
+        exposedThing.handleSubscribeEvent(eventName = "testEvent", listener = contentListener)
 
         exposedThing.emitEvent("testEvent", data)
         coVerify { eventSubscriptionHandler.handle(any()) }
         coVerify { contentListener.handle(any<Content>()) }
 
         exposedThing.setEventUnsubscribeHandler("testEvent", eventSubscriptionHandler)
-        exposedThing.handleUnsubscribeEvent("testEvent", contentListener)
+        exposedThing.handleUnsubscribeEvent(eventName = "testEvent")
 
         coVerify { eventSubscriptionHandler.handle(any()) }
         coVerify { contentListener.handle(any<Content>()) }

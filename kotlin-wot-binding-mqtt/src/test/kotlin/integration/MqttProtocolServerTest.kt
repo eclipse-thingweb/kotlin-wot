@@ -173,27 +173,27 @@ class MqttProtocolServerTest {
    }
 
 
-      @Test
-      fun `subscribe to event and verify publishing`() = runTest {
+    @Test
+    fun `subscribe to event and verify publishing`() = runTest {
 
-          val events = protocolClient.subscribeResource(Form(
-              "${brokerUrl}/${exposedThing.id}/events/$EVENT_NAME",
-              "application/json"
-          ))
+        val events = protocolClient.subscribeResource(Form(
+          "${brokerUrl}/${exposedThing.id}/events/$EVENT_NAME",
+          "application/json"
+        ))
 
-          events.test(timeout = 5.seconds) {
-              // Trigger event
-              exposedThing.emitEvent(EVENT_NAME, "\"testEvent\"".toInteractionInputValue())
+        events.test(timeout = 5.seconds) {
+          // Trigger event
+          exposedThing.emitEvent(EVENT_NAME, "\"testEvent\"".toInteractionInputValue())
 
-              // Verify that the event is emitted in the flow
-              val content = awaitItem()
-              val stringValue = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-              assertEquals("\"testEvent\"", stringValue.value)
+          // Verify that the event is emitted in the flow
+          val content = awaitItem()
+          val stringValue = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
+          assertEquals("\"testEvent\"", stringValue.value)
 
-              // Optionally verify no further emissions or complete the flow
-              cancelAndIgnoreRemainingEvents()
-          }
-      }
+          // Optionally verify no further emissions or complete the flow
+          cancelAndIgnoreRemainingEvents()
+        }
+    }
 
     @Test
     fun `subscribe to property change and verify publishing`() = runTest {

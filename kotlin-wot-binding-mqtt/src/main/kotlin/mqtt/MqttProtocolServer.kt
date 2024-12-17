@@ -115,7 +115,7 @@ class MqttProtocolServer(
                 property.forms += observableForm
                 log.debug("Assign '{}' to observe Property '{}'", observableHref, name)
 
-                val observeListener: suspend (Content) -> Unit = suspend@{ content ->
+                val observeListener = ContentListener { content ->
                     log.debug("MqttServer at $baseUrl publishing to Property topic '$observableTopic'")
                     val buffer = content.body
                     val publishMessage = Mqtt5Publish.builder()
@@ -126,7 +126,7 @@ class MqttProtocolServer(
                         .build()
                     client.publish(publishMessage).await()
                 }
-                thing.handleObserveProperty(name, observeListener)
+                thing.handleObserveProperty(propertyName = name, listener = observeListener)
             }
         }
     }
@@ -160,7 +160,7 @@ class MqttProtocolServer(
             event.forms += (form)
             log.debug("Assigned '{}' to Event '{}'", href, name)
 
-            thing.handleSubscribeEvent(name, { content ->
+            thing.handleSubscribeEvent(eventName = name, listener = { content ->
                 log.debug("MqttServer at $baseUrl publishing to Events topic '$topic")
                 val publishMessage = Mqtt5Publish.builder()
                     .topic(topic)
@@ -323,7 +323,7 @@ class MqttProtocolServer(
         val contentListener = ContentListener { content ->
             respondToTopic(content, message.topic)
         }
-        thing.handleSubscribeEvent(eventName, contentListener)
+        thing.handleSubscribeEvent(eventName = eventName, listener = contentListener)
     }
 
     private suspend fun respondToTopic(content: Content?, responseTopic: MqttTopic) {
