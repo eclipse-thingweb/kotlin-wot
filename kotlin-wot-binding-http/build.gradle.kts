@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     api(project(":kotlin-wot"))
-    //implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.slf4j:slf4j-api")
     implementation("io.ktor:ktor-server-core")
     implementation("io.ktor:ktor-server-netty")
@@ -17,7 +16,6 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation")
     implementation("io.ktor:ktor-serialization-jackson")
     implementation("io.ktor:ktor-server-auto-head-response")
-    //implementation("io.insert-koin:koin-ktor:4.0.0")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("ch.qos.logback:logback-classic:1.5.12")
     testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")

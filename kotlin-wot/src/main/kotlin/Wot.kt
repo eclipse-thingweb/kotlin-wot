@@ -1,11 +1,11 @@
 package ai.ancf.lmos.wot
 
 import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
+import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
 import kotlinx.coroutines.flow.Flow
 import java.net.URI
 
@@ -39,9 +39,9 @@ interface Wot {
      * @param thingDescription
      * @return
      */
-    fun produce(thingDescription: ThingDescription): ExposedThing
+    fun produce(thingDescription: WoTThingDescription): WoTExposedThing
 
-    fun produce(configure: ThingDescription.() -> Unit): ExposedThing
+    fun produce(configure: ThingDescription.() -> Unit): WoTExposedThing
 
     /**
      * Accepts a `thing` argument of type [ThingDescription] and returns a [ConsumedThing] object.<br></br>
@@ -51,7 +51,7 @@ interface Wot {
      * @param thingDescription
      * @return
      */
-    fun consume(thingDescription: ThingDescription): WoTConsumedThing
+    fun consume(thingDescription: WoTThingDescription): WoTConsumedThing
 
     /**
      * Accepts an [java.net.URL] (e.g. "file:..." or "http://...") to a resource that serves a
@@ -60,7 +60,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun requestThingDescription(url: URI): ThingDescription
+    suspend fun requestThingDescription(url: URI): WoTThingDescription
 
     /**
      * Accepts an [String] containing an url (e.g. "file:..." or "http://...") to a resource
@@ -69,7 +69,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun requestThingDescription(url: String): ThingDescription
+    suspend fun requestThingDescription(url: String): WoTThingDescription
 
     companion object {
         // Factory method to create an instance of WoT with a given Servient

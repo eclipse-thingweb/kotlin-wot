@@ -3,7 +3,6 @@ package ai.ancf.lmos.wot.reflection
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
-import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.content.toJsonContent
 import ai.ancf.lmos.wot.reflection.things.SimpleThing
@@ -11,7 +10,6 @@ import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.ContentListener
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.StringSchema
-import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -39,7 +37,7 @@ class SimpleThingTest {
         simpleThing = SimpleThing()
 
         // Generate ThingDescription from the class
-        exposedThing = ExposedThingBuilder.createExposedThing(wot, simpleThing, SimpleThing::class)!!
+        exposedThing = ExposedThingBuilder.createExposedThing(wot, simpleThing, SimpleThing::class) as ExposedThing
 
         servient.addThing(exposedThing)
         servient.expose("simpleThing")
@@ -68,7 +66,7 @@ class SimpleThingTest {
         var lock = CountDownLatch(1);
         val contentListener: ContentListener = (ContentListener { lock.countDown() })
 
-        exposedThing.handleObserveProperty("observableProperty", contentListener)
+        exposedThing.handleObserveProperty(propertyName = "observableProperty", listener = contentListener)
 
         lock.await(2000, TimeUnit.MILLISECONDS);
 
@@ -140,7 +138,7 @@ class SimpleThingTest {
         var lock = CountDownLatch(1);
         val contentListener: ContentListener = (ContentListener { lock.countDown() })
 
-        exposedThing.handleSubscribeEvent("statusUpdated", contentListener)
+        exposedThing.handleSubscribeEvent(eventName = "statusUpdated", listener = contentListener)
 
         lock.await(2000, TimeUnit.MILLISECONDS);
     }

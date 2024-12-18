@@ -7,6 +7,7 @@ import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
+import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
 import kotlinx.coroutines.flow.Flow
 import java.net.URI
 import java.net.URISyntaxException
@@ -31,7 +32,7 @@ class DefaultWot(private val servient: Servient) : Wot {
         return discover(ThingFilter(method = DiscoveryMethod.ANY))
     }
 
-    override fun produce(thingDescription: ThingDescription): ExposedThing {
+    override fun produce(thingDescription: WoTThingDescription): WoTExposedThing {
         val exposedThing = ExposedThing(servient, thingDescription)
         return if (servient.addThing(exposedThing)) {
             exposedThing
@@ -40,19 +41,19 @@ class DefaultWot(private val servient: Servient) : Wot {
         }
     }
 
-    override fun produce(configure: ThingDescription.() -> Unit): ExposedThing {
+    override fun produce(configure: ThingDescription.() -> Unit): WoTExposedThing {
         val thingDescription = ThingDescription().apply(configure)
         return produce(thingDescription)
     }
 
-    override fun consume(thingDescription: ThingDescription) = ConsumedThing(servient, thingDescription)
+    override fun consume(thingDescription: WoTThingDescription) = ConsumedThing(servient, thingDescription)
 
-    override suspend fun requestThingDescription(url: URI): ThingDescription {
+    override suspend fun requestThingDescription(url: URI): WoTThingDescription {
         return servient.fetch(url)
     }
 
     @Throws(URISyntaxException::class)
-    override suspend fun requestThingDescription(url: String): ThingDescription {
+    override suspend fun requestThingDescription(url: String): WoTThingDescription {
         return servient.fetch(url)
     }
 

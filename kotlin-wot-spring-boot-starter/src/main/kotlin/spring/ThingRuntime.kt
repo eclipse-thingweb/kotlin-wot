@@ -51,8 +51,7 @@ abstract class ThingRuntime : CommandLineRunner {
             val exposedThing = ExposedThingBuilder.createExposedThing(wot, thing, typedClass)
             // Add and expose the thing after `start()` has had time to begin
             servient.addThing(exposedThing as WoTExposedThing)
-            servient.expose(exposedThing.id)
-            log.debug("Exposed Thing '${exposedThing.id}' on HTTP Server")
+            servient.expose(exposedThing.getThingDescription().id)
         }
 
         Job().join()

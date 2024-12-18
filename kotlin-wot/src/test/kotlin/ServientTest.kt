@@ -7,7 +7,7 @@ import ai.ancf.lmos.wot.thing.Context
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
+import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
@@ -154,7 +154,7 @@ class ServientTest {
         coEvery { mockClient.readResource(any()) } returns mockContent
 
         // Mock ContentManager to return a map from content
-        every { ContentManager.contentToValue(mockContent, ObjectSchema()) } returns DataSchemaValue.ObjectValue(thingAsMap)
+        every { ContentManager.contentToValue(mockContent, StringSchema()) } returns DataSchemaValue.ObjectValue(thingAsMap)
 
         // Act
         val fetchedThing = servient.fetch(url)
@@ -188,15 +188,15 @@ class ServientTest {
         val url = URI("http://example.com")
         coEvery { mockClient.readResource(any()) } returns mockContent
 
-        every { ContentManager.contentToValue(mockContent, ObjectSchema()) } throws ContentCodecException("Codec error")
+        every { ContentManager.contentToValue(mockContent, StringSchema()) } throws ContentCodecException("Codec error")
 
         // Act & Assert
         val exception = assertThrows<ServientException> {
             runBlocking { servient.fetch(url) }
         }
-        assertEquals("Error while fetching TD: Codec error", exception.message)
+        assertEquals("Error while fetching thing description: Codec error", exception.message)
         coVerify { mockClient.readResource(any()) }
-        verify { ContentManager.contentToValue(mockContent, ObjectSchema()) }
+        verify { ContentManager.contentToValue(mockContent, StringSchema()) }
     }
 
     /*

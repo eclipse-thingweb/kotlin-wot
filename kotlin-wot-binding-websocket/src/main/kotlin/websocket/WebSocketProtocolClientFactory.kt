@@ -11,6 +11,7 @@ open class WebSocketProtocolClientFactory(private val httpClientConfig: HttpClie
     }
     override val scheme: String
         get() = "ws"
+
     override val client: WebSocketProtocolClient
         get() = WebSocketProtocolClient(httpClientConfig)
 

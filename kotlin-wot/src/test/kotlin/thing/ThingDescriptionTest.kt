@@ -83,7 +83,6 @@ class ThingDescriptionTest {
         }
 
         val thingAsJson = thingDescription.toJson()
-        println(thingAsJson)
         assertThatJson(thingAsJson)
             .`when`(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo(
@@ -131,7 +130,6 @@ class ThingDescriptionTest {
                                     "title": "subPropertyTitle"
                                 }
                             },
-                            "required": [],
                             "title": "propertyTitle"
                         },
                         "arrayProperty": {

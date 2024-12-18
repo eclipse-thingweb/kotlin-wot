@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap
 data class ExposedThing(
     @JsonIgnore
     private val servient: Servient,
-    private val thingDescription: ThingDescription = ThingDescription(),
+    private val thingDescription: WoTThingDescription = ThingDescription(),
 ) : WoTExposedThing, WoTThingDescription by thingDescription {
 
 

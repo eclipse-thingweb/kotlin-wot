@@ -43,7 +43,7 @@ object ExposedThingBuilder {
      * @param clazz The KClass of the object to be described.
      * @return An [ExposedThing] or null if no description could be generated.
      */
-    fun <T : Any> createExposedThing(wot: Wot, instance: T, clazz: KClass<T>): ExposedThing? {
+    fun <T : Any> createExposedThing(wot: Wot, instance: T, clazz: KClass<T>): WoTExposedThing? {
         log.debug("Creating ThingDescription for class: ${clazz.simpleName}")
 
         // 1. Get the @Thing annotation from the class
@@ -358,7 +358,7 @@ object ExposedThingBuilder {
 
     internal fun <T : Any> addEventHandler(
         eventsMap: MutableMap<String, KFunction<*>>,
-        exposedThing: ExposedThing,
+        exposedThing: WoTExposedThing,
         instance: T
     ) {
         for ((name, function) in eventsMap) {
@@ -381,7 +381,7 @@ object ExposedThingBuilder {
 
     internal fun <T : Any> addActionHandler(
         actionsMap: MutableMap<String, KFunction<*>>,
-        exposedThing: ExposedThing,
+        exposedThing: WoTExposedThing,
         instance: T
     ) {
         for ((name, function) in actionsMap) {
@@ -408,7 +408,7 @@ object ExposedThingBuilder {
 
     internal fun <T : Any> addPropertyHandler(
         readOnlyPropertiesMap: MutableMap<String, KProperty1<T, *>>,
-        exposedThing: ExposedThing,
+        exposedThing: WoTExposedThing,
         instance: T,
         writeOnlyPropertiesMap: MutableMap<String, KMutableProperty1<T, *>>,
         readWritePropertiesMap: MutableMap<String, KMutableProperty1<T, *>>
@@ -430,7 +430,7 @@ object ExposedThingBuilder {
 
     private fun <T : Any> addPropertyWriteHandler(
         property: KMutableProperty1<T, *>,
-        exposedThing: ExposedThing,
+        exposedThing: WoTExposedThing,
         name: String,
         instance: T
     ) {
@@ -442,7 +442,7 @@ object ExposedThingBuilder {
 
     private fun <T : Any> addPropertyReadHandler(
         property: KProperty1<T, *>,
-        exposedThing: ExposedThing,
+        exposedThing: WoTExposedThing,
         name: String,
         instance: T
     ) {

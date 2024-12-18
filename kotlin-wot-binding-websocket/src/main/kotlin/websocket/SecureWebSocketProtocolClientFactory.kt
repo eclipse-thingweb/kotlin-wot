@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.binding.websocket
 
 /**
- * Creates new [HttpProtocolClient] instances that allow consuming Things via HTTPS.
+ * Creates new [WebSocketProtocolClient] instances that allow consuming Things via WSS.
  */
 class SecureWebSocketProtocolClientFactory() : WebSocketProtocolClientFactory() {
 

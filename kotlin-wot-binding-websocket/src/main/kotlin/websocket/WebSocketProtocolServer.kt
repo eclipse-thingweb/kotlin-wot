@@ -5,6 +5,7 @@ import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ExposedThing
+import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.ContentListener
@@ -12,6 +13,7 @@ import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -23,16 +25,15 @@ import io.ktor.util.reflect.*
 import io.ktor.websocket.*
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 
-open class WebSocketProtocolServer(
+class WebSocketProtocolServer(
     private val wait: Boolean = false,
     private val bindHost: String = "0.0.0.0",
     private val bindPort: Int = 8080,
     private val createServer: (host: String, port: Int, servient: Servient) -> EmbeddedServer<*, *> = ::defaultWebSocketServer
 ) : ProtocolServer {
-    val things: MutableMap<String, ExposedThing> = mutableMapOf()
-    private val webSocketSessions: MutableMap<String, MutableList<WebSocketServerSession>> = ConcurrentHashMap()
+    internal val things: MutableMap<String, ExposedThing> = mutableMapOf()
+
     var started = false
     private var server: EmbeddedServer<*, *>? = null
     private var actualAddresses: List<String> = listOf("http://$bindHost:$bindPort")
@@ -157,6 +158,18 @@ fun Application.setupRoutingWithWebSockets(servient: Servient) {
         route("/") {
             get {
                 call.respond(servient.things.values.toList(), typeInfo<List<WoTExposedThing>>())
+            }
+        }
+
+        route("/{id}") {
+            get {
+                val id = call.parameters["id"]
+                val thing: ExposedThing? = servient.things[id]
+                if (thing != null) {
+                    call.respond(thing, typeInfo<ThingDescription>())
+                } else {
+                    call.response.status(HttpStatusCode.NotFound)
+                }
             }
         }
 

@@ -1,14 +1,10 @@
 plugins {
     kotlin("jvm") version "2.0.20"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
     id("org.jetbrains.kotlinx.kover") version "0.8.3"
 }
 
-
-
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
-    apply(plugin = "org.jlleitschuh.gradle.ktlint")
     apply(plugin = "org.jetbrains.kotlinx.kover")
 
     group = "ai.ancf.lmos"
@@ -36,4 +32,3 @@ allprojects {
         mavenCentral()
     }
 }
-
