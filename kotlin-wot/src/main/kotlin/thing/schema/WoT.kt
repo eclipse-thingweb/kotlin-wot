@@ -209,7 +209,7 @@ interface WoTConsumedThing {
      * @param options Optional interaction options.
      * @return The result of the action as [WoTInteractionOutput].
      */
-    suspend fun invokeAction(actionName: String, params: InteractionInput, options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
+    suspend fun invokeAction(actionName: String, params: InteractionInput = InteractionInput.Value(DataSchemaValue.NullValue), options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
 
     /**
      * Observes a property by its name, with a callback for each update.

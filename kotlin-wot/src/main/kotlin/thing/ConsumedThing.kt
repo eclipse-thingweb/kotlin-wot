@@ -11,6 +11,7 @@ import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
+import ai.anfc.lmos.wot.binding.Resource
 import com.fasterxml.jackson.annotation.JsonIgnore
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -57,7 +58,7 @@ data class ConsumedThing(
             val finalForm = handleUriVariables(this, property, form, options)
 
             // Use the client to read the resource
-            val content = client.readResource(finalForm)
+            val content = client.readResource(Resource(id, propertyName, finalForm))
 
             // Process and handle the interaction output
 
@@ -158,7 +159,7 @@ data class ConsumedThing(
 
             val content = ContentManager.valueToContent(interactionValue.value, finalForm.contentType)
 
-            client.writeResource(form, content)
+            client.writeResource(Resource(id, propertyName, finalForm), content)
 
         } catch (e: Exception) {
             throw ConsumedThingException("Error while processing property for ${property.title}. ${e.message}", e)
@@ -205,7 +206,7 @@ data class ConsumedThing(
 
             val content = ContentManager.valueToContent(interactionValue.value, finalForm.contentType)
 
-            val response = client.invokeResource(form, content)
+            val response = client.invokeResource(Resource(id, actionName, finalForm), content)
 
             InteractionOutput(response, action.output)
 

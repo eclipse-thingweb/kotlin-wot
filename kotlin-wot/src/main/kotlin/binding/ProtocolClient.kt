@@ -39,6 +39,16 @@ interface ProtocolClient {
     }
 
     /**
+     * Reads the resource defined in `resource`.
+     *
+     * @param resource
+     * @return
+     */
+    suspend fun readResource(resource: Resource): Content {
+        return readResource(resource.form)
+    }
+
+    /**
      * Reads the resource defined in `form`. This can be a [ThingProperty], a
      * [ThingDescription] or a Thing Directory.
      *
@@ -61,6 +71,19 @@ interface ProtocolClient {
         throw ProtocolClientNotImplementedException(javaClass, "write")
     }
 
+
+    /**
+     * Writes `content` to the resource defined in `resource`. This can be, for
+     * example, a [ThingProperty].
+     *
+     * @param form
+     * @param content
+     * @return
+     */
+    suspend fun writeResource(resource: Resource, content: Content) {
+        writeResource(resource.form, content)
+    }
+
     /**
      * Invokes the resource defined in the `form`. This can be a [ThingAction], for
      * example.
@@ -70,6 +93,19 @@ interface ProtocolClient {
      */
     suspend fun invokeResource(form: Form): Content {
         return invokeResource(form, null)
+    }
+
+    /**
+     * Invokes the resource defined in the `form` with the payload defined in
+     * `content`. This can be a [ThingAction], for
+     * example.
+     *
+     * @param resource
+     * @param content
+     * @return
+     */
+    suspend fun invokeResource(resource: Resource, content: Content?): Content {
+        return invokeResource(resource.form, content)
     }
 
     /**
@@ -106,3 +142,5 @@ interface ProtocolClient {
     /** stop the client */
     suspend fun stop()
 }
+
+data class Resource(val thingId: String, val name: String, val form: Form)

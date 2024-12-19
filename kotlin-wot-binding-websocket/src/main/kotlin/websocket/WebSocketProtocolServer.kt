@@ -12,6 +12,8 @@ import ai.ancf.lmos.wot.thing.schema.ContentListener
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
@@ -19,6 +21,7 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.calllogging.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.util.reflect.*
@@ -32,11 +35,11 @@ class WebSocketProtocolServer(
     private val bindPort: Int = 8080,
     private val createServer: (host: String, port: Int, servient: Servient) -> EmbeddedServer<*, *> = ::defaultWebSocketServer
 ) : ProtocolServer {
-    internal val things: MutableMap<String, ExposedThing> = mutableMapOf()
+    private val things: MutableMap<String, ExposedThing> = mutableMapOf()
 
     var started = false
     private var server: EmbeddedServer<*, *>? = null
-    private var actualAddresses: List<String> = listOf("http://$bindHost:$bindPort")
+    private var actualAddresses: List<String> = listOf("ws://$bindHost:$bindPort")
 
     companion object {
         private val log = LoggerFactory.getLogger(WebSocketProtocolServer::class.java)
@@ -151,6 +154,12 @@ fun defaultWebSocketServer(host: String, port: Int, servient: Servient): Embedde
 
 fun Application.setupRoutingWithWebSockets(servient: Servient) {
     install(CallLogging)
+    install(ContentNegotiation) {
+        jackson {
+            enable(SerializationFeature.INDENT_OUTPUT)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
+    }
     install(WebSockets) {
         contentConverter = JacksonWebsocketContentConverter(JsonMapper.instance)
     }
