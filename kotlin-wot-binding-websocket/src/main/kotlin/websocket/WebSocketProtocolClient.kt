@@ -140,7 +140,7 @@ class WebSocketProtocolClient(
         try {
             when (val woTMessage = JsonMapper.instance.readValue<WoTMessage>(messageText)) {
                 is Acknowledgement -> handleReplyMessage(woTMessage)
-                is ErrorMessage -> handleErrorMessage(woTMessage)
+                is ErrorMessage -> handleReplyMessage(woTMessage)
                 is PropertyReadingMessage -> handleReplyMessage(woTMessage)
                 is ActionStatusMessage -> handleReplyMessage(woTMessage)
                 is EventMessage -> handleEventMessage(woTMessage)
@@ -194,13 +194,18 @@ class WebSocketProtocolClient(
                 if (message.correlationId != null) {
                     val handler = requestHandlers.remove(message.correlationId)
                     if (handler != null) {
-                        handler.completeExceptionally(
-                            ProtocolClientException("Error received: ${message.title} - ${message.detail}")
-                        )
+                        val errorMessage = buildString {
+                            append("Error received")
+                            message.correlationId?.let { append(" for correlationId: $it") }
+                            append(" - Title: ${message.title}, Detail: ${message.detail}")
+                        }
+                        handler.completeExceptionally(ProtocolClientException(errorMessage))
                         return
                     }
                 }
-                log.warn("Unhandled ErrorMessage without a correlationId: ${message.title}")
+                log.warn(
+                    "Unhandled ErrorMessage received - Title: ${message.title}, Detail: ${message.detail}, CorrelationId: ${message.correlationId ?: "N/A"}"
+                )
             }
             else -> {
                 log.warn("Unhandled message type in handleReplyMessage: ${message::class.simpleName}")
@@ -228,16 +233,23 @@ class WebSocketProtocolClient(
         }
     }
 
-    private fun handleErrorMessage(message: ErrorMessage) {
-        val handler = requestHandlers.remove(message.correlationId)
-        handler?.completeExceptionally(ProtocolClientException("Error received: ${message.title} - ${message.detail}"))
-    }
-
-    private suspend fun requestAndReply(form: Form, message: WoTMessage): Content {
+    private suspend fun requestAndReply(form: Form, message: WoTMessage, timeoutMillis: Long = 5000L): Content {
         val session = getOrCreateSession(form.href)
         val deferred = CompletableDeferred<Content>()
+
         requestHandlers[message.messageId] = deferred
-        session.sendSerialized(message)
-        return deferred.await()
+
+        try {
+            session.sendSerialized(message)
+            return withTimeout(timeoutMillis) {
+                deferred.await()
+            }
+        } catch (e: TimeoutCancellationException) {
+            requestHandlers.remove(message.messageId)
+            throw ProtocolClientException("Request timed out for '${message.messageType}' message to thing '${message.thingId}' with messageId: '${message.messageId}'. No response received within ${timeoutMillis} [ms].", e)
+        } catch (e: Exception) {
+            requestHandlers.remove(message.messageId)
+            throw e
+        }
     }
 }

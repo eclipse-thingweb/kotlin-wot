@@ -138,7 +138,13 @@ data class ConsumedThing(
         }
     }
 
-    override suspend fun writeProperty(propertyName: String, value: InteractionInput, options: InteractionOptions?) {
+    override suspend fun writeProperty(propertyName: String, input: InteractionInput, options: InteractionOptions?) {
+        val interactionValue = input as? InteractionInput.Value
+            ?: throw UnsupportedOperationException("Streaming input is not supported for property: $propertyName")
+        writeProperty(propertyName, interactionValue.value)
+    }
+
+    override suspend fun writeProperty(propertyName: String, value: DataSchemaValue, options: InteractionOptions?) {
         val property = this.properties[propertyName]
         requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
 
@@ -153,9 +159,7 @@ data class ConsumedThing(
             // Handle URI variables if present
             val finalForm = handleUriVariables(this, property, form, options)
 
-            val interactionValue = value as InteractionInput.Value
-
-            val content = ContentManager.valueToContent(interactionValue.value, finalForm.contentType)
+            val content = ContentManager.valueToContent(value, finalForm.contentType)
 
             client.writeResource(Resource(id, propertyName, finalForm), content)
 
@@ -182,16 +186,16 @@ data class ConsumedThing(
         }
     }
 
-    override suspend fun invokeAction(
+    private suspend fun invokeActionInternal(
         actionName: String,
-        params: InteractionInput,
+        value: DataSchemaValue,
         options: InteractionOptions?
     ): WoTInteractionOutput {
         val action = this.actions[actionName]
         requireNotNull(action) { "ConsumedThing '${this.title}' does not have action $actionName" }
 
-        return try {
-            // Retrieve the client and form for the property
+        try {
+            // Retrieve the client and form for the action
             val (client, form) = getClientFor(action.forms, Operation.INVOKE_ACTION)
 
             // Log the action
@@ -200,17 +204,42 @@ data class ConsumedThing(
             // Handle URI variables if present
             val finalForm = handleUriVariables(this, action, form, options)
 
-            val interactionValue = params as InteractionInput.Value
+            val content = ContentManager.valueToContent(value, finalForm.contentType)
 
-            val content = ContentManager.valueToContent(interactionValue.value, finalForm.contentType)
-
+            // Invoke the action
             val response = client.invokeResource(Resource(id, actionName, finalForm), content)
 
-            InteractionOutput(response, action.output)
-
+            return InteractionOutput(response, action.output)
         } catch (e: Exception) {
             throw ConsumedThingException("Error while invoking action for ${action.title}. ${e.message}", e)
         }
+    }
+
+    override suspend fun invokeAction(
+        actionName: String,
+        input: InteractionInput,
+        options: InteractionOptions?
+    ): WoTInteractionOutput {
+        val interactionValue = input as? InteractionInput.Value
+            ?: throw UnsupportedOperationException("Streaming input is not supported for action: $actionName")
+        return invokeActionInternal(actionName, interactionValue.value, options)
+    }
+
+    override suspend fun invokeAction(
+        actionName: String,
+        input: DataSchemaValue,
+        options: InteractionOptions?
+    ): DataSchemaValue {
+        val output = invokeActionInternal(actionName, input, options)
+        return output.value()
+    }
+
+    override suspend fun invokeAction(
+        actionName: String,
+        options: InteractionOptions?
+    ): DataSchemaValue {
+        val output = invokeActionInternal(actionName, DataSchemaValue.NullValue, options)
+        return output.value()
     }
 
     override suspend fun observeProperty(

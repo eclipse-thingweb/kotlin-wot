@@ -12,6 +12,8 @@ import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
+import ai.anfc.lmos.wot.binding.Resource
+import ai.anfc.lmos.wot.binding.ResourceType
 import io.mockk.*
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
@@ -72,7 +74,7 @@ class ConsumedThingTest {
     @Test
     fun `test readProperty`() = runBlocking {
         val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
-        coEvery { protocolClient.readResource(any<Form>()) } returns content
+        coEvery { protocolClient.readResource(any<Resource>()) } returns content
 
         val output = consumedThing.readProperty("testProperty")
         assertNotNull(output)
@@ -83,7 +85,7 @@ class ConsumedThingTest {
     @Test
     fun `test readAllProperties`() = runBlocking {
         val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
-        coEvery { protocolClient.readResource(any<Form>()) } returns content
+        coEvery { protocolClient.readResource(any<Resource>()) } returns content
 
         val properties = consumedThing.readAllProperties()
         assertNotNull(properties)
@@ -95,7 +97,7 @@ class ConsumedThingTest {
     @Test
     fun `test readMultipleProperties`() = runBlocking {
         val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
-        coEvery { protocolClient.readResource(any<Form>()) } returns content
+        coEvery { protocolClient.readResource(any<Resource>()) } returns content
 
         val properties = consumedThing.readMultipleProperties(listOf("testProperty"))
         assertNotNull(properties)
@@ -107,27 +109,27 @@ class ConsumedThingTest {
     @Test
     fun `test writeProperty`() = runBlocking {
         val value = InteractionInput.Value(DataSchemaValue.StringValue("newValue"))
-        coJustRun { protocolClient.writeResource(any<Form>(), any<Content>()) }
+        coJustRun { protocolClient.writeResource(any<Resource>(), any<Content>()) }
 
         consumedThing.writeProperty("testProperty", value)
-        coVerify { protocolClient.writeResource(any<Form>(), any<Content>()) }
+        coVerify { protocolClient.writeResource(any<Resource>(), any<Content>()) }
     }
 
     @Test
     fun `test writeMultipleProperties`() = runBlocking {
         val valueMap = mapOf(
-            "testProperty" to InteractionInput.Value(DataSchemaValue.StringValue("newValue"))
+            "testProperty" to "newValue".toDataSchemeValue()
         )
-        coJustRun { protocolClient.writeResource(any<Form>(), any<Content>()) }
+        coJustRun { protocolClient.writeResource(any<Resource>(), any<Content>()) }
 
         consumedThing.writeMultipleProperties(valueMap)
-        coVerify(exactly = 1) { protocolClient.writeResource(any<Form>(), any<Content>()) }
+        coVerify(exactly = 1) { protocolClient.writeResource(any<Resource>(), any<Content>()) }
     }
 
     @Test
     fun `test invokeAction`() = runBlocking {
         val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
-        coEvery { protocolClient.invokeResource(any<Form>(), any<Content>()) } returns content
+        coEvery { protocolClient.invokeResource(any<Resource>(), any<Content>()) } returns content
 
         val params = InteractionInput.Value(DataSchemaValue.StringValue("actionInput"))
         val output = consumedThing.invokeAction("testAction", params)
@@ -139,7 +141,7 @@ class ConsumedThingTest {
     @Test
     fun `test observeProperty`(): Unit = runBlocking {
         val listener = mockk<InteractionListener>(relaxed = true)
-        coEvery { protocolClient.subscribeResource(any<Form>()) } returns emptyFlow()
+        coEvery { protocolClient.subscribeResource(any<Resource>(), any<ResourceType>()) } returns emptyFlow()
 
         val subscription = consumedThing.observeProperty("testProperty", listener)
         assertEquals(true, subscription.active)
@@ -148,7 +150,7 @@ class ConsumedThingTest {
     @Test
     fun `test subscribeEvent`(): Unit = runBlocking {
         val listener = mockk<InteractionListener>(relaxed = true)
-        coEvery { protocolClient.subscribeResource(any<Form>()) } returns emptyFlow()
+        coEvery { protocolClient.subscribeResource(any<Resource>(), any<ResourceType>()) } returns emptyFlow()
 
         val subscription = consumedThing.subscribeEvent("testEvent", listener)
         assertNotNull(subscription)

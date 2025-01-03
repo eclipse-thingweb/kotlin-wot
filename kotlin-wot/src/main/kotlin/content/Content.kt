@@ -3,10 +3,10 @@ package ai.ancf.lmos.wot.content
 /**
  * Represents any serialized content. Enables the transfer of arbitrary data structures.
  */
-data class Content(val type: String = ContentManager.DEFAULT, val body: ByteArray = ByteArray(0)) {
+data class Content(val type: String = ContentManager.DEFAULT_MEDIA_TYPE, val body: ByteArray = ByteArray(0)) {
 
     companion object {
-        val EMPTY_CONTENT = Content(ContentManager.DEFAULT, ByteArray(0))
+        val EMPTY_CONTENT = Content(ContentManager.DEFAULT_MEDIA_TYPE, ByteArray(0))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -30,5 +30,5 @@ data class Content(val type: String = ContentManager.DEFAULT, val body: ByteArra
 
 fun String.toJsonContent(): Content{
     val jsonContent = """"$this""""
-    return Content(ContentManager.DEFAULT, jsonContent.toByteArray())
+    return Content(ContentManager.DEFAULT_MEDIA_TYPE, jsonContent.toByteArray())
 }

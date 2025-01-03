@@ -10,7 +10,7 @@ import java.io.*
 
 
 object ContentManager {
-    const val DEFAULT = "application/json"
+    const val DEFAULT_MEDIA_TYPE = "application/json"
     private val log = LoggerFactory.getLogger(ContentManager::class.java)
     private val CODECS: MutableMap<String, ContentCodec> = mutableMapOf()
     private val OFFERED: MutableSet<String> = HashSet()
@@ -191,8 +191,8 @@ object ContentManager {
     }
 
     fun valueToContent(value: DataSchemaValue, contentType: String?): Content {
-        val mediaType = getMediaType(contentType ?: DEFAULT)
-        val parameters = getMediaTypeParameters(contentType ?: DEFAULT)
+        val mediaType = getMediaType(contentType ?: DEFAULT_MEDIA_TYPE)
+        val parameters = getMediaTypeParameters(contentType ?: DEFAULT_MEDIA_TYPE)
 
         // Select codec based on mediaType and log the action
         val codec = CODECS[mediaType]
@@ -203,7 +203,7 @@ object ContentManager {
             log.warn("Content passthrough due to unsupported serialization format '$mediaType'")
             fallbackValueToBytes(value)
         }
-        return Content(contentType ?: DEFAULT, bytes)
+        return Content(contentType ?: DEFAULT_MEDIA_TYPE, bytes)
     }
 
     /**
@@ -219,8 +219,8 @@ object ContentManager {
      */
     fun valueToContent(value: Any?, contentType: String?): Content {
         // Use a default value for contentType if null
-        val mediaType = getMediaType(contentType ?: DEFAULT)
-        val parameters = getMediaTypeParameters(contentType ?: DEFAULT)
+        val mediaType = getMediaType(contentType ?: DEFAULT_MEDIA_TYPE)
+        val parameters = getMediaTypeParameters(contentType ?: DEFAULT_MEDIA_TYPE)
 
         // Select codec based on mediaType and log the action
         val codec = CODECS[mediaType]
@@ -232,7 +232,7 @@ object ContentManager {
             fallbackValueToBytes(value)
         }
 
-        return Content(contentType ?: DEFAULT, bytes)
+        return Content(contentType ?: DEFAULT_MEDIA_TYPE, bytes)
     }
 
     private fun fallbackValueToBytes(value: Any?): ByteArray {

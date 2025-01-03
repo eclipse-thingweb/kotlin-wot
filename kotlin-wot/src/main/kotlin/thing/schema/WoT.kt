@@ -36,13 +36,11 @@ fun interface ContentListener {
 
 
 // Type Aliases for Mapping and Listener Types
-typealias PropertyContentMap = Map<String, Content>
 typealias PropertyHandlerMap = MutableMap<String, PropertyHandlers>
 typealias ActionHandlerMap = MutableMap<String, ActionHandler>
 typealias EventHandlerMap = MutableMap<String, EventHandlers>
-typealias ListenerMap = Map<String, ListenerItem>
 typealias PropertyReadMap = Map<String, WoTInteractionOutput>
-typealias PropertyWriteMap = Map<String, InteractionInput>
+typealias PropertyWriteMap = Map<String, DataSchemaValue>
 
 data class InteractionOptions(
     var formIndex: Int? = null,
@@ -92,7 +90,7 @@ interface WoTInteractionOutput {
     //val form: Form?
     val schema: DataSchema<*>?
     suspend fun arrayBuffer(): ByteArray
-    suspend fun value(): DataSchemaValue?
+    suspend fun value(): DataSchemaValue
 }
 
 sealed class DataSchemaValue {
@@ -123,8 +121,6 @@ sealed class DataSchemaValue {
         }
     }
 }
-
-
 
 // Interface for ExposedThing, handling various property, action, and event interactions
 interface WoTExposedThing {
@@ -190,10 +186,18 @@ interface WoTConsumedThing {
     /**
      * Writes a value to a property by its name.
      * @param propertyName The name of the property to write.
+     * @param input The input to write to the property.
+     * @param options Optional interaction options.
+     */
+    suspend fun writeProperty(propertyName: String, input: InteractionInput, options: InteractionOptions? = InteractionOptions())
+
+    /**
+     * Writes a value to a property by its name.
+     * @param propertyName The name of the property to write.
      * @param value The value to write to the property.
      * @param options Optional interaction options.
      */
-    suspend fun writeProperty(propertyName: String, value: InteractionInput, options: InteractionOptions? = InteractionOptions())
+    suspend fun writeProperty(propertyName: String, value: DataSchemaValue, options: InteractionOptions? = InteractionOptions())
 
     /**
      * Writes multiple properties with a map of values.
@@ -209,7 +213,24 @@ interface WoTConsumedThing {
      * @param options Optional interaction options.
      * @return The result of the action as [WoTInteractionOutput].
      */
-    suspend fun invokeAction(actionName: String, params: InteractionInput = InteractionInput.Value(DataSchemaValue.NullValue), options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
+    suspend fun invokeAction(actionName: String, input: InteractionInput = InteractionInput.Value(DataSchemaValue.NullValue), options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
+
+    /**
+     * Invokes an action by its name with optional parameters.
+     * @param actionName The name of the action to invoke.
+     * @param input Input for the action.
+     * @param options Optional interaction options.
+     * @return The result of the action as [WoTInteractionOutput].
+     */
+    suspend fun invokeAction(actionName: String, input: DataSchemaValue, options: InteractionOptions? = InteractionOptions()): DataSchemaValue
+
+    /**
+     * Invokes an action by its name with optional parameters.
+     * @param actionName The name of the action to invoke.
+     * @param options Optional interaction options.
+     * @return The result of the action as [WoTInteractionOutput].
+     */
+    suspend fun invokeAction(actionName: String, options: InteractionOptions? = InteractionOptions()): DataSchemaValue
 
     /**
      * Observes a property by its name, with a callback for each update.

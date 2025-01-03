@@ -6,6 +6,7 @@ import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.Context
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Type
+import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.anfc.lmos.wot.binding.ProtocolClient
@@ -151,7 +152,7 @@ class ServientTest {
         )
 
         // Mock readResource to return mockContent
-        coEvery { mockClient.readResource(any()) } returns mockContent
+        coEvery { mockClient.readResource(any<Form>()) } returns mockContent
 
         // Mock ContentManager to return a map from content
         every { ContentManager.contentToValue(mockContent, StringSchema()) } returns DataSchemaValue.ObjectValue(thingAsMap)
@@ -171,7 +172,7 @@ class ServientTest {
         val url = URI("http://example.com")
         val scheme = url.scheme
 
-        coEvery { mockClient.readResource(any()) } throws ProtocolClientException("Client error")
+        coEvery { mockClient.readResource(any<Form>()) } throws ProtocolClientException("Client error")
 
         // Act & Assert
         val exception = assertThrows<ServientException> {
@@ -179,14 +180,14 @@ class ServientTest {
         }
         assertEquals("Unable to fetch thing description: Client error", exception.message)
         verify { servient.getClientFor(scheme) }
-        coVerify { mockClient.readResource(any()) }
+        coVerify { mockClient.readResource(any<Form>()) }
     }
 
     @Test
     fun `fetch should throw ServientException when ContentCodecException occurs`() = runTest {
         // Arrange
         val url = URI("http://example.com")
-        coEvery { mockClient.readResource(any()) } returns mockContent
+        coEvery { mockClient.readResource(any<Form>()) } returns mockContent
 
         every { ContentManager.contentToValue(mockContent, StringSchema()) } throws ContentCodecException("Codec error")
 
@@ -195,7 +196,7 @@ class ServientTest {
             runBlocking { servient.fetch(url) }
         }
         assertEquals("Error while fetching thing description: Codec error", exception.message)
-        coVerify { mockClient.readResource(any()) }
+        coVerify { mockClient.readResource(any<Form>()) }
         verify { ContentManager.contentToValue(mockContent, StringSchema()) }
     }
 
@@ -207,7 +208,7 @@ class ServientTest {
         val expectedThings = listOf(ExposedThingImpl(servient, id = "test"))
 
         // Mocking ProtocolClient's readResource method
-        coEvery { mockClient.readResource(any()) } returns mockContent
+        coEvery { mockClient.readResource(any<Resource>()) } returns mockContent
 
         // Mocking ContentManager to simulate content to value conversion
         mockkObject(ContentManager)

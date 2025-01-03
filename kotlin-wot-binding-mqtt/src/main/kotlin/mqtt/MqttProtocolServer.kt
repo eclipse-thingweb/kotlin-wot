@@ -139,7 +139,7 @@ class MqttProtocolServer(
 
             val href = "$baseUrl$topic"
             val form = Form(href= href,
-                contentType = ContentManager.DEFAULT,
+                contentType = ContentManager.DEFAULT_MEDIA_TYPE,
                 op = listOf(Operation.INVOKE_ACTION))
             action.forms += (form)
             log.debug("Assigned '{}' to Action '{}'", href, name)
@@ -153,7 +153,7 @@ class MqttProtocolServer(
             val topic = "${thing.id}/events/$name"
             val href = "$baseUrl$topic"
             val form = Form(href= href,
-                contentType = ContentManager.DEFAULT,
+                contentType = ContentManager.DEFAULT_MEDIA_TYPE,
                 op = listOf(Operation.SUBSCRIBE_EVENT, Operation.UNSUBSCRIBE_EVENT),
                 optionalProperties=  mapOf("mqtt:qos" to 0, "mqtt:retain" to false)
             )
@@ -294,7 +294,7 @@ class MqttProtocolServer(
             respondToTopic(responseContent, message.responseTopic.get())
         } else {
             // If payload is provided, consider it a write request
-            val inputContent = Content(ContentManager.DEFAULT, message.payloadAsBytes)
+            val inputContent = Content(ContentManager.DEFAULT_MEDIA_TYPE, message.payloadAsBytes)
             val responseContent = thing.handleWriteProperty(propertyName, inputContent)
             respondToTopic(responseContent, message.responseTopic.get())
         }
@@ -307,7 +307,7 @@ class MqttProtocolServer(
             log.warn("Action '{}' not found on thing '{}'", actionName, thing.id)
             return
         }
-        val inputContent = Content(ContentManager.DEFAULT, message.payloadAsBytes)
+        val inputContent = Content(ContentManager.DEFAULT_MEDIA_TYPE, message.payloadAsBytes)
         val actionResult = thing.handleInvokeAction(actionName, inputContent)
         respondToTopic(actionResult, message.responseTopic.get())
     }

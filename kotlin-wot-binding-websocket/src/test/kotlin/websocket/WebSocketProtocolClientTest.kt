@@ -9,6 +9,7 @@ import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.exposedThing
 import ai.ancf.lmos.wot.thing.schema.*
 import io.mockk.clearAllMocks
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -84,7 +85,7 @@ class WebSocketProtocolClientTest {
         }.setPropertyReadHandler(PROPERTY_NAME) {
             property1.toInteractionInputValue()
         }.setPropertyReadHandler(PROPERTY_NAME_2) {
-            5.toInteractionInputValue()
+            "test".toInteractionInputValue()
         }.setActionHandler(ACTION_NAME) { input, _->
             val inputString = input.value() as DataSchemaValue.StringValue
             "${inputString.value} 10".toInteractionInputValue()
@@ -92,6 +93,10 @@ class WebSocketProtocolClientTest {
             val inputInt = input.value() as DataSchemaValue.IntegerValue
             property1 = inputInt.value
             property1.toInteractionInputValue()
+        }.setPropertyWriteHandler(PROPERTY_NAME_2) { input, _->
+            val inputInt = input.value() as DataSchemaValue.StringValue
+            property2 = inputInt.value
+            property2.toInteractionInputValue()
         }.setActionHandler(ACTION_NAME_2) { input, _->
             "test test".toInteractionInputValue()
         }.setActionHandler(ACTION_NAME_3) { input, _->
@@ -123,48 +128,64 @@ class WebSocketProtocolClientTest {
     }
 
     @Test
-    fun `should get property`() = runTest{
+    fun `should get property`() = runBlocking {
 
         val readProperty1 = thing.readProperty(PROPERTY_NAME).value()
         assertEquals(10, (readProperty1 as DataSchemaValue.IntegerValue).value)
 
         val readProperty2 = thing.readProperty(PROPERTY_NAME_2).value()
-        assertEquals(5, (readProperty2 as DataSchemaValue.IntegerValue).value)
+        assertEquals("test", (readProperty2 as DataSchemaValue.StringValue).value)
 
     }
 
     @Test
-    fun `should write property`() = runTest{
+    fun `should get all properties`() = runBlocking {
+        val readPropertyMap = thing.readAllProperties()
+        assertEquals(10, (readPropertyMap[PROPERTY_NAME]?.value() as DataSchemaValue.IntegerValue).value)
+        assertEquals("test", (readPropertyMap[PROPERTY_NAME_2]?.value() as  DataSchemaValue.StringValue).value)
+    }
+
+    @Test
+    fun `should write property`() = runBlocking {
         thing.writeProperty(PROPERTY_NAME, 20.toInteractionInputValue())
 
         assertEquals(20, property1)
     }
 
+    @Test
+    fun `should write multiple properties`() = runBlocking {
+
+        thing.writeMultipleProperties(mapOf(PROPERTY_NAME to 30.toDataSchemeValue(), PROPERTY_NAME_2 to "new".toDataSchemeValue()))
+
+        assertEquals(30, property1)
+        assertEquals("new", property2)
+    }
+
 
     @Test
-    fun `should invoke action`() = runTest{
-        val response = thing.invokeAction(ACTION_NAME, "test".toInteractionInputValue()).value()
+    fun `should invoke action`() = runBlocking {
+        val response = thing.invokeAction(ACTION_NAME, "test".toDataSchemeValue())
 
         assertEquals("test 10", (response as DataSchemaValue.StringValue).value)
     }
 
     @Test
-    fun `should invoke action without input`() = runTest{
-        val response = thing.invokeAction(ACTION_NAME_2).value()
+    fun `should invoke action without input`() =  runBlocking {
+        val response = thing.invokeAction(ACTION_NAME_2)
 
         assertEquals("test test", (response as DataSchemaValue.StringValue).value)
     }
 
     @Test
-    fun `should invoke action without output`() = runTest{
-        val response = thing.invokeAction(ACTION_NAME_3, "test".toInteractionInputValue()).value()
+    fun `should invoke action without output`(): Unit = runBlocking {
+        val response = thing.invokeAction(ACTION_NAME_3, "test".toDataSchemeValue())
         assertEquals("test", property2)
         assertIs<DataSchemaValue.NullValue>(response)
     }
 
 
     @Test
-    fun `should subscribe to event`() = runTest{
+    fun `should subscribe to event`() = runBlocking {
 
         val lock = CountDownLatch(2);
 
@@ -184,7 +205,7 @@ class WebSocketProtocolClientTest {
     }
 
     @Test
-    fun `should observe property`() = runTest{
+    fun `should observe property`() = runBlocking {
 
         val lock = CountDownLatch(2);
 
