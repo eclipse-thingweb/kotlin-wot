@@ -13,10 +13,7 @@ import ai.ancf.lmos.wot.thing.schema.StringSchema
 import kotlinx.coroutines.test.runTest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.*
 
 class SimpleThingTest {
 
@@ -68,13 +65,21 @@ class SimpleThingTest {
 
         exposedThing.handleObserveProperty(propertyName = "observableProperty", listener = contentListener)
 
-        lock.await(2000, TimeUnit.MILLISECONDS);
+        // Wait for the events to be handled, with a timeout.
+        val completedInTime = lock.await(2000, TimeUnit.MILLISECONDS)
+
+        // Assert that the events were handled within the timeout period.
+        assertTrue(completedInTime, "Expected events were not received within the timeout period.")
 
         lock = CountDownLatch(1);
 
         simpleThing.changeObservableProperty()
 
-        lock.await(2000, TimeUnit.MILLISECONDS);
+        // Wait for the events to be handled, with a timeout.
+        val completedInTime2 = lock.await(2000, TimeUnit.MILLISECONDS)
+
+        // Assert that the events were handled within the timeout period.
+        assertTrue(completedInTime2, "Expected events were not received within the timeout period.")
     }
 
     @Test
@@ -140,6 +145,10 @@ class SimpleThingTest {
 
         exposedThing.handleSubscribeEvent(eventName = "statusUpdated", listener = contentListener)
 
-        lock.await(2000, TimeUnit.MILLISECONDS);
+        // Wait for the events to be handled, with a timeout.
+        val completedInTime = lock.await(2000, TimeUnit.MILLISECONDS)
+
+        // Assert that the events were handled within the timeout period.
+        assertTrue(completedInTime, "Expected events were not received within the timeout period.")
     }
 }

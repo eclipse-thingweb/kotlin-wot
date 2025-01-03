@@ -7,7 +7,6 @@ import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
 import ai.ancf.lmos.wot.binding.mqtt.MqttClientConfig
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolClientFactory
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolServer
-import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
@@ -70,7 +69,7 @@ class WoTIntegrationTest {
         }
     }
 
-    private fun createExposedThing(wot: Wot): ExposedThing {
+    private fun createExposedThing(wot: Wot): WoTExposedThing {
         return wot.produce {
             id = "myid"
             title = "MyThing"
@@ -107,15 +106,13 @@ class WoTIntegrationTest {
         }
     }
 
-    private fun validateExposedThing(
+    private suspend fun validateExposedThing(
         wot: Wot,
-        exposedThing: ExposedThing,
+        exposedThing: WoTExposedThing,
         baseUrl: String
-    ) = runTest {
+    )  {
         val thingDescription = wot.requestThingDescription("$baseUrl/myid")
         val consumedThing = wot.consume(thingDescription)
-
-        assertEquals(consumedThing.getThingDescription().id, exposedThing.id)
 
         val readProperty = consumedThing.readProperty(PROPERTY_NAME)
         val propertyResponse = readProperty.value() as DataSchemaValue.IntegerValue

@@ -3,6 +3,7 @@ package ai.ancf.lmos.wot.binding.websocket
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.JsonNode
 import java.time.Instant
+import java.util.*
 
 object MessageTypes {
     const val READ_PROPERTY = "readProperty"
@@ -54,12 +55,15 @@ object MessageTypes {
 )
 sealed interface WoTMessage {
     var thingId: String
+    var messageId : String
     @get:JsonIgnore // Ignore the type property in the interface itself
     val messageType: String
 }
 
 class Acknowledgement(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
+    var correlationId : String? = null,
     var message: String
 ) : WoTMessage {
     override val messageType: String = MessageTypes.ACKNOWLEDGEMENT
@@ -67,6 +71,7 @@ class Acknowledgement(
 
 data class ReadPropertyMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var property: String
 ) : WoTMessage {
     override val messageType: String = MessageTypes.READ_PROPERTY
@@ -74,6 +79,7 @@ data class ReadPropertyMessage(
 
 data class WritePropertyMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var property: String,
     var data: JsonNode
 ) : WoTMessage {
@@ -82,6 +88,7 @@ data class WritePropertyMessage(
 
 data class ObservePropertyMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var property: String,
     var lastPropertyReading: Instant = Instant.now()
 ) : WoTMessage {
@@ -90,19 +97,22 @@ data class ObservePropertyMessage(
 
 data class UnobservePropertyMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var property: String
 ) : WoTMessage {
     override val messageType: String = MessageTypes.UNOBSERVE_PROPERTY
 }
 
 data class ReadAllPropertiesMessage(
-    override var thingId: String
+    override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
 ) : WoTMessage {
     override val messageType: String = MessageTypes.READ_ALL_PROPERTIES
 }
 
 data class WriteAllPropertiesMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var data: Map<String, JsonNode>
 ) : WoTMessage {
     override val messageType: String = MessageTypes.WRITE_ALL_PROPERTIES
@@ -110,6 +120,7 @@ data class WriteAllPropertiesMessage(
 
 data class ReadMultiplePropertiesMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var properties: List<String>
 ) : WoTMessage {
     override val messageType: String = MessageTypes.READ_MULTIPLE_PROPERTIES
@@ -117,6 +128,7 @@ data class ReadMultiplePropertiesMessage(
 
 data class WriteMultiplePropertiesMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var data: Map<String, JsonNode>
 ) : WoTMessage {
     override val messageType: String = MessageTypes.WRITE_MULTIPLE_PROPERTIES
@@ -124,6 +136,8 @@ data class WriteMultiplePropertiesMessage(
 
 data class PropertyReadingMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
+    var correlationId : String? = null,
     var property: String,
     var data: JsonNode,
     var timestamp: Instant = Instant.now()
@@ -133,6 +147,8 @@ data class PropertyReadingMessage(
 
 data class PropertyReadingsMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
+    var correlationId : String? = null,
     var data: Map<String, JsonNode>,
     var timestamp: Instant = Instant.now()
 ) : WoTMessage {
@@ -141,6 +157,7 @@ data class PropertyReadingsMessage(
 
 data class InvokeActionMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var action: String,
     var input: JsonNode? = null
 ) : WoTMessage {
@@ -158,6 +175,8 @@ enum class ActionStatus(val status: String) {
 
 data class ActionStatusMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
+    var correlationId : String? = null,
     var action: String,
     var status: ActionStatus = ActionStatus.COMPLETED, // Example: "pending", "completed", "failed"
     var output: JsonNode?
@@ -167,6 +186,8 @@ data class ActionStatusMessage(
 
 data class ActionStatusesMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
+    var correlationId : String? = null,
     var statuses: Map<String, String> // Map of action names to their statuses
 ) : WoTMessage {
     override val messageType: String = MessageTypes.ACTION_STATUSES
@@ -174,6 +195,7 @@ data class ActionStatusesMessage(
 
 data class Subscription(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var event: String,
     var lastEvent: Instant = Instant.now()
 ) : WoTMessage {
@@ -182,6 +204,7 @@ data class Subscription(
 
 data class SubscribeEventMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var event: String,
     var lastEvent: Instant = Instant.now()
 ) : WoTMessage {
@@ -190,6 +213,7 @@ data class SubscribeEventMessage(
 
 data class UnsubscribeEventMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
     var event: String
 ) : WoTMessage {
     override val messageType: String = MessageTypes.UNSUBSCRIBE_EVENT
@@ -197,6 +221,8 @@ data class UnsubscribeEventMessage(
 
 data class EventMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
+    var correlationId : String? = null,
     var event: String,
     var href: String? = null,
     var data: JsonNode,
@@ -207,6 +233,8 @@ data class EventMessage(
 
 data class ErrorMessage(
     override var thingId: String,
+    override var messageId : String = UUID.randomUUID().toString(),
+    var correlationId : String? = null,
     var type: String, // URI reference to the type of error
     var title: String, // Short, human-readable summary of the problem
     var status: String, // HTTP status code as a string

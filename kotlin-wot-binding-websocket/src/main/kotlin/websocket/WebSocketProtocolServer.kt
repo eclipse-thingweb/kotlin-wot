@@ -1,6 +1,5 @@
 package ai.ancf.lmos.wot.binding.websocket
 
-
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.ContentManager
@@ -195,7 +194,7 @@ fun Application.setupRoutingWithWebSockets(servient: Servient) {
                         val thing = servient.things[thingId]
 
                         if (thing == null) {
-                            sendError(thingId, ErrorType.THING_NOT_FOUND)
+                            sendError(thingId, message.messageId, ErrorType.THING_NOT_FOUND)
                             return@webSocket
                         }
 
@@ -209,7 +208,7 @@ fun Application.setupRoutingWithWebSockets(servient: Servient) {
                             is InvokeActionMessage -> handleInvokeAction(thing, message, thingId)
                             is SubscribeEventMessage -> handleSubscribeEvent(thing, message, thingId, sessionId)
                             is UnsubscribeEventMessage -> handleUnsubscribeEvent(thing, message, thingId, sessionId)
-                            else -> sendError(thingId, ErrorType.UNSUPPORTED_MESSAGE_TYPE)
+                            else -> sendError(thingId, message.messageId, ErrorType.UNSUPPORTED_MESSAGE_TYPE)
                         }
                     } catch (e: Exception) {
                         val errorMessage = "Failed to read message"
@@ -234,16 +233,16 @@ enum class ErrorType {
     UNSUPPORTED_MESSAGE_TYPE
 }
 
-suspend fun DefaultWebSocketServerSession.sendError(thingId: String, errorType: ErrorType, message: String? = null) {
+suspend fun DefaultWebSocketServerSession.sendError(thingId: String, correlationId : String, errorType: ErrorType, message: String? = null) {
     val errorJson = when (errorType) {
-        ErrorType.THING_NOT_FOUND -> createThingNotFound(thingId)
-        ErrorType.PROPERTY_NOT_FOUND -> createPropertyNotFound(thingId, message)
-        ErrorType.PROPERTY_IS_READ_ONLY -> createPropertyIsReadOnly(thingId, message)
-        ErrorType.PROPERTY_IS_WRITE_ONLY -> createPropertyIsWriteOnly(thingId, message)
-        ErrorType.ACTION_NOT_FOUND -> createActionNotFound(thingId, message as String)
-        ErrorType.EVENT_NOT_FOUND -> createEventNotFound(thingId, message as String)
-        ErrorType.INTERNAL_SERVER_ERROR -> createInternalServerError(thingId, message)
-        ErrorType.UNSUPPORTED_MESSAGE_TYPE -> createUnsupportedMessageType(thingId)
+        ErrorType.THING_NOT_FOUND -> createThingNotFound(thingId, correlationId)
+        ErrorType.PROPERTY_NOT_FOUND -> createPropertyNotFound(thingId, correlationId, message)
+        ErrorType.PROPERTY_IS_READ_ONLY -> createPropertyIsReadOnly(thingId, correlationId, message)
+        ErrorType.PROPERTY_IS_WRITE_ONLY -> createPropertyIsWriteOnly(thingId, correlationId, message)
+        ErrorType.ACTION_NOT_FOUND -> createActionNotFound(thingId, correlationId, message as String)
+        ErrorType.EVENT_NOT_FOUND -> createEventNotFound(thingId, correlationId, message as String)
+        ErrorType.INTERNAL_SERVER_ERROR -> createInternalServerError(thingId, correlationId, message)
+        ErrorType.UNSUPPORTED_MESSAGE_TYPE -> createUnsupportedMessageType(thingId, correlationId)
     }
     sendSerialized(errorJson)
 }
@@ -269,11 +268,12 @@ suspend fun DefaultWebSocketServerSession.handleReadAllProperties(thing: Exposed
         }
         val propertyReadingsMessage = PropertyReadingsMessage(
             thingId = thingId,
-            data = propertyMap
+            data = propertyMap,
+            correlationId = message.messageId
         )
         sendSerialized(propertyReadingsMessage)
     } catch (e: Exception) {
-        sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+        sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
     }
 }
 
@@ -282,15 +282,16 @@ suspend fun DefaultWebSocketServerSession.handleReadProperty(thing: ExposedThing
     val property = thing.properties[propertyName]
 
     if (property == null) {
-        sendError(thingId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
+        sendError(thingId, message.messageId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
     } else if (property.writeOnly) {
-        sendError(thingId, ErrorType.PROPERTY_IS_WRITE_ONLY, propertyName)
+        sendError(thingId, message.messageId, ErrorType.PROPERTY_IS_WRITE_ONLY, propertyName)
     } else {
         try {
             val response = readProperty(thing, propertyName, thingId)
+            response.correlationId = message.messageId
             sendSerialized(response)
         } catch (e: Exception) {
-            sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+            sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 }
@@ -301,16 +302,16 @@ suspend fun DefaultWebSocketServerSession.handleWriteProperty(thing: ExposedThin
     val property = thing.properties[propertyName]
 
     if (property == null) {
-        sendError(thingId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
+        sendError(thingId, message.messageId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
     } else if (property.readOnly) {
-        sendError(thingId, ErrorType.PROPERTY_IS_READ_ONLY, propertyName)
+        sendError(thingId, message.messageId, ErrorType.PROPERTY_IS_READ_ONLY, propertyName)
     } else {
         try {
             thing.handleWriteProperty(propertyName, ContentManager.valueToContent(data))
-            val response = PropertyReadingMessage(thingId = thingId, property = propertyName, data = data)
+            val response = PropertyReadingMessage(thingId = thingId, property = propertyName, data = data, correlationId = message.messageId)
             sendSerialized(response)
         } catch (e: Exception) {
-            sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+            sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 }
@@ -320,7 +321,7 @@ suspend fun DefaultWebSocketServerSession.handleObserveProperty(thing: ExposedTh
     val property = thing.properties[propertyName]
 
     if (property == null) {
-        sendError(thingId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
+        sendError(thingId, message.messageId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
     } else {
         try {
             val contentListener = ContentListener { content ->
@@ -332,14 +333,15 @@ suspend fun DefaultWebSocketServerSession.handleObserveProperty(thing: ExposedTh
                     )
                     sendSerialized(response)
                 } catch (e: Exception) {
-                    sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+                    sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
                 }
             }
             thing.handleObserveProperty(sessionId = sessionId, propertyName = propertyName, listener = contentListener)
             val response = readProperty(thing, propertyName, thingId)
+            response.correlationId = message.messageId
             sendSerialized(response)
         } catch (e: Exception) {
-            sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+            sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 }
@@ -349,14 +351,14 @@ suspend fun DefaultWebSocketServerSession.handleUnobserveProperty(thing: Exposed
     val property = thing.properties[propertyName]
 
     if (property == null) {
-        sendError(thingId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
+        sendError(thingId, message.messageId, ErrorType.PROPERTY_NOT_FOUND, propertyName)
     } else {
         try {
             thing.handleUnobserveProperty(sessionId = sessionId, propertyName = propertyName)
-            val acknowledgement = Acknowledgement(thingId = thingId, message = MessageTypes.UNOBSERVE_PROPERTY)
+            val acknowledgement = Acknowledgement(thingId = thingId, message = MessageTypes.UNOBSERVE_PROPERTY, correlationId = message.messageId)
             sendSerialized(acknowledgement)
         } catch (e: Exception) {
-            sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+            sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 }
@@ -366,7 +368,7 @@ suspend fun DefaultWebSocketServerSession.handleInvokeAction(thing: ExposedThing
     val action = thing.actions[actionName]
 
     if (action == null) {
-        sendError(thingId, ErrorType.ACTION_NOT_FOUND, actionName)
+        sendError(thingId, message.messageId, ErrorType.ACTION_NOT_FOUND, actionName)
     } else {
         try {
             val inputContent = ContentManager.valueToContent(message.input)
@@ -375,11 +377,12 @@ suspend fun DefaultWebSocketServerSession.handleInvokeAction(thing: ExposedThing
             val response = ActionStatusMessage(
                 thingId = thingId,
                 action = actionName,
-                output = JsonMapper.instance.readTree(actionResult.body)
+                output = JsonMapper.instance.readTree(actionResult.body),
+                correlationId = message.messageId
             )
             sendSerialized(response)
         } catch (e: Exception) {
-            sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+            sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 }
@@ -389,7 +392,7 @@ suspend fun DefaultWebSocketServerSession.handleSubscribeEvent(thing: ExposedThi
     val event = thing.events[eventName]
 
     if (event == null) {
-        sendError(thingId, ErrorType.EVENT_NOT_FOUND, eventName)
+        sendError(thingId, message.messageId, ErrorType.EVENT_NOT_FOUND, eventName)
     } else {
         try {
             val contentListener = ContentListener { content ->
@@ -397,18 +400,19 @@ suspend fun DefaultWebSocketServerSession.handleSubscribeEvent(thing: ExposedThi
                     val eventMessage = EventMessage(
                         thingId = thingId,
                         event = eventName,
-                        data = JsonMapper.instance.readTree(content.body)
+                        data = JsonMapper.instance.readTree(content.body),
+                        correlationId = message.messageId
                     )
                     sendSerialized(eventMessage)
                 } catch (e: Exception) {
-                    sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+                    sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
                 }
             }
             thing.handleSubscribeEvent(sessionId = sessionId, eventName = eventName, listener = contentListener)
-            val acknowledgement = Acknowledgement(thingId = thingId, message = MessageTypes.SUBSCRIBE_EVENT)
+            val acknowledgement = Acknowledgement(thingId = thingId, message = MessageTypes.SUBSCRIBE_EVENT, correlationId = message.messageId)
             sendSerialized(acknowledgement)
         } catch (e: Exception) {
-            sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+            sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 }
@@ -418,21 +422,22 @@ suspend fun DefaultWebSocketServerSession.handleUnsubscribeEvent(thing: ExposedT
     val event = thing.events[eventName]
 
     if (event == null) {
-        sendError(thingId, ErrorType.EVENT_NOT_FOUND, eventName)
+        sendError(thingId, message.messageId, ErrorType.EVENT_NOT_FOUND, eventName)
     } else {
         try {
             thing.handleUnsubscribeEvent(sessionId = sessionId, eventName = eventName)
-            val acknowledgement = Acknowledgement(thingId = thingId, message = MessageTypes.UNSUBSCRIBE_EVENT)
+            val acknowledgement = Acknowledgement(thingId = thingId, message = MessageTypes.UNSUBSCRIBE_EVENT, correlationId = message.messageId)
             sendSerialized(acknowledgement)
         } catch (e: Exception) {
-            sendError(thingId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
+            sendError(thingId, message.messageId, ErrorType.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 }
 
-private fun createUnsupportedMessageType(thingId: String): ErrorMessage {
+private fun createUnsupportedMessageType(thingId: String, correlationId : String): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#unsupported-message-type",
         title = "Unsupported Message Type",
         status = "400",
@@ -441,9 +446,10 @@ private fun createUnsupportedMessageType(thingId: String): ErrorMessage {
     )
 }
 
-private fun createPropertyIsReadOnly(thingId: String, propertyName: String?): ErrorMessage {
+private fun createPropertyIsReadOnly(thingId: String, correlationId : String, propertyName: String?): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#operation-not-allowed",
         title = "Property Read-Only",
         status = "405",
@@ -452,9 +458,10 @@ private fun createPropertyIsReadOnly(thingId: String, propertyName: String?): Er
     )
 }
 
-private fun createPropertyIsWriteOnly(thingId: String, propertyName: String?): ErrorMessage {
+private fun createPropertyIsWriteOnly(thingId: String, correlationId : String, propertyName: String?): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#operation-not-allowed",
         title = "Property is write-only",
         status = "405",
@@ -463,9 +470,10 @@ private fun createPropertyIsWriteOnly(thingId: String, propertyName: String?): E
     )
 }
 
-private fun createThingNotFound(thingId: String): ErrorMessage {
+private fun createThingNotFound(thingId: String, correlationId : String): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
         title = "Thing Not Found",
         status = "404",
@@ -474,9 +482,10 @@ private fun createThingNotFound(thingId: String): ErrorMessage {
     )
 }
 
-private fun createInternalServerError(thingId: String, exceptionMessage: String?): ErrorMessage {
+private fun createInternalServerError(thingId: String, correlationId : String, exceptionMessage: String?): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#internal-server-error",
         title = "Internal Server Error",
         status = "500",
@@ -485,9 +494,10 @@ private fun createInternalServerError(thingId: String, exceptionMessage: String?
     )
 }
 
-private fun createPropertyNotFound(thingId: String, propertyName: String?): ErrorMessage {
+private fun createPropertyNotFound(thingId: String, correlationId : String, propertyName: String?): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
         title = "Property Not Found",
         status = "404",
@@ -496,9 +506,10 @@ private fun createPropertyNotFound(thingId: String, propertyName: String?): Erro
     )
 }
 
-private fun createEventNotFound(thingId: String, eventName: String?): ErrorMessage {
+private fun createEventNotFound(thingId: String, correlationId : String, eventName: String?): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
         title = "Event Not Found",
         status = "404",
@@ -507,9 +518,10 @@ private fun createEventNotFound(thingId: String, eventName: String?): ErrorMessa
     )
 }
 
-private fun createActionNotFound(thingId: String, actionName: String?): ErrorMessage {
+private fun createActionNotFound(thingId: String, correlationId : String, actionName: String?): ErrorMessage {
     return ErrorMessage(
         thingId = thingId,
+        correlationId = correlationId,
         type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
         title = "Action Not Found",
         status = "404",

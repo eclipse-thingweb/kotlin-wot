@@ -5,10 +5,13 @@ import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolClientFactory
 import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolServer
+import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.exposedThing
 import ai.ancf.lmos.wot.thing.schema.*
 import io.mockk.clearAllMocks
 import kotlinx.coroutines.test.runTest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
 private const val PROPERTY_NAME = "property1"
@@ -31,6 +34,8 @@ class WebSocketProtocolClientTest {
 
     private lateinit var servient : Servient
 
+    private lateinit var exposedThing : ExposedThing
+
     private var property1 : Int = 0
     private var property2 : String = ""
 
@@ -42,7 +47,7 @@ class WebSocketProtocolClientTest {
             clientFactories = listOf(HttpProtocolClientFactory(), WebSocketProtocolClientFactory())
         )
 
-        val exposedThing = exposedThing(servient, id="test") {
+        exposedThing = exposedThing(servient, id="test") {
             intProperty(PROPERTY_NAME) {
                 observable = true
             }
@@ -155,5 +160,43 @@ class WebSocketProtocolClientTest {
         val response = thing.invokeAction(ACTION_NAME_3, "test".toInteractionInputValue()).value()
         assertEquals("test", property2)
         assertIs<DataSchemaValue.NullValue>(response)
+    }
+
+
+    @Test
+    fun `should subscribe to event`() = runTest{
+
+        val lock = CountDownLatch(2);
+
+        val subscription = thing.subscribeEvent(EVENT_NAME, listener = {
+            println("TESTETST")
+            lock.countDown() }
+        )
+
+        exposedThing.emitEvent(EVENT_NAME, "test".toInteractionInputValue())
+        exposedThing.emitEvent(EVENT_NAME, "test".toInteractionInputValue())
+
+        // Wait for the events to be handled, with a timeout.
+        val completedInTime = lock.await(2000, TimeUnit.MILLISECONDS)
+
+        // Assert that the events were handled within the timeout period.
+        assertTrue(completedInTime, "Expected events were not received within the timeout period.")
+    }
+
+    @Test
+    fun `should observe property`() = runTest{
+
+        val lock = CountDownLatch(2);
+
+        thing.observeProperty(PROPERTY_NAME, listener = { lock.countDown() })
+
+        exposedThing.emitPropertyChange(PROPERTY_NAME, 1.toInteractionInputValue())
+        exposedThing.emitPropertyChange(PROPERTY_NAME, 2.toInteractionInputValue())
+
+        // Wait for the property change events to be handled, with a timeout.
+        val completedInTime = lock.await(2000, TimeUnit.MILLISECONDS)
+
+        // Assert that the events were handled within the timeout period.
+        assertTrue(completedInTime, "Expected events were not received within the timeout period.")
     }
 }

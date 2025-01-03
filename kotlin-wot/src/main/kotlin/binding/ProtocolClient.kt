@@ -76,7 +76,7 @@ interface ProtocolClient {
      * Writes `content` to the resource defined in `resource`. This can be, for
      * example, a [ThingProperty].
      *
-     * @param form
+     * @param resource
      * @param content
      * @return
      */
@@ -122,7 +122,18 @@ interface ProtocolClient {
     }
 
     /**
-     * Create a flow for the resource defined in `form`. This resource can be, for
+     * Subscribe to the resource . This resource can be, for
+     * example, an [ThingEvent] or an observable [ThingProperty].
+     *
+     * @param resource
+     * @return
+     */
+    suspend fun subscribeResource(resource: Resource, resourceType: ResourceType) : Flow<Content> {
+        return subscribeResource(resource.form)
+    }
+
+    /**
+     * Subscribe to the resource defined in `form`. This resource can be, for
      * example, an [ThingEvent] or an observable [ThingProperty].
      *
      * @param form
@@ -130,6 +141,10 @@ interface ProtocolClient {
      */
     suspend fun subscribeResource(form: Form): Flow<Content> {
         throw ProtocolClientNotImplementedException(javaClass, "subscribeResource")
+    }
+
+    suspend fun unlinkResource(resource: Resource, resourceType: ResourceType) {
+        unlinkResource(resource.form)
     }
 
     suspend fun unlinkResource(form: Form) {
@@ -144,3 +159,8 @@ interface ProtocolClient {
 }
 
 data class Resource(val thingId: String, val name: String, val form: Form)
+
+enum class ResourceType{
+    EVENT,
+    PROPERTY
+}

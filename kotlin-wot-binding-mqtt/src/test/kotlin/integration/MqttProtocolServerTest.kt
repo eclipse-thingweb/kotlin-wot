@@ -136,7 +136,11 @@ class MqttProtocolServerTest {
             }
             .send().await()
 
-        lock.await(2000, TimeUnit.MILLISECONDS);
+        // Wait for the events to be handled, with a timeout.
+        val completedInTime = lock.await(2000, TimeUnit.MILLISECONDS)
+
+        // Assert that the events were handled within the timeout period.
+        assertTrue(completedInTime, "Expected events were not received within the timeout period.")
     }
 
     @Test

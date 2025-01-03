@@ -12,13 +12,11 @@ import ai.ancf.lmos.wot.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.Resource
+import ai.anfc.lmos.wot.binding.ResourceType
 import com.fasterxml.jackson.annotation.JsonIgnore
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -236,20 +234,17 @@ data class ConsumedThing(
         val formWithoutURITemplates = handleUriVariables(this, property, form, options)
 
         // Subscribe to the resource
-        client.subscribeResource(formWithoutURITemplates)
-            .map { content ->
-                // Process the content with `handleInteractionOutput`
-                handleInteractionOutput(content, form, property)
-            }
-            .onEach { result ->
-                // Pass each result to the listener
-                listener.handle(result)
-            }
+       
+        client.subscribeResource(Resource(id, propertyName, formWithoutURITemplates), ResourceType.PROPERTY)
             .catch { error ->
                 // Handle any error by passing it to the errorListener if defined
                 errorListener?.handle(error)
                 log.warn("Error while processing observe property for ${property.title}: ${error.message}", error)
             }
+            .onEach { content ->
+                // Pass each result to the listener
+                listener.handle(handleInteractionOutput(content, form, property))
+            }.launchIn(CoroutineScope(Dispatchers.IO))
 
         val subscription = InternalPropertySubscription(this, propertyName, client, form)
         observedProperties[propertyName] = subscription
@@ -278,17 +273,16 @@ data class ConsumedThing(
         val formWithoutURITemplates = handleUriVariables(this, eventAffordance, form, options)
 
         // Subscribe to the resource
-        client.subscribeResource(formWithoutURITemplates)
-            .map { content ->
-                handleInteractionOutput(content, form, eventAffordance.data)
-            }
-            .onEach { result ->
-                listener.handle(result)
-            }
+        client.subscribeResource(Resource(id, eventName, formWithoutURITemplates), ResourceType.EVENT)
             .catch { error ->
                 errorListener?.handle(error)
-                log.warn("Error while processing observe property for ${eventAffordance.title}: ${error.message}", error)
-            }
+                log.warn(
+                    "Error while processing observe property for ${eventAffordance.title}: ${error.message}",
+                    error
+                )
+            }.onEach { content ->
+                listener.handle(handleInteractionOutput(content, form, eventAffordance.data))
+            }.launchIn(CoroutineScope(Dispatchers.IO))
 
         val subscription = InternalEventSubscription(this, eventName, client, form)
         subscribedEvents[eventName] = subscription
@@ -515,7 +509,7 @@ data class ConsumedThing(
 
             val formWithoutURIvariables = thing.handleUriVariables(thing, property, form, options)
             log.debug("ConsumedThing '${thing.title}' unobserving to ${form.href}")
-            client.unlinkResource(formWithoutURIvariables)
+            client.unlinkResource(Resource(thing.id, name, formWithoutURIvariables), ResourceType.PROPERTY)
             active = false
         }
 
@@ -563,7 +557,7 @@ data class ConsumedThing(
 
             val formWithoutURIvariables = thing.handleUriVariables(thing, event, form, options)
             log.debug("ConsumedThing '${thing.title}' unsubscribing to ${form.href}")
-            client.unlinkResource(formWithoutURIvariables)
+            client.unlinkResource(Resource(thing.id, name, formWithoutURIvariables), ResourceType.EVENT)
             active = false
         }
 
