@@ -86,7 +86,7 @@ object ContentManager {
         val parameters = getMediaTypeParameters(contentType)
 
         // Choose codec based on media type
-        val codec = CODECS[mediaType]
+        val codec = findCodec(mediaType)
         return if (codec != null) {
             log.debug("Content deserializing from '$mediaType'")
             codec.bytesToValue(content.body, schema, parameters)
@@ -97,6 +97,34 @@ object ContentManager {
         }
     }
 
+    // Add a function to resolve a matching codec
+    private fun findCodec(contentType: String): ContentCodec? {
+        // Exact match
+        CODECS[contentType]?.let { return it }
+
+        // Attempt to find a compatible codec
+        val normalizedType = normalizeContentType(contentType)
+        return CODECS.keys.firstOrNull { key ->
+            normalizeContentType(key) == normalizedType
+        }?.let { CODECS[it] }
+    }
+
+    // Helper to normalize content types
+    fun normalizeContentType(contentType: String): String {
+        val mainType = contentType.substringBefore('/')
+        val subType = contentType.substringAfter('/')
+
+        // Check for a structured suffix (e.g., "+json") and retain it
+        val baseSubType = subType.substringBefore('+')
+        val suffix = subType.substringAfter('+', "")
+
+        return if (suffix.isNotEmpty()) {
+            "$mainType/$suffix"
+        } else {
+            "$mainType/$baseSubType"
+        }
+    }
+
     /**
      * Extracts the media type from `contentType` (e.g. "text/plain; charset=utf-8"
      * becomes "text/plain"). Returns `null` if no media type could be found.
@@ -104,9 +132,9 @@ object ContentManager {
      * @param contentType
      * @return
      */
-    internal fun getMediaType(contentType: String?): String? {
+    internal fun getMediaType(contentType: String?): String {
         if (contentType == null) {
-            return null
+            return DEFAULT_MEDIA_TYPE
         }
         val parts = contentType.split(";".toRegex(), limit = 2).toTypedArray()
         return parts[0].trim { it <= ' ' }

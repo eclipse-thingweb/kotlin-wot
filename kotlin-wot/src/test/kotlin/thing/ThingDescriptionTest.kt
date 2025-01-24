@@ -195,7 +195,7 @@ class ThingDescriptionTest {
     }
 
     @Test
-    fun shouldDeserializeGivenJsonToThing() {
+    fun fromJson() {
         val json = """{
                     "id": "Foo",
                     "@type": "Thing",
@@ -285,22 +285,20 @@ class ThingDescriptionTest {
                     }
                 }"""
         val thingDescription = ThingDescription.fromJson(json)
-        if (thingDescription != null) {
-            assertEquals("Foo", thingDescription.id)
-            assertEquals("A test thing for unit testing", thingDescription.description)
-            assertEquals(Type("Thing"), thingDescription.objectType)
-            assertEquals(
-                Context("https://www.w3.org/2022/wot/td/v1.1"),
-                thingDescription.objectContext
-            )
-            assertEquals(
-                thingDescription.securityDefinitions["basic_sc"], BasicSecurityScheme("header")
-            )
-            assertEquals(listOf("basic_sc"), thingDescription.security)
-            assertEquals(6, thingDescription.properties.size)
-            assertEquals(2, thingDescription.actions.size)
-            assertEquals(1, thingDescription.events.size)
-        }
+        assertEquals("Foo", thingDescription.id)
+        assertEquals("A test thing for unit testing", thingDescription.description)
+        assertEquals(Type("Thing"), thingDescription.objectType)
+        assertEquals(
+            Context("https://www.w3.org/2022/wot/td/v1.1"),
+            thingDescription.objectContext
+        )
+        assertEquals(
+            thingDescription.securityDefinitions["basic_sc"], BasicSecurityScheme("header")
+        )
+        assertEquals(listOf("basic_sc"), thingDescription.security)
+        assertEquals(6, thingDescription.properties.size)
+        assertEquals(2, thingDescription.actions.size)
+        assertEquals(1, thingDescription.events.size)
     }
 
     @Test

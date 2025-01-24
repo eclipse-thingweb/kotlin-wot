@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.thing.form
 
+import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
@@ -51,7 +52,7 @@ data class Form(
     val op: List<Operation>? = null, // Default op values
 
     @JsonInclude(NON_EMPTY)
-    val optionalProperties : Map<String, Any>? = null
+    val optionalProperties : MutableMap<String, Any> = mutableMapOf()
 ) {
 
     @get:JsonIgnore
@@ -67,6 +68,12 @@ data class Form(
 
     companion object {
         private val log = LoggerFactory.getLogger(Form::class.java)
+    }
+
+    // This method is called for any unknown fields during deserialization
+    @JsonAnySetter
+    fun setAdditionalProperties(key: String, value: Any) {
+        optionalProperties[key] = value
     }
 
     @JsonInclude(NON_EMPTY)

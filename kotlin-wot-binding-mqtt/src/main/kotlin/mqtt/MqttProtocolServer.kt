@@ -14,8 +14,11 @@ import com.hivemq.client.mqtt.datatypes.MqttTopic
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -69,7 +72,6 @@ class MqttProtocolServer(
     override suspend fun destroy(thing: ExposedThing) {
         log.info("MqttServer stop exposing '{}' as unique '/{}/*'", thing.id, thing.id)
 
-        unexposeTD(thing)
         things.remove(thing.id)
     }
 
@@ -155,7 +157,7 @@ class MqttProtocolServer(
             val form = Form(href= href,
                 contentType = ContentManager.DEFAULT_MEDIA_TYPE,
                 op = listOf(Operation.SUBSCRIBE_EVENT, Operation.UNSUBSCRIBE_EVENT),
-                optionalProperties=  mapOf("mqtt:qos" to 0, "mqtt:retain" to false)
+                optionalProperties=  mutableMapOf("mqtt:qos" to 0, "mqtt:retain" to false)
             )
             event.forms += (form)
             log.debug("Assigned '{}' to Event '{}'", href, name)
@@ -184,10 +186,14 @@ class MqttProtocolServer(
                 .topicFilter(tdTopic)
                 .qos(MqttQos.AT_LEAST_ONCE) // Use AT_LEAST_ONCE QoS level
                 .callback { message ->
-                    val responseTopic = message.responseTopic.get()
-                    log.debug("Sending Thing Description of thing '{}' to topic '{}'", thing.id, responseTopic)
-                    CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-                        respondToTopic(content, responseTopic)
+                    try{
+                        val responseTopic = message.responseTopic.get()
+                        log.debug("Sending Thing Description of thing '{}' to topic '{}'", thing.id, responseTopic)
+                        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
+                            respondToTopic(content, responseTopic)
+                        }
+                    } catch (e: Exception) {
+                        log.warn("Failed to respond with Thing Description of thing '${thing.id}'", e)
                     }
                 }
                 .send().await()  // Sending the subscription request
@@ -201,21 +207,6 @@ class MqttProtocolServer(
             */
         } catch (e: Exception) {
             log.warn("Unable to publish thing description to topic '{}': {}", topic, e.message)
-        }
-    }
-
-    private fun unexposeTD(thing: ExposedThing) = runBlocking {
-        val topic = thing.id
-        log.debug("Removing published Thing Description for topic '{}'", topic)
-
-        try {
-            val publishMessage = Mqtt5Publish.builder()
-                .topic(topic)
-                .retain(true)
-                .build()
-            client.publish(publishMessage).await()
-        } catch (e: Exception) {
-            log.warn("Unable to remove thing description from topic '{}': {}", topic, e.message)
         }
     }
 
@@ -326,19 +317,20 @@ class MqttProtocolServer(
         thing.handleSubscribeEvent(eventName = eventName, listener = contentListener)
     }
 
-    private suspend fun respondToTopic(content: Content?, responseTopic: MqttTopic) {
+    private suspend fun respondToTopic(content: Content, responseTopic: MqttTopic) {
         try {
-            val payload = content?.body
+            val payload = content.body
             val publishMessage = Mqtt5Publish.builder()
                 .topic(responseTopic)
                 .payload(payload)
                 .qos(MqttQos.AT_LEAST_ONCE)
+                .contentType(content.type)
                 .build()
 
             client.publish(publishMessage).await()
-            log.info("Response sent to topic '{}'", responseTopic)
+            log.debug("Response sent to topic '{}'", responseTopic)
         } catch (e: Exception) {
-            log.warn("Failed to send response to topic '{}': {}", responseTopic, e.message)
+            log.warn("Failed to send response to topic '${responseTopic}'", e)
         }
     }
 }

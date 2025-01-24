@@ -113,9 +113,7 @@ open class HttpProtocolServer(
                 href = href,
                 contentType = contentType,
                 op = operations,
-                optionalProperties = hashMapOf<String, String>().apply {
-                    httpMethod?.let { put(HTTP_METHOD_NAME, it) }
-                }
+                optionalProperties = mutableMapOf(HTTP_METHOD_NAME to (httpMethod ?: ""))
             )
             property.forms += form
             log.debug("Assign '{}' to Property '{}'", href, name)

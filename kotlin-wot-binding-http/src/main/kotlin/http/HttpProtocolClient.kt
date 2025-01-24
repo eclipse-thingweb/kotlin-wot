@@ -10,6 +10,7 @@ import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import http.HttpClientConfig
 import io.ktor.client.*
+import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
@@ -27,7 +28,7 @@ import java.util.*
  */
 class HttpProtocolClient(
     private val httpClientConfig: HttpClientConfig? = null,
-    private val client: HttpClient = HttpClient(CIO)
+    private val client: HttpClient = createHttpClient()
 ) : ProtocolClient {
 
     private var authorization: String? = null
@@ -134,5 +135,25 @@ class HttpProtocolClient(
         private val log = LoggerFactory.getLogger(HttpProtocolClient::class.java)
         private const val HTTP_METHOD_NAME = "htv:methodName"
         private val LONG_POLLING_TIMEOUT = Duration.ofMinutes(60)
+    }
+}
+
+fun createHttpClient(): HttpClient {
+    val proxyHost = System.getProperty("http.proxyHost")
+    val proxyPort = System.getProperty("http.proxyPort")?.toIntOrNull()
+
+    return if (!proxyHost.isNullOrBlank() && proxyPort != null) {
+        HttpClient(CIO) {
+            val proxyUrl = URLBuilder().apply {
+                protocol = URLProtocol.HTTP
+                host = proxyHost
+                port = proxyPort
+            }.build()
+            engine {
+                proxy = ProxyBuilder.http(proxyUrl)
+            }
+        }
+    } else {
+        HttpClient(CIO)
     }
 }

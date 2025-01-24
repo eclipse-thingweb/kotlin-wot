@@ -18,6 +18,15 @@ subprojects {
 
     tasks.test {
         useJUnitPlatform()
+
+        // Configure proxy only if the required properties are set
+        val proxyHost = System.getProperty("http.proxyHost")
+        val proxyPort = System.getProperty("http.proxyPort")
+
+        if (!proxyHost.isNullOrEmpty() && !proxyPort.isNullOrEmpty()) {
+            systemProperty("http.proxyHost", proxyHost)
+            systemProperty("http.proxyPort", proxyPort)
+        }
     }
 
     kotlin {

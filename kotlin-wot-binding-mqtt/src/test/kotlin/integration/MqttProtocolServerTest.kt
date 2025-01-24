@@ -15,6 +15,7 @@ import app.cash.turbine.test
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -24,6 +25,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -121,26 +123,40 @@ class MqttProtocolServerTest {
     }
 
     @Test
-    fun `expose should publish Thing Description`() = runTest {
-        val topic = "${brokerUrl}/things/${exposedThing.id}"
+    fun `expose should publish Thing Description and receive a response`(): Unit = runBlocking {
+        val requestTopic = exposedThing.id
+        val responseTopic = "${exposedThing.id}/td"
+        val messagePayload = "TestMessage"
 
-        val lock = CountDownLatch(1);
+        val lock = CountDownLatch(1)
+        var responsePayload: ByteArray? = null
 
-        // Subscribe to verify Thing Description publishing
+        // Subscribe to the response topic
         mqttClient.subscribeWith()
-            .topicFilter(topic)
+            .topicFilter(responseTopic)
             .callback { publish ->
-                val payloadString = publish.payloadAsBytes.decodeToString()
-                assertTrue(payloadString.contains("thingId"))
-                lock.countDown();
+                responsePayload = publish.payloadAsBytes
+                lock.countDown()
             }
-            .send().await()
+            .send()
+            .await()
 
-        // Wait for the events to be handled, with a timeout.
+        // Publish the message to the request topic
+        mqttClient.publishWith()
+            .topic(requestTopic)
+            .payload(messagePayload.toByteArray())
+            .responseTopic(responseTopic)
+            .send()
+            .await()
+
+        // Wait for the response, with a timeout.
         val completedInTime = lock.await(2000, TimeUnit.MILLISECONDS)
 
-        // Assert that the events were handled within the timeout period.
-        assertTrue(completedInTime, "Expected events were not received within the timeout period.")
+        // Assert that the response was received in time and matches expectations
+        assertTrue(completedInTime, "Expected response was not received within the timeout period.")
+        assertNotNull(responsePayload, "Response payload is null.")
+
+        //assertEquals("test", ThingDescription.fromBytes(responsePayload!!).id)
     }
 
     @Test

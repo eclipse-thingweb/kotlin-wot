@@ -38,21 +38,20 @@ class ServientAutoConfiguration {
 
     @Configuration
     @ConditionalOnClass(HttpProtocolServer::class)
-
     class HttpConfiguration {
 
         @Bean
-        @ConditionalOnProperty(
-            prefix = "wot.servient.http.server",
-            name = ["enabled"],
-            havingValue = "true",
-            matchIfMissing = true // By default, enable the server
-        )
         fun httpProtocolServer(httpServerProperties: HttpServerProperties): HttpProtocolServer {
             return HttpProtocolServer(bindHost = httpServerProperties.host, bindPort = httpServerProperties.port)
         }
 
         @Bean
+        @ConditionalOnProperty(
+            prefix = "wot.servient.http.client",
+            name = ["enabled"],
+            havingValue = "true",
+            matchIfMissing = true // By default, enable the client
+        )
         fun httpProtocolClientFactory(): HttpProtocolClientFactory {
             return HttpProtocolClientFactory()
         }

@@ -175,8 +175,7 @@ class Servient(
                 val form = Form(href = url.toString(), contentType = "application/json")
                 val content = client.readResource(form)
                 try {
-                    val dataSchemaValue = ContentManager.contentToValue(content, StringSchema())
-                    return when (dataSchemaValue) {
+                    return when (val dataSchemaValue = ContentManager.contentToValue(content, StringSchema())) {
                         is DataSchemaValue.StringValue -> ThingDescription.fromJson(dataSchemaValue.value)
                         is DataSchemaValue.ObjectValue -> ThingDescription.fromMap(dataSchemaValue.value)
                         else -> {
