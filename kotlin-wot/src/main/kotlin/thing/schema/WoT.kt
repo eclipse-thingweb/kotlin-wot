@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.thing.schema
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
@@ -101,6 +102,7 @@ sealed class DataSchemaValue {
     data class StringValue(val value: String) : DataSchemaValue()
     data class ObjectValue(val value: Map<*, *>) : DataSchemaValue()
     data class ArrayValue(val value: List<*>) : DataSchemaValue()
+    data class PojoValue(val value: List<*>) : DataSchemaValue()
 
     companion object {
         @JsonCreator
@@ -259,4 +261,21 @@ interface WoTConsumedThing {
     fun getThingDescription(): WoTThingDescription
 
     fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form>
+}
+
+suspend inline fun <reified T> WoTConsumedThing.genericReadProperty(
+    propertyName: String,
+    options: InteractionOptions? = InteractionOptions()
+): T {
+    val result = readProperty(propertyName, options).value() // Call your existing function
+    return when (T::class) {
+        String::class -> (result as DataSchemaValue.StringValue).value as T
+        Boolean::class -> (result as DataSchemaValue.BooleanValue).value as T
+        Int::class -> (result as DataSchemaValue.IntegerValue).value as T
+        Number::class -> (result as DataSchemaValue.NumberValue).value as T
+        Map::class -> (result as DataSchemaValue.ObjectValue).value as T
+        List::class -> (result as DataSchemaValue.ArrayValue).value as T
+        DataSchemaValue::class -> result as T // If you want to allow returning the raw DataSchemaValue
+        else -> JsonMapper.instance.convertValue((result as DataSchemaValue.ObjectValue).value, T::class.java)
+    }
 }

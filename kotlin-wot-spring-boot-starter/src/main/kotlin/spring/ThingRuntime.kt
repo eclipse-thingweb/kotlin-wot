@@ -6,7 +6,6 @@ import ai.ancf.lmos.wot.reflection.ExposedThingBuilder
 import ai.ancf.lmos.wot.reflection.annotations.Thing
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import jakarta.annotation.PreDestroy
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -54,6 +53,6 @@ abstract class ThingRuntime : CommandLineRunner {
             servient.expose(exposedThing.getThingDescription().id)
         }
 
-        Job().join()
+        //Job().join()
     }
 }

@@ -9,6 +9,10 @@ arc:
 
 wot:
   servient:
+    http:
+      server:
+        host: localhost
+        port: 8080
     mqtt:
       server:
         enabled: false

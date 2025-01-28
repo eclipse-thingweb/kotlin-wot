@@ -6,7 +6,7 @@ plugins {
 
 dependencies {
     api(project(":kotlin-wot"))
-    implementation(project(":kotlin-wot-reflection"))
+    api(project(":kotlin-wot-reflection"))
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-logging")
     compileOnly(project(":kotlin-wot-binding-http"))

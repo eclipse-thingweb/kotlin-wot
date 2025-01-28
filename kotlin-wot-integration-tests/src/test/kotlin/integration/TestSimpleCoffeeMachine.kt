@@ -1,10 +1,10 @@
-package integration
+package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.http.HttpsProtocolClientFactory
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
+import ai.ancf.lmos.wot.thing.schema.genericReadProperty
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -19,11 +19,21 @@ class TestSimpleCoffeeMachine {
         val wot = Wot.create(servient)
 
         val thingDescription =
-            wot.requestThingDescription("https://zion.vaimee.com/things/urn:uuid:7ba2bca0-a7f6-47b3-bdce-498caa33bbaf")
+            wot.requestThingDescription("http://remotelab.esi.cit.tum.de:8080/virtual-coffee-machine-1_1")
 
-        val coffeeMachine = wot.consume(thingDescription)
-        val resources = coffeeMachine.readProperty("resources").value() as DataSchemaValue.ObjectValue
+        val testThing = wot.consume(thingDescription)
+        val status = testThing.genericReadProperty<String>("status")
 
-        println(resources)
+        val availableResources = testThing.genericReadProperty<Resources>("allAvailableResources")
+
+        println(status)
+        println(availableResources)
     }
 }
+
+data class Resources(
+    val milk: Int,
+    val water: Int ,
+    val chocolate : Int,
+    val coffeeBeans: Int
+)

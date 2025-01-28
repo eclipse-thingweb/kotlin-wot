@@ -471,6 +471,7 @@ object ExposedThingBuilder {
         } else{
             exposedThing.setPropertyReadHandler(name) { _ ->
                 val value = property.getter.call(instance)
+
                 InteractionInput.Value(DataSchemaValue.toDataSchemaValue(value))
             }
         }
