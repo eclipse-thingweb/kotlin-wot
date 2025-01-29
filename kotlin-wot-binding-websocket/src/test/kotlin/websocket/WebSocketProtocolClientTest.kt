@@ -8,6 +8,7 @@ import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolServer
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.exposedThing
 import ai.ancf.lmos.wot.thing.schema.*
+import com.fasterxml.jackson.databind.node.NullNode
 import io.mockk.clearAllMocks
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -87,24 +88,24 @@ class WebSocketProtocolClientTest {
         }.setPropertyReadHandler(PROPERTY_NAME_2) {
             "test".toInteractionInputValue()
         }.setActionHandler(ACTION_NAME) { input, _->
-            val inputString = input.value() as DataSchemaValue.StringValue
-            "${inputString.value} 10".toInteractionInputValue()
+            val inputString = input.value()
+            "${inputString.asText()} 10".toInteractionInputValue()
         }.setPropertyWriteHandler(PROPERTY_NAME) { input, _->
-            val inputInt = input.value() as DataSchemaValue.IntegerValue
-            property1 = inputInt.value
+            val inputInt = input.value()
+            property1 = inputInt.asInt()
             property1.toInteractionInputValue()
         }.setPropertyWriteHandler(PROPERTY_NAME_2) { input, _->
-            val inputInt = input.value() as DataSchemaValue.StringValue
-            property2 = inputInt.value
+            val inputInt = input.value()
+            property2 = inputInt.asText()
             property2.toInteractionInputValue()
         }.setActionHandler(ACTION_NAME_2) { input, _->
             "test test".toInteractionInputValue()
         }.setActionHandler(ACTION_NAME_3) { input, _->
-            val inputString = input.value() as DataSchemaValue.StringValue
-            property2 = inputString.value
-            InteractionInput.Value(DataSchemaValue.NullValue)
+            val inputString = input.value()
+            property2 = inputString.asText()
+            InteractionInput.Value(NullNode.instance)
         }.setActionHandler(ACTION_NAME_4) { _, _->
-            InteractionInput.Value(DataSchemaValue.NullValue)
+            InteractionInput.Value(NullNode.instance)
         }.setEventSubscribeHandler(EVENT_NAME) { _ ->
         }
 
@@ -131,18 +132,18 @@ class WebSocketProtocolClientTest {
     fun `should get property`() = runBlocking {
 
         val readProperty1 = thing.readProperty(PROPERTY_NAME).value()
-        assertEquals(10, (readProperty1 as DataSchemaValue.IntegerValue).value)
+        assertEquals(10, (readProperty1).asInt())
 
         val readProperty2 = thing.readProperty(PROPERTY_NAME_2).value()
-        assertEquals("test", (readProperty2 as DataSchemaValue.StringValue).value)
+        assertEquals("test", (readProperty2).asText())
 
     }
 
     @Test
     fun `should get all properties`() = runBlocking {
         val readPropertyMap = thing.readAllProperties()
-        assertEquals(10, (readPropertyMap[PROPERTY_NAME]?.value() as DataSchemaValue.IntegerValue).value)
-        assertEquals("test", (readPropertyMap[PROPERTY_NAME_2]?.value() as  DataSchemaValue.StringValue).value)
+        assertEquals(10, readPropertyMap[PROPERTY_NAME]?.value()?.asInt())
+        assertEquals("test", readPropertyMap[PROPERTY_NAME_2]?.value()?.asText())
     }
 
     @Test
@@ -166,21 +167,21 @@ class WebSocketProtocolClientTest {
     fun `should invoke action`() = runBlocking {
         val response = thing.invokeAction(ACTION_NAME, "test".toDataSchemeValue())
 
-        assertEquals("test 10", (response as DataSchemaValue.StringValue).value)
+        assertEquals("test 10", response.asText())
     }
 
     @Test
     fun `should invoke action without input`() =  runBlocking {
         val response = thing.invokeAction(ACTION_NAME_2)
 
-        assertEquals("test test", (response as DataSchemaValue.StringValue).value)
+        assertEquals("test test", response.asText())
     }
 
     @Test
     fun `should invoke action without output`(): Unit = runBlocking {
         val response = thing.invokeAction(ACTION_NAME_3, "test".toDataSchemeValue())
         assertEquals("test", property2)
-        assertIs<DataSchemaValue.NullValue>(response)
+        assertIs<NullNode>(response)
     }
 
 

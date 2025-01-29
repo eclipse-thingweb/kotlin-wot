@@ -19,9 +19,9 @@ internal class ContextDeserializer : JsonDeserializer<Context?>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Context? {
         val t = p.currentToken()
         return if (t == JsonToken.VALUE_STRING) {
-            ai.ancf.lmos.wot.thing.Context(p.valueAsString)
+            Context(p.valueAsString)
         } else if (t == JsonToken.START_ARRAY) {
-            val context:Context = Context()
+            val context = Context()
             val arrayNode = p.codec.readTree<ArrayNode>(p)
             val arrayElements = arrayNode.elements()
             while (arrayElements.hasNext()) {

@@ -9,6 +9,7 @@ import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.*
+import com.fasterxml.jackson.databind.node.TextNode
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
@@ -312,7 +313,7 @@ class ExposedThingTest {
         }
         val exposedThing = ExposedThing(Servient(), thingDescription)
 
-        val data = InteractionInput.Value(DataSchemaValue.StringValue("propertyChangeData"))
+        val data = InteractionInput.Value(TextNode("propertyChangeData"))
         val content = Content("application/json", "\"propertyChangeData\"".toByteArray())
         val contentListener = mockk<ContentListener>()
         val propertyReadHandler = mockk<PropertyReadHandler>()
@@ -353,7 +354,7 @@ class ExposedThingTest {
 
         val exposedThing = ExposedThing(Servient(), thingDescription)
 
-        val data = InteractionInput.Value(DataSchemaValue.StringValue("eventData"))
+        val data = InteractionInput.Value(TextNode("eventData"))
         val content = Content("application/json", "\"eventData\"".toByteArray())
         val eventSubscriptionHandler = mockk<EventSubscriptionHandler>()
         val contentListener = mockk<ContentListener>()

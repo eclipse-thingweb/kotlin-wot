@@ -11,4 +11,5 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-logging")
     compileOnly(project(":kotlin-wot-binding-http"))
     compileOnly(project(":kotlin-wot-binding-mqtt"))
+    compileOnly(project(":kotlin-wot-binding-websocket"))
 }

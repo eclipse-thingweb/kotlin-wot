@@ -5,7 +5,9 @@ import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.anfc.lmos.wot.binding.ProtocolClient
-import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import kotlinx.coroutines.flow.Flow
 import java.io.InputStream
 
@@ -41,7 +43,7 @@ typealias PropertyHandlerMap = MutableMap<String, PropertyHandlers>
 typealias ActionHandlerMap = MutableMap<String, ActionHandler>
 typealias EventHandlerMap = MutableMap<String, EventHandlers>
 typealias PropertyReadMap = Map<String, WoTInteractionOutput>
-typealias PropertyWriteMap = Map<String, DataSchemaValue>
+typealias PropertyWriteMap = Map<String, JsonNode>
 
 data class InteractionOptions(
     var formIndex: Int? = null,
@@ -80,8 +82,8 @@ sealed class InteractionInput {
     // Represents a stream of bytes (similar to ReadableStream)
     data class Stream(val stream: InputStream) : InteractionInput()
 
-    // Represents the DataSchemaValue (could be a Boolean, String, etc.)
-    data class Value(val value: DataSchemaValue) : InteractionInput()
+    // Represents the JsonNode (could be a Boolean, String, etc.)
+    data class Value(val value: JsonNode) : InteractionInput()
 }
 
 // Interface for InteractionOutput
@@ -91,38 +93,9 @@ interface WoTInteractionOutput {
     //val form: Form?
     val schema: DataSchema<*>?
     suspend fun arrayBuffer(): ByteArray
-    suspend fun value(): DataSchemaValue
+    suspend fun value(): JsonNode
 }
 
-sealed class DataSchemaValue {
-    data object NullValue : DataSchemaValue()
-    data class BooleanValue(val value: Boolean) : DataSchemaValue()
-    data class IntegerValue(val value: Int) : DataSchemaValue()
-    data class NumberValue(val value: Number) : DataSchemaValue()
-    data class StringValue(val value: String) : DataSchemaValue()
-    data class ObjectValue(val value: Map<*, *>) : DataSchemaValue()
-    data class ArrayValue(val value: List<*>) : DataSchemaValue()
-    data class PojoValue(val value: List<*>) : DataSchemaValue()
-
-    companion object {
-        @JsonCreator
-        fun toDataSchemaValue(value: Any?): DataSchemaValue {
-            return when (value) {
-                null -> NullValue
-                is Boolean -> BooleanValue(value)
-                is Int -> IntegerValue(value)
-                is Long -> NumberValue(value)
-                is Double -> NumberValue(value)
-                is Float -> NumberValue(value)
-                is String -> StringValue(value)
-                is Map<*, *> -> ObjectValue(value)
-                is List<*> -> ArrayValue(value)
-                is Unit -> NullValue
-                else -> throw IllegalArgumentException("Unsupported type: ${value::class}")
-            }
-        }
-    }
-}
 
 // Interface for ExposedThing, handling various property, action, and event interactions
 interface WoTExposedThing {
@@ -199,7 +172,7 @@ interface WoTConsumedThing {
      * @param value The value to write to the property.
      * @param options Optional interaction options.
      */
-    suspend fun writeProperty(propertyName: String, value: DataSchemaValue, options: InteractionOptions? = InteractionOptions())
+    suspend fun writeProperty(propertyName: String, value: JsonNode, options: InteractionOptions? = InteractionOptions())
 
     /**
      * Writes multiple properties with a map of values.
@@ -215,7 +188,7 @@ interface WoTConsumedThing {
      * @param options Optional interaction options.
      * @return The result of the action as [WoTInteractionOutput].
      */
-    suspend fun invokeAction(actionName: String, input: InteractionInput = InteractionInput.Value(DataSchemaValue.NullValue), options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
+    suspend fun invokeAction(actionName: String, input: InteractionInput = InteractionInput.Value(NullNode.instance), options: InteractionOptions? = InteractionOptions()): WoTInteractionOutput
 
     /**
      * Invokes an action by its name with optional parameters.
@@ -224,7 +197,9 @@ interface WoTConsumedThing {
      * @param options Optional interaction options.
      * @return The result of the action as [WoTInteractionOutput].
      */
-    suspend fun invokeAction(actionName: String, input: DataSchemaValue, options: InteractionOptions? = InteractionOptions()): DataSchemaValue
+    suspend fun invokeAction(actionName: String, input: JsonNode = NullNode.instance, options: InteractionOptions? = InteractionOptions()): JsonNode
+
+    //suspend fun <I, O>invokeAction(actionName: String, input: I, options: InteractionOptions?): O
 
     /**
      * Invokes an action by its name with optional parameters.
@@ -232,7 +207,7 @@ interface WoTConsumedThing {
      * @param options Optional interaction options.
      * @return The result of the action as [WoTInteractionOutput].
      */
-    suspend fun invokeAction(actionName: String, options: InteractionOptions? = InteractionOptions()): DataSchemaValue
+    suspend fun invokeAction(actionName: String, options: InteractionOptions? = InteractionOptions()): JsonNode
 
     /**
      * Observes a property by its name, with a callback for each update.
@@ -268,14 +243,5 @@ suspend inline fun <reified T> WoTConsumedThing.genericReadProperty(
     options: InteractionOptions? = InteractionOptions()
 ): T {
     val result = readProperty(propertyName, options).value() // Call your existing function
-    return when (T::class) {
-        String::class -> (result as DataSchemaValue.StringValue).value as T
-        Boolean::class -> (result as DataSchemaValue.BooleanValue).value as T
-        Int::class -> (result as DataSchemaValue.IntegerValue).value as T
-        Number::class -> (result as DataSchemaValue.NumberValue).value as T
-        Map::class -> (result as DataSchemaValue.ObjectValue).value as T
-        List::class -> (result as DataSchemaValue.ArrayValue).value as T
-        DataSchemaValue::class -> result as T // If you want to allow returning the raw DataSchemaValue
-        else -> JsonMapper.instance.convertValue((result as DataSchemaValue.ObjectValue).value, T::class.java)
-    }
+    return JsonMapper.instance.convertValue<T>(result)
 }

@@ -2,6 +2,7 @@ package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
+import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.flow.Flow
 
 class InteractionOutput(
@@ -13,14 +14,14 @@ class InteractionOutput(
 
     override var dataUsed: Boolean = false
 
-    private val lazyValue: DataSchemaValue? by lazy {
+    private val lazyValue: JsonNode? by lazy {
         schema?.let { ContentManager.contentToValue(content, schema) }
     }
     override suspend fun arrayBuffer(): ByteArray {
         return content.body
     }
 
-    override suspend fun value(): DataSchemaValue {
+    override suspend fun value(): JsonNode {
         return ContentManager.contentToValue(content, schema)
     }
 }

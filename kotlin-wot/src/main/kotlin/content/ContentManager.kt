@@ -1,12 +1,12 @@
 package ai.ancf.lmos.wot.content
 
 import ai.ancf.lmos.wot.ServientException
-import ai.ancf.lmos.wot.thing.schema.ArraySchema
 import ai.ancf.lmos.wot.thing.schema.DataSchema
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.BinaryNode
 import org.slf4j.LoggerFactory
 import java.io.*
+import kotlin.reflect.KClass
 
 
 object ContentManager {
@@ -17,7 +17,6 @@ object ContentManager {
 
     init {
         addCodec(JsonCodec(), true)
-        addCodec(TextCodec())
         //addCodec(LinkFormatCodec())
     }
 
@@ -62,6 +61,24 @@ object ContentManager {
          */
         get() = OFFERED
 
+    fun <O : Any> contentToValue(content: Content, kClass: KClass<O>): O {
+        // Get content type or use default
+        val contentType = content.type
+
+        val mediaType = getMediaType(contentType)
+        val parameters = getMediaTypeParameters(contentType)
+
+        // Choose codec based on media type
+        val codec = findCodec(mediaType)
+        return if (codec != null) {
+            log.debug("Content deserializing from '$mediaType'")
+            codec.bytesToValue(content.body, parameters, kClass)
+        }
+        else {
+            throw ContentCodecException("Unable to deserialize content because codec not supported")
+        }
+    }
+
     /**
      * Deserializes `content` according to the data schema defined in
      * `schema`. Returns `null` if no schema is specified. If
@@ -78,7 +95,7 @@ object ContentManager {
     fun contentToValue(
         content: Content,
         schema: DataSchema<*>?
-    ): DataSchemaValue {
+    ): JsonNode {
         // Get content type or use default
         val contentType = content.type
 
@@ -90,10 +107,8 @@ object ContentManager {
         return if (codec != null) {
             log.debug("Content deserializing from '$mediaType'")
             codec.bytesToValue(content.body, schema, parameters)
-        }
-        else {
-            log.warn("Content passthrough due to unsupported media type '$mediaType'")
-            fallbackBytesToValue(content, schema!!)
+        }else {
+            throw ContentCodecException("Unable to deserialize content because codec not supported")
         }
     }
 
@@ -163,44 +178,15 @@ object ContentManager {
 
 
 
-    private fun <T> fallbackBytesToValue(
-        content: Content,
-        schema: DataSchema<T>
-    ): DataSchemaValue {
+    private fun fallbackBytesToValue(
+        content: Content
+    ): JsonNode {
          try {
-             val byteStream = ByteArrayInputStream(content.body)
-             val objectStream: ObjectInputStream = SecureObjectInputStream(byteStream, schema)
-             val response = when (val readObject = objectStream.readObject()) {
-                is String -> {
-                    DataSchemaValue.StringValue(readObject)
-                }
-                is Int -> {
-                    // Parse as IntegerValue
-                    DataSchemaValue.IntegerValue(readObject)
-                }
-                is Number -> {
-                    // Parse as NumberValue
-                    DataSchemaValue.NumberValue(readObject)
-                }
-                is Boolean -> {
-                    // Parse as BooleanValue
-                    DataSchemaValue.BooleanValue(readObject)
-                }
-                is ArraySchema<*> -> {
-                    // Parse as ArrayValue
-                    DataSchemaValue.ArrayValue(readObject as List<*>)
-                }
-                is ObjectSchema -> {
-                    // Parse as ObjectValue
-                    DataSchemaValue.ObjectValue(readObject as Map<*, *>)
-                }
-                else -> { DataSchemaValue.NullValue }
-            }
-             return response
+             return BinaryNode(content.body)
         } catch (e: IOException) {
-            throw ContentCodecException("Unable to deserialize content: " + e.message)
+            throw ContentCodecException("Unable to deserialize content: " + e.message, e)
         } catch (e: ClassNotFoundException) {
-            throw ContentCodecException("Unable to deserialize content: " + e.message)
+            throw ContentCodecException("Unable to deserialize content: " + e.message, e)
         }
     }
 
@@ -218,7 +204,7 @@ object ContentManager {
         return valueToContent(value, null)
     }
 
-    fun valueToContent(value: DataSchemaValue, contentType: String?): Content {
+    fun valueToContent(value: JsonNode, contentType: String?): Content {
         val mediaType = getMediaType(contentType ?: DEFAULT_MEDIA_TYPE)
         val parameters = getMediaTypeParameters(contentType ?: DEFAULT_MEDIA_TYPE)
 
@@ -271,7 +257,7 @@ object ContentManager {
             objectStream.flush()
             byteStream.toByteArray()
         } catch (e: IOException) {
-            throw ContentCodecException("Unable to serialize content: " + e.message)
+            throw ContentCodecException("Unable to serialize content: " + e.message, e)
         }
         return bytes
     }
@@ -287,6 +273,8 @@ object ContentManager {
         val mediaType = getMediaType(contentType)
         return CODECS.keys.contains(mediaType)
     }
+
+
 
     private class SecureObjectInputStream<T>(`in`: InputStream?, val schema: DataSchema<T>) : ObjectInputStream(`in`) {
         override fun resolveClass(desc: ObjectStreamClass): Class<*> {

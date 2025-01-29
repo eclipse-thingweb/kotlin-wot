@@ -7,6 +7,8 @@ import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
 import ai.ancf.lmos.wot.binding.mqtt.MqttClientConfig
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolClientFactory
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolServer
+import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolClientFactory
+import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import org.springframework.beans.factory.annotation.Qualifier
@@ -23,6 +25,9 @@ import org.springframework.context.annotation.Configuration
 class ServientAutoConfiguration {
 
     @Bean
+    fun wotRuntime() = WoTRuntime()
+
+    @Bean
     fun wot(servient : Servient) = Wot.create(servient)
 
     @Bean
@@ -37,10 +42,43 @@ class ServientAutoConfiguration {
     }
 
     @Configuration
+    @ConditionalOnClass(WebSocketProtocolServer::class)
+    class WebSocketConfiguration {
+
+        @Bean
+        @ConditionalOnProperty(
+            prefix = "wot.servient.websocket.server",
+            name = ["enabled"],
+            havingValue = "true",
+            matchIfMissing = true // By default, enable the server
+        )
+        fun webSocketProtocolServer(httpServerProperties: HttpServerProperties): WebSocketProtocolServer {
+            return WebSocketProtocolServer(bindHost = httpServerProperties.host, bindPort = httpServerProperties.port)
+        }
+
+        @Bean
+        @ConditionalOnProperty(
+            prefix = "wot.servient.websocket.client",
+            name = ["enabled"],
+            havingValue = "true",
+            matchIfMissing = true // By default, enable the client
+        )
+        fun websocketProtocolClientFactory(): WebSocketProtocolClientFactory {
+            return WebSocketProtocolClientFactory()
+        }
+    }
+
+    @Configuration
     @ConditionalOnClass(HttpProtocolServer::class)
     class HttpConfiguration {
 
         @Bean
+        @ConditionalOnProperty(
+            prefix = "wot.servient.http.server",
+            name = ["enabled"],
+            havingValue = "true",
+            matchIfMissing = true // By default, enable the server
+        )
         fun httpProtocolServer(httpServerProperties: HttpServerProperties): HttpProtocolServer {
             return HttpProtocolServer(bindHost = httpServerProperties.host, bindPort = httpServerProperties.port)
         }

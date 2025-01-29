@@ -5,9 +5,10 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.binding.websocket.*
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.exposedThing
-import ai.ancf.lmos.wot.thing.schema.*
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue.IntegerValue
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue.StringValue
+import ai.ancf.lmos.wot.thing.schema.InteractionInput
+import ai.ancf.lmos.wot.thing.schema.StringSchema
+import ai.ancf.lmos.wot.thing.schema.stringSchema
+import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.NullNode
@@ -81,17 +82,17 @@ class WebSocketProtocolServerTest {
     }.setPropertyReadHandler(PROPERTY_NAME_2) {
         5.toInteractionInputValue()
     }.setActionHandler(ACTION_NAME) { input, _->
-        val inputString = input.value() as StringValue
-        "${inputString.value} 10".toInteractionInputValue()
+        val inputString = input.value()
+        "${inputString.asText()} 10".toInteractionInputValue()
     }.setPropertyWriteHandler(PROPERTY_NAME) { input, _->
-        val inputInt = input.value() as IntegerValue
-        inputInt.value.toInteractionInputValue()
+        val inputInt = input.value()
+        inputInt.asInt().toInteractionInputValue()
     }.setActionHandler(ACTION_NAME_2) { input, _->
         "10".toInteractionInputValue()
     }.setActionHandler(ACTION_NAME_3) { input, _->
-        InteractionInput.Value(DataSchemaValue.NullValue)
+        InteractionInput.Value(NullNode.instance)
     }.setActionHandler(ACTION_NAME_4) { _, _->
-        InteractionInput.Value(DataSchemaValue.NullValue)
+        InteractionInput.Value(NullNode.instance)
     }.setEventSubscribeHandler(EVENT_NAME) { _ ->
     }
 

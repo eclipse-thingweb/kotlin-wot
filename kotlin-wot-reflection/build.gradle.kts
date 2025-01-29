@@ -4,4 +4,5 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation(project(":kotlin-wot-binding-http"))
+    testImplementation("com.willowtreeapps.assertk:assertk:0.28.1")
 }

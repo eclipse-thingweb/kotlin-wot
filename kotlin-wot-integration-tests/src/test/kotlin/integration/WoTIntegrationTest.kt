@@ -8,6 +8,8 @@ import ai.ancf.lmos.wot.binding.mqtt.MqttClientConfig
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolClientFactory
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolServer
 import ai.ancf.lmos.wot.thing.schema.*
+import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.NullNode
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -92,16 +94,16 @@ class WoTIntegrationTest {
             setPropertyReadHandler(PROPERTY_NAME) { 10.toInteractionInputValue() }
             setPropertyReadHandler(PROPERTY_NAME_2) { 5.toInteractionInputValue() }
             setPropertyWriteHandler(PROPERTY_NAME) { input, _ ->
-                val inputInt = input.value() as DataSchemaValue.IntegerValue
-                inputInt.value.toInteractionInputValue()
+                val inputInt = input.value()
+                inputInt.asInt().toInteractionInputValue()
             }
             setActionHandler(ACTION_NAME) { input, _ ->
-                val inputString = input.value() as DataSchemaValue.StringValue
-                "${inputString.value} 10".toInteractionInputValue()
+                val inputString = input.value()
+                "${inputString.asText()} 10".toInteractionInputValue()
             }
             setActionHandler(ACTION_NAME_2) { _, _ -> "10".toInteractionInputValue() }
-            setActionHandler(ACTION_NAME_3) { _, _ -> InteractionInput.Value(DataSchemaValue.NullValue) }
-            setActionHandler(ACTION_NAME_4) { _, _ -> InteractionInput.Value(DataSchemaValue.NullValue) }
+            setActionHandler(ACTION_NAME_3) { _, _ -> InteractionInput.Value(NullNode.instance) }
+            setActionHandler(ACTION_NAME_4) { _, _ -> InteractionInput.Value(NullNode.instance) }
             setPropertyObserveHandler(PROPERTY_NAME) { 10.toInteractionInputValue() }
         }
     }
@@ -115,19 +117,19 @@ class WoTIntegrationTest {
         val consumedThing = wot.consume(thingDescription)
 
         val readProperty = consumedThing.readProperty(PROPERTY_NAME)
-        val propertyResponse = readProperty.value() as DataSchemaValue.IntegerValue
-        assertEquals(10, propertyResponse.value)
+        val propertyResponse = readProperty.value()
+        assertEquals(10, propertyResponse.asInt())
 
         consumedThing.writeProperty(PROPERTY_NAME, 20.toInteractionInputValue())
 
         val output = consumedThing.invokeAction(ACTION_NAME, "actionInput".toInteractionInputValue(), null)
-        val actionResponse = output.value() as DataSchemaValue.StringValue
-        assertEquals("actionInput 10", actionResponse.value)
+        val actionResponse = output.value()
+        assertEquals("actionInput 10", actionResponse.asText())
 
         val responseMap = consumedThing.readAllProperties()
         assertEquals(2, responseMap.size)
-        assertEquals(DataSchemaValue.IntegerValue(10), responseMap[PROPERTY_NAME]?.value())
-        assertEquals(DataSchemaValue.IntegerValue(5), responseMap[PROPERTY_NAME_2]?.value())
+        assertEquals(IntNode(10), responseMap[PROPERTY_NAME]?.value())
+        assertEquals(IntNode(5), responseMap[PROPERTY_NAME_2]?.value())
 
         consumedThing.observeProperty(PROPERTY_NAME, listener = { println("Property observed: $it") })
         exposedThing.emitPropertyChange(PROPERTY_NAME, 30.toInteractionInputValue())

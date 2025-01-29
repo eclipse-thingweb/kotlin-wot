@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.binding.http
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
@@ -9,14 +10,14 @@ import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.ContentListener
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue.*
 import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.node.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -228,26 +229,26 @@ fun Application.setupRouting(servient: Servient) {
                     val response: MutableMap<String, Any?> = mutableMapOf()
                     for ((key, value) in properties) {
                         // Assuming content is not null as it's checked earlier
-                        when (val schemaValue: DataSchemaValue = ContentManager.contentToValue(value, null)) {
-                            is BooleanValue -> {
-                                response[key] = schemaValue.value
+                        when (val jsonNode: JsonNode = ContentManager.contentToValue(value, null)) {
+                            is BooleanNode -> {
+                                response[key] = jsonNode.asBoolean()
                             }
-                            is IntegerValue -> {
-                                response[key] = schemaValue.value
+                            is IntNode -> {
+                                response[key] = jsonNode.asInt()
                             }
-                            is NumberValue -> {
-                                response[key] = schemaValue.value
+                            is LongNode -> {
+                                response[key] = jsonNode.asLong()
                             }
-                            is StringValue -> {
-                                response[key] = schemaValue.value
+                            is TextNode -> {
+                                response[key] = jsonNode.asText()
                             }
-                            is ObjectValue -> {
-                                response[key] = schemaValue.value
+                            is ObjectNode -> {
+                                response[key] = JsonMapper.instance.convertValue(jsonNode, Map::class.java)
                             }
-                            is ArrayValue -> {
-                                response[key] = schemaValue.value
+                            is ArrayNode -> {
+                                response[key] = JsonMapper.instance.convertValue(jsonNode, Array::class.java)
                             }
-                            is NullValue -> {
+                            is NullNode -> {
                                 response[key] = null
                             }
                         }

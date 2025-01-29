@@ -29,12 +29,15 @@ class AgentConfiguration {
     ) {
 
         val thingDescription =
-            wot.requestThingDescription("http://remotelab.esi.cit.tum.de:8080/virtual-coffee-machine-1_1")
+            wot.requestThingDescription("http://plugfest.thingweb.io/http-data-schema-thing")
 
         val testThing = wot.consume(thingDescription)
 
-        val availableResources = testThing.genericReadProperty<Resources>("allAvailableResources")
+        val availableResources = testThing.genericReadProperty<String>("int")
 
+        availableResources
+
+        /*
         """
             The coffee machine has the following resources available:
             - Milk: ${availableResources.milk} ml
@@ -42,6 +45,7 @@ class AgentConfiguration {
             - Chocolate: ${availableResources.chocolate} grams
             - Coffee Beans: ${availableResources.coffeeBeans} grams
         """
+        */
     }
 }
 

@@ -7,8 +7,6 @@ import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.*
 import kotlinx.coroutines.async
@@ -175,12 +173,7 @@ class Servient(
                 val form = Form(href = url.toString(), contentType = "application/json")
                 val content = client.readResource(form)
                 try {
-                    return when (val dataSchemaValue = ContentManager.contentToValue(content, StringSchema())) {
-                        is DataSchemaValue.StringValue -> ThingDescription.fromJson(dataSchemaValue.value)
-                        is DataSchemaValue.ObjectValue -> ThingDescription.fromMap(dataSchemaValue.value)
-                        else -> {
-                            throw ServientException("Unexpected data type: $dataSchemaValue")}
-                    }
+                    return ContentManager.contentToValue(content, ThingDescription::class)
                 } catch (e: ContentCodecException) {
                     throw ServientException("Error while fetching thing description: ${e.message}", e)
                 }

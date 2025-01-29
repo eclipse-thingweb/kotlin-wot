@@ -7,7 +7,6 @@ import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.exposedThing
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.schema.stringSchema
 import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
@@ -94,12 +93,12 @@ class MqttProtocolServerTest {
             }.setPropertyReadHandler(PROPERTY_NAME) {
                 "\"testOutput\"".toInteractionInputValue()
             }.setActionHandler(ACTION_NAME) { input, _ ->
-                val inputString = input.value() as DataSchemaValue.StringValue
-                "\"${inputString.value} 10\"".toInteractionInputValue()
+                val inputString = input.value()
+                "\"${inputString.textValue()} 10\"".toInteractionInputValue()
             }.setPropertyWriteHandler(PROPERTY_NAME) { input, _ ->
                 try {
-                    val inputInt = input.value() as DataSchemaValue.StringValue
-                    inputInt.value.toInteractionInputValue()
+                    val inputInt = input.value()
+                    inputInt.textValue().toInteractionInputValue()
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Invalid input", e)
                 }
@@ -207,8 +206,8 @@ class MqttProtocolServerTest {
 
           // Verify that the event is emitted in the flow
           val content = awaitItem()
-          val stringValue = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-          assertEquals("\"testEvent\"", stringValue.value)
+          val stringValue = ContentManager.contentToValue(content, StringSchema())
+          assertEquals("\"testEvent\"", stringValue.textValue())
 
           // Optionally verify no further emissions or complete the flow
           cancelAndIgnoreRemainingEvents()
@@ -229,8 +228,8 @@ class MqttProtocolServerTest {
 
             // Verify that the event is emitted in the flow
             val content = awaitItem()
-            val stringValue = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-            assertEquals("\"testPropertyChange\"", stringValue.value)
+            val stringValue = ContentManager.contentToValue(content, StringSchema())
+            assertEquals("\"testPropertyChange\"", stringValue.textValue())
 
             // Optionally verify no further emissions or complete the flow
             cancelAndIgnoreRemainingEvents()

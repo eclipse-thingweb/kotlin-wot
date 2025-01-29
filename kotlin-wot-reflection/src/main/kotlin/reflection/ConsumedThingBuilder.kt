@@ -1,25 +1,19 @@
 package ai.ancf.lmos.wot.reflection
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.reflection.annotations.Action
 import ai.ancf.lmos.wot.reflection.annotations.Property
 import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.InteractionInput
-import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
-import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
 import kotlinx.coroutines.runBlocking
 import java.lang.reflect.InvocationHandler
-import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.coroutines.Continuation
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberProperties
 
 class ConsumedThingBuilder {
     companion object {
@@ -54,7 +48,7 @@ class ConsumedThingBuilder {
                         consumedThing.invokeAction(
                             actionName,
                             InteractionInput.Value(
-                                DataSchemaValue.toDataSchemaValue(
+                                JsonMapper.instance.valueToTree(
                                     args?.firstOrNull()
                                 )
                             )
@@ -94,7 +88,7 @@ class ConsumedThingBuilder {
                 runBlocking { consumedThing.readProperty(propertyName) }
             } else if (method.name.startsWith("set")) {
                 runBlocking { consumedThing.writeProperty(propertyName,  InteractionInput.Value(
-                    DataSchemaValue.toDataSchemaValue(
+                    JsonMapper.instance.valueToTree(
                         args?.firstOrNull()
                     )
                 )) }
@@ -113,7 +107,7 @@ class ConsumedThingBuilder {
                 ?: throw IllegalStateException("Missing Continuation for suspend function")
             return try {
                 consumedThing.invokeAction(actionName,  InteractionInput.Value(
-                    DataSchemaValue.toDataSchemaValue(
+                    JsonMapper.instance.valueToTree(
                         args.firstOrNull()
                     )
                 ))
@@ -123,13 +117,13 @@ class ConsumedThingBuilder {
             }.also { result ->
                 /*
                 when(val dataSchemaValue = result?.value()) {
-                    is DataSchemaValue.StringValue -> continuation.resume(dataSchemaValue.value)
-                    is DataSchemaValue.ArrayValue -> continuation.resume(dataSchemaValue.value)
-                    is DataSchemaValue.BooleanValue -> continuation.resume(dataSchemaValue.value)
-                    is DataSchemaValue.IntegerValue -> continuation.resume(dataSchemaValue.value)
-                    is DataSchemaValue.NullValue -> continuation.resume(null)
-                    is DataSchemaValue.NumberValue -> continuation.resume(dataSchemaValue.value)
-                    is DataSchemaValue.ObjectValue -> continuation.resume(dataSchemaValue.value)
+                    is JsonNode.StringValue -> continuation.resume(dataSchemaValue.value)
+                    is JsonNode.ArrayValue -> continuation.resume(dataSchemaValue.value)
+                    is JsonNode.BooleanValue -> continuation.resume(dataSchemaValue.value)
+                    is JsonNode.IntegerValue -> continuation.resume(dataSchemaValue.value)
+                    is JsonNode.NullValue -> continuation.resume(null)
+                    is JsonNode.NumberValue -> continuation.resume(dataSchemaValue.value)
+                    is JsonNode.ObjectValue -> continuation.resume(dataSchemaValue.value)
                     null -> continuation.resume()
                 }
                  */

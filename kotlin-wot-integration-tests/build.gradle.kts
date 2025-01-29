@@ -6,7 +6,7 @@ plugins {
 
 dependencies {
     api(project(":kotlin-wot-binding-http"))
-    //api(project(":kotlin-wot-binding-websocket"))
+    api(project(":kotlin-wot-binding-websocket"))
     api(project(":kotlin-wot-binding-mqtt"))
     api(project(":kotlin-wot-spring-boot-starter"))
     implementation("ai.ancf.lmos:arc-azure-client:0.111.0")

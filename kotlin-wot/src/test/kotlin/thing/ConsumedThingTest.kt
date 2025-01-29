@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.thing
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
@@ -9,11 +10,15 @@ import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.*
+import ai.ancf.lmos.wot.thing.schema.InteractionInput
+import ai.ancf.lmos.wot.thing.schema.InteractionListener
+import ai.ancf.lmos.wot.thing.schema.StringProperty
+import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import ai.anfc.lmos.wot.binding.Resource
 import ai.anfc.lmos.wot.binding.ResourceType
+import com.fasterxml.jackson.databind.node.TextNode
 import io.mockk.*
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
@@ -76,10 +81,9 @@ class ConsumedThingTest {
         val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
         coEvery { protocolClient.readResource(any<Resource>()) } returns content
 
-        val output = consumedThing.readProperty("testProperty")
+        val output = consumedThing.readProperty("testProperty").value()
         assertNotNull(output)
-        val outputValue = output.value() as DataSchemaValue.ObjectValue
-        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+        assertEquals(mutableMapOf("value" to "testValue"), JsonMapper.instance.convertValue(output, Map::class.java))
     }
 
     @Test
@@ -90,8 +94,8 @@ class ConsumedThingTest {
         val properties = consumedThing.readAllProperties()
         assertNotNull(properties)
         assertEquals(1, properties.size)
-        val outputValue = properties["testProperty"]?.value() as DataSchemaValue.ObjectValue
-        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+        val outputValue = properties["testProperty"]?.value()
+        assertEquals(mutableMapOf("value" to "testValue"), JsonMapper.instance.convertValue(outputValue, Map::class.java))
     }
 
     @Test
@@ -102,13 +106,13 @@ class ConsumedThingTest {
         val properties = consumedThing.readMultipleProperties(listOf("testProperty"))
         assertNotNull(properties)
         assertEquals(1, properties.size)
-        val outputValue = properties["testProperty"]?.value() as DataSchemaValue.ObjectValue
-        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+        val outputValue = properties["testProperty"]?.value()
+        assertEquals(mutableMapOf("value" to "testValue"), JsonMapper.instance.convertValue(outputValue, Map::class.java))
     }
 
     @Test
     fun `test writeProperty`() = runBlocking {
-        val value = InteractionInput.Value(DataSchemaValue.StringValue("newValue"))
+        val value = InteractionInput.Value(TextNode("newValue"))
         coJustRun { protocolClient.writeResource(any<Resource>(), any<Content>()) }
 
         consumedThing.writeProperty("testProperty", value)
@@ -118,7 +122,7 @@ class ConsumedThingTest {
     @Test
     fun `test writeMultipleProperties`() = runBlocking {
         val valueMap = mapOf(
-            "testProperty" to "newValue".toDataSchemeValue()
+            "testProperty" to TextNode("newValue")
         )
         coJustRun { protocolClient.writeResource(any<Resource>(), any<Content>()) }
 
@@ -131,11 +135,11 @@ class ConsumedThingTest {
         val content = Content("application/json", """{"value": "testValue"}""".toByteArray())
         coEvery { protocolClient.invokeResource(any<Resource>(), any<Content>()) } returns content
 
-        val params = InteractionInput.Value(DataSchemaValue.StringValue("actionInput"))
+        val params = InteractionInput.Value(TextNode("actionInput"))
         val output = consumedThing.invokeAction("testAction", params)
         assertNotNull(output)
-        val outputValue = output.value() as DataSchemaValue.ObjectValue
-        assertEquals(mutableMapOf("value" to "testValue"), outputValue.value)
+        val outputValue = output.value()
+        assertEquals(mutableMapOf("value" to "testValue"), JsonMapper.instance.convertValue(outputValue, Map::class.java))
     }
 
     @Test

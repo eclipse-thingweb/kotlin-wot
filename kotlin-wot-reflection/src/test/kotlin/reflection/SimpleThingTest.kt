@@ -8,7 +8,6 @@ import ai.ancf.lmos.wot.content.toJsonContent
 import ai.ancf.lmos.wot.reflection.things.SimpleThing
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.ContentListener
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -44,19 +43,19 @@ class SimpleThingTest {
     @Test
     fun `Read mutable property`() = runTest {
         val content = exposedThing.handleReadProperty("mutableProperty")
-        val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-        assertEquals("test", response.value)
+        val response = ContentManager.contentToValue(content, StringSchema())
+        assertEquals("test", response.asText())
     }
 
     @Test
     fun `Read observable property`() = runTest {
         val content = exposedThing.handleReadProperty("observableProperty")
-        val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-        assertEquals("Hello World", response.value)
+        val response = ContentManager.contentToValue(content, StringSchema())
+        assertEquals("Hello World", response.asText())
         simpleThing.changeObservableProperty()
         val updatedContent = exposedThing.handleReadProperty("observableProperty")
-        val updatedResponse = ContentManager.contentToValue(updatedContent, StringSchema()) as DataSchemaValue.StringValue
-        assertEquals("Hello from action!", updatedResponse.value)
+        val updatedResponse = ContentManager.contentToValue(updatedContent, StringSchema())
+        assertEquals("Hello from action!", updatedResponse.asText())
     }
 
     @Test
@@ -86,16 +85,16 @@ class SimpleThingTest {
     @Test
     fun `Write writeOnly property`() = runTest {
         val content = exposedThing.handleWriteProperty("writeOnlyProperty", "newValue".toJsonContent())
-        val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-        assertEquals("newValue", response.value)
+        val response = ContentManager.contentToValue(content, StringSchema())
+        assertEquals("newValue", response.asText())
         assertEquals("newValue", simpleThing.writeOnlyProperty)
     }
 
     @Test
     fun `Write mutable property`() = runTest {
         val content = exposedThing.handleWriteProperty("mutableProperty", "newValue".toJsonContent())
-        val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-        assertEquals("newValue", response.value)
+        val response = ContentManager.contentToValue(content, StringSchema())
+        assertEquals("newValue", response.asText())
         assertEquals("newValue", simpleThing.mutableProperty)
     }
 
@@ -128,15 +127,15 @@ class SimpleThingTest {
     @Test
     fun `Invoke outputAction`() = runTest {
         val content = exposedThing.handleInvokeAction("outputAction")
-        val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-        assertEquals("test", response.value)
+        val response = ContentManager.contentToValue(content, StringSchema())
+        assertEquals("test", response.asText())
     }
 
     @Test
     fun `Invoke inOutAction`() = runTest {
         val content = exposedThing.handleInvokeAction("inOutAction", "test".toJsonContent())
-        val response = ContentManager.contentToValue(content, StringSchema()) as DataSchemaValue.StringValue
-        assertEquals("test output", response.value)
+        val response = ContentManager.contentToValue(content, StringSchema())
+        assertEquals("test output", response.asText())
     }
 
     @Test

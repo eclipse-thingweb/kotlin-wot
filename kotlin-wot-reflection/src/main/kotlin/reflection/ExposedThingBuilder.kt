@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.reflection
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.reflection.annotations.*
 import ai.ancf.lmos.wot.reflection.annotations.VersionInfo
@@ -10,6 +11,8 @@ import ai.ancf.lmos.wot.thing.schema.IntegerSchema
 import ai.ancf.lmos.wot.thing.schema.NumberSchema
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.thingDescription
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.*
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -368,8 +371,7 @@ object ExposedThingBuilder {
                 val flow = function.call(instance) as Flow<*>
                 scope.launch {
                     flow.collect { value ->
-                        val data = DataSchemaValue.toDataSchemaValue(value)
-                        exposedThing.emitEvent(name, InteractionInput.Value(data))
+                        exposedThing.emitEvent(name, InteractionInput.Value(JsonMapper.instance.valueToTree(value)))
                     }
                 }
             }
@@ -396,11 +398,11 @@ object ExposedThingBuilder {
                     // Call the suspending function with the continuation
                     val result = function.callSuspendBy(args)
                     // Return the result from the continuation
-                    InteractionInput.Value(DataSchemaValue.toDataSchemaValue(result))
+                    InteractionInput.Value(JsonMapper.instance.valueToTree(result))
                 } else {
                     // Regular function call
                     val result = function.callBy(args)
-                    InteractionInput.Value(DataSchemaValue.toDataSchemaValue(result))
+                    InteractionInput.Value(JsonMapper.instance.valueToTree(result))
                 }
             }
         }
@@ -436,7 +438,7 @@ object ExposedThingBuilder {
     ) {
         exposedThing.setPropertyWriteHandler(name) { input, _ ->
             property.setter.call(instance, toKotlinObject(input.value(), property.returnType))
-            InteractionInput.Value(input.value() ?: DataSchemaValue.NullValue)
+            InteractionInput.Value(input.value() ?: NullNode.instance)
         }
     }
 
@@ -458,21 +460,21 @@ object ExposedThingBuilder {
                     mutableStateFlow.collect { value ->
                         exposedThing.emitPropertyChange(
                             name,
-                            InteractionInput.Value(DataSchemaValue.toDataSchemaValue(value))
+                            InteractionInput.Value(JsonMapper.instance.valueToTree(value))
                         )
                     }
                 }
-                InteractionInput.Value(DataSchemaValue.NullValue)
+                InteractionInput.Value(NullNode.instance)
             }
             exposedThing.setPropertyReadHandler(name) { _ ->
                 val value = mutableStateFlow.value
-                InteractionInput.Value(DataSchemaValue.toDataSchemaValue(value))
+                InteractionInput.Value(JsonMapper.instance.valueToTree(value))
             }
         } else{
             exposedThing.setPropertyReadHandler(name) { _ ->
                 val value = property.getter.call(instance)
 
-                InteractionInput.Value(DataSchemaValue.toDataSchemaValue(value))
+                InteractionInput.Value(JsonMapper.instance.valueToTree(value))
             }
         }
     }
@@ -604,44 +606,42 @@ object ExposedThingBuilder {
         }
     }
 
-    internal fun toKotlinObject(input: DataSchemaValue?, type: KType): Any? {
-        log.debug("Converting DataSchemaValue to Kotlin object: input={}, type={}", input, type)
-        if (input == null) return null
 
+    internal fun toKotlinObject(input: JsonNode?, type: KType): Any? {
+        log.debug("Converting JsonNode to Kotlin object: input={}, type={}", input, type)
+
+        if (input == null) return null
         return when (input) {
-            is DataSchemaValue.StringValue -> handleStringValue(input, type)
-            is DataSchemaValue.IntegerValue -> input.value
-            is DataSchemaValue.NumberValue -> input.value
-            is DataSchemaValue.BooleanValue -> input.value
-            is DataSchemaValue.ArrayValue -> handleArrayValue(input, type)
-            is DataSchemaValue.ObjectValue -> handleObjectValue(input, type)
-            else -> throw IllegalArgumentException("Unsupported input type: ${input::class}")
+            is TextNode -> handleStringValue(input, type)
+            is ArrayNode -> handleArrayValue(input, type)
+            is ObjectNode -> handleObjectValue(input, type)
+            else -> JsonMapper.instance.treeToValue(input, (type.classifier as KClass<*>).java)
         }
+
     }
 
-    private fun handleStringValue(input: DataSchemaValue.StringValue, type: KType): Any? {
-        log.debug("Handling StringValue: input=$input, type=$type")
+    private fun handleStringValue(input: TextNode, type: KType): Any? {
+        log.debug("Handling StringValue: input={}, type={}", input, type)
         val classifier = type.classifier
         return if (classifier is KClass<*> && classifier.java.isEnum) {
             handleEnumString(input, classifier)
         } else {
-            input.value
+            input.textValue()
         }
     }
 
-    private fun handleEnumString(input: DataSchemaValue.StringValue, classifier: KClass<*>): Any? {
-        log.debug("Handling enum StringValue: input=$input, classifier=$classifier")
+    private fun handleEnumString(input: TextNode, classifier: KClass<*>): Any? {
+        log.debug("Handling enum StringValue: input={}, classifier={}", input, classifier)
         val enumClass = classifier as KClass<out Enum<*>>
-        return enumClass.java.enumConstants?.find { it.name == input.value }
-            ?: throw IllegalArgumentException("Unknown enum value: ${input.value}")
+        return enumClass.java.enumConstants?.find { it.name == input.asText() }
+            ?: throw IllegalArgumentException("Unknown enum value: ${input.asText()}")
     }
 
-    private fun handleArrayValue(input: DataSchemaValue.ArrayValue, type: KType): Any? {
+    private fun handleArrayValue(input: ArrayNode, type: KType): Any? {
         log.debug("Handling ArrayValue: input=$input, type=$type")
         val itemType = type.arguments.firstOrNull()?.type ?: throw IllegalArgumentException("Unknown generic type for collection")
-        val mappedItems = input.value.map { item ->
-            val dataSchemaValue = DataSchemaValue.toDataSchemaValue(item)
-            toKotlinObject(dataSchemaValue, itemType)
+        val mappedItems = input.map { item ->
+            toKotlinObject(item, itemType)
         }
 
         return when (type.classifier) {
@@ -655,7 +655,7 @@ object ExposedThingBuilder {
         }
     }
 
-    private fun handleObjectValue(input: DataSchemaValue.ObjectValue, type: KType): Any? {
+    private fun handleObjectValue(input: ObjectNode, type: KType): Any? {
         log.debug("Handling ObjectValue: input=$input, type=$type")
         val kClass = type.classifier as? KClass<*>
             ?: throw IllegalArgumentException("Type is not a valid class: $type")
@@ -666,15 +666,15 @@ object ExposedThingBuilder {
         }
     }
 
-    private fun handleMapValue(input: DataSchemaValue.ObjectValue, type: KType): Any? {
-        log.debug("Handling MapValue: input=$input, type=$type")
+    private fun handleMapValue(input: ObjectNode, type: KType): Any? {
+        log.debug("Handling MapValue: input={}, type={}", input, type)
         val keyType = type.arguments.getOrNull(0)?.type ?: throw IllegalArgumentException("Unknown key type for map")
         val valueType = type.arguments.getOrNull(1)?.type ?: throw IllegalArgumentException("Unknown value type for map")
 
         val mapInstance = mutableMapOf<Any, Any>()
-        for ((key, value) in input.value) {
-            val keyConverted = toKotlinObject(DataSchemaValue.StringValue(key as String), keyType)
-            val valueConverted = toKotlinObject(DataSchemaValue.toDataSchemaValue(value), valueType)
+        for ((key, value) in input.fields()) {
+            val keyConverted = toKotlinObject(TextNode(key), keyType)
+            val valueConverted = toKotlinObject(value, valueType)
             if (keyConverted != null && valueConverted != null) {
                 mapInstance[keyConverted] = valueConverted
             }
@@ -682,18 +682,27 @@ object ExposedThingBuilder {
         return mapInstance
     }
 
-    private fun handleNonMapObject(input: DataSchemaValue.ObjectValue, kClass: KClass<*>): Any {
+    private fun handleNonMapObject(input: ObjectNode, kClass: KClass<*>): Any {
         log.debug("Handling non-Map ObjectValue: input={}, kClass={}", input, kClass)
+
+        return JsonMapper.instance.treeToValue(input, kClass.java)
+
+        /*
+
         val constructor = kClass.primaryConstructor
             ?: throw IllegalArgumentException("The class must have a primary constructor")
 
         val args = constructor.parameters.associateWith { parameter ->
             val propertyType = parameter.type
             val value = input.value[parameter.name]
-            val dataSchemaValue = DataSchemaValue.toDataSchemaValue(value)
-            toKotlinObject(dataSchemaValue, propertyType)
+            //val dataSchemaValue : JsonNode = JsonMapper.instance.valueToTree(value)
+            //toKotlinObject(dataSchemaValue, propertyType)
+
+            JsonMapper.instance.valueToTree(input, propertyType)
         }
 
         return constructor.callBy(args)
+
+         */
     }
 }

@@ -14,6 +14,9 @@ import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.Resource
 import ai.anfc.lmos.wot.binding.ResourceType
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -144,7 +147,7 @@ data class ConsumedThing(
         writeProperty(propertyName, interactionValue.value)
     }
 
-    override suspend fun writeProperty(propertyName: String, value: DataSchemaValue, options: InteractionOptions?) {
+    override suspend fun writeProperty(propertyName: String, value: JsonNode, options: InteractionOptions?) {
         val property = this.properties[propertyName]
         requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
 
@@ -188,7 +191,7 @@ data class ConsumedThing(
 
     private suspend fun invokeActionInternal(
         actionName: String,
-        value: DataSchemaValue,
+        value: JsonNode,
         options: InteractionOptions?
     ): WoTInteractionOutput {
         val action = this.actions[actionName]
@@ -227,18 +230,24 @@ data class ConsumedThing(
 
     override suspend fun invokeAction(
         actionName: String,
-        input: DataSchemaValue,
+        input: JsonNode,
         options: InteractionOptions?
-    ): DataSchemaValue {
+    ): JsonNode {
         val output = invokeActionInternal(actionName, input, options)
         return output.value()
+    }
+
+     suspend inline fun <reified I, reified O> invokeAction(actionName: String, input: I, options: InteractionOptions? = InteractionOptions()): O {
+        val inputAsJsonNode : JsonNode = JsonMapper.instance.valueToTree(input)
+        val output : JsonNode = invokeAction(actionName, input = inputAsJsonNode, options)
+        return JsonMapper.instance.treeToValue<O>(output)
     }
 
     override suspend fun invokeAction(
         actionName: String,
         options: InteractionOptions?
-    ): DataSchemaValue {
-        val output = invokeActionInternal(actionName, DataSchemaValue.NullValue, options)
+    ): JsonNode {
+        val output = invokeActionInternal(actionName, NullNode.instance, options)
         return output.value()
     }
 

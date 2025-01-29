@@ -7,8 +7,6 @@ import ai.ancf.lmos.wot.thing.Context
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.Type
 import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.DataSchemaValue
-import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
@@ -18,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.assertThrows
 import java.net.URI
+import kotlin.reflect.KClass
 import kotlin.test.*
 
 class ServientTest {
@@ -144,18 +143,18 @@ class ServientTest {
     fun `fetch should return Thing when successful`() = runTest {
         // Arrange
         val url = URI("http://example.com")
-        val thingAsMap = mapOf(
-            "id" to "Foo",
-            "description" to "Bar",
-            "@type" to "Thing",
-            "@context" to listOf("http://www.w3.org/ns/td")
-        )
+        val thingAsJsonString = """
+            {
+              "id": "Foo",
+              "description": "Bar",
+              "@type": "Thing",
+              "@context": ["http://www.w3.org/ns/td"]
+            }
+            """
 
         // Mock readResource to return mockContent
-        coEvery { mockClient.readResource(any<Form>()) } returns mockContent
-
-        // Mock ContentManager to return a map from content
-        every { ContentManager.contentToValue(mockContent, StringSchema()) } returns DataSchemaValue.ObjectValue(thingAsMap)
+        coEvery { mockClient.readResource(any<Form>()) } returns
+                Content(ContentManager.DEFAULT_MEDIA_TYPE, thingAsJsonString.toByteArray())
 
         // Act
         val fetchedThing = servient.fetch(url)
@@ -189,7 +188,7 @@ class ServientTest {
         val url = URI("http://example.com")
         coEvery { mockClient.readResource(any<Form>()) } returns mockContent
 
-        every { ContentManager.contentToValue(mockContent, StringSchema()) } throws ContentCodecException("Codec error")
+        every { ContentManager.contentToValue(mockContent, any<KClass<*>>()) } throws ContentCodecException("Codec error")
 
         // Act & Assert
         val exception = assertThrows<ServientException> {
@@ -197,7 +196,7 @@ class ServientTest {
         }
         assertEquals("Error while fetching thing description: Codec error", exception.message)
         coVerify { mockClient.readResource(any<Form>()) }
-        verify { ContentManager.contentToValue(mockContent, StringSchema()) }
+        verify { ContentManager.contentToValue(mockContent, any<KClass<*>>()) }
     }
 
     /*
@@ -212,7 +211,7 @@ class ServientTest {
 
         // Mocking ContentManager to simulate content to value conversion
         mockkObject(ContentManager)
-        every { ContentManager.contentToValue(mockContent, ArraySchema<Map<*,*>>()) } returns DataSchemaValue.ArrayValue(expectedThings)
+        every { ContentManager.contentToValue(mockContent, ArraySchema<Map<*,*>>()) } returns JsonNode.ArrayValue(expectedThings)
 
         // Act
         val result = servient.fetchDirectory("http://example.com")
