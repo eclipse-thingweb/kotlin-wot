@@ -18,9 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
@@ -42,6 +40,7 @@ data class ConsumedThing(
 
     private val subscribedEvents: ConcurrentMap<String, Subscription> = ConcurrentHashMap()
     private val observedProperties: ConcurrentMap<String, Subscription> = ConcurrentHashMap()
+    private val clients: MutableMap<String, ProtocolClient> = mutableMapOf()
 
     override suspend fun readProperty(propertyName: String, options: InteractionOptions?): WoTInteractionOutput {
         val property = this.properties[propertyName]
@@ -243,6 +242,14 @@ data class ConsumedThing(
         return JsonMapper.instance.treeToValue<O>(output)
     }
 
+    suspend inline fun <reified I> invokeUnitAction(
+        actionName: String,
+        input: I,
+        options: InteractionOptions? = InteractionOptions()
+    ) {
+        invokeAction<I, Unit>(actionName, input, options)
+    }
+
     override suspend fun invokeAction(
         actionName: String,
         options: InteractionOptions?
@@ -289,6 +296,31 @@ data class ConsumedThing(
         return subscription
     }
 
+    suspend fun consumeEvent(
+        eventName: String,
+        options: InteractionOptions = InteractionOptions()
+    ): Flow<WoTInteractionOutput> {
+
+        val eventAffordance = requireNotNull(events[eventName]) {
+            "ConsumedThing '$title', no event found for '$eventName'"
+        }
+
+        val (client, form) = getClientFor(eventAffordance.forms, Operation.SUBSCRIBE_EVENT)
+
+        if (subscribedEvents.containsKey(eventName)) {
+            return flow {
+                throw IllegalStateException("ConsumedThing '$title' already has a function subscribed to $eventName. You can only subscribe once.")
+            }
+        }
+
+        log.debug("ConsumedThing '$title' subscribing to ${form.href}")
+
+        val formWithoutURITemplates = handleUriVariables(this, eventAffordance, form, options)
+
+        return client.subscribeResource(Resource(id, eventName, formWithoutURITemplates), ResourceType.EVENT)
+            .map { handleInteractionOutput(it, form, eventAffordance.data) }
+    }
+
     override suspend fun subscribeEvent(
         eventName: String,
         listener: InteractionListener,
@@ -332,9 +364,6 @@ data class ConsumedThing(
         return this
     }
 
-
-    private val clients: MutableMap<String, ProtocolClient> = mutableMapOf()
-
     fun getClientFor(
         form: Form,
         op: Operation
@@ -352,7 +381,7 @@ data class ConsumedThing(
      * @throws ConsumedThingException
      */
 
-    override fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form> {
+    private fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form> {
         require(forms.isNotEmpty()) { "No forms available for operation $op on $id" }
 
         // Get supported schemes in the order of preference
@@ -391,12 +420,12 @@ data class ConsumedThing(
                     security.takeIf { it.isNotEmpty() }?.let {
                         log.debug("'{}' setting credentials for '{}'", id, client)
                         val metadata = security.mapNotNull { key -> securityDefinitions[key] }
-                        client.setSecurity(metadata, mapOf( "credentials" to servient.getCredentials(id)))
+                        client.setSecurity(metadata, mapOf("credentials" to servient.getCredentials(id)))
                     }
                     return scheme to client
                 }
             }
-            throw NoClientFactoryForSchemesConsumedThingException(id, schemes)
+            throw NoClientFactoryForSchemesException(id, schemes)
         } catch (e: ProtocolClientException) {
             throw ConsumedThingException("Unable to create client: ${e.message}")
         }
@@ -410,7 +439,7 @@ data class ConsumedThing(
         // Find a form that matches the operation and scheme
         return forms.firstOrNull { it.op?.contains(op) == true && it.hrefScheme == scheme }
             ?: forms.firstOrNull { it.op.isNullOrEmpty() && it.hrefScheme == scheme }
-            ?: throw NoFormForInteractionConsumedThingException(id, op)
+            ?: throw NoFormForInteractionException(id, op)
     }
 
     /**
@@ -657,13 +686,13 @@ data class ConsumedThing(
     }
 }
 
-class NoFormForInteractionConsumedThingException : ConsumedThingException {
+class NoFormForInteractionException : ConsumedThingException {
     constructor(title: String, op: Operation) : super("'$title' has no form for interaction '$op'")
     constructor(message: String) : super(message)
 }
 
 
-class NoClientFactoryForSchemesConsumedThingException(title: String, schemes: Set<String?>) :
+class NoClientFactoryForSchemesException(title: String, schemes: Set<String?>) :
     ConsumedThingException("'$title': Missing ClientFactory for schemes '$schemes'")
 
 open class ConsumedThingException : ServientException {

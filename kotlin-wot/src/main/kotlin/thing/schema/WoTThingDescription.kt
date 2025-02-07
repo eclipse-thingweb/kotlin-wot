@@ -2,8 +2,6 @@ package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.WoTDSL
 import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.Context
-import ai.ancf.lmos.wot.thing.Link
 import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form

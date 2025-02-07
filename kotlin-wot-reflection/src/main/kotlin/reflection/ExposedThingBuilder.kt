@@ -3,7 +3,9 @@ package ai.ancf.lmos.wot.reflection
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.reflection.annotations.*
+import ai.ancf.lmos.wot.reflection.annotations.Context
 import ai.ancf.lmos.wot.reflection.annotations.VersionInfo
+import ai.ancf.lmos.wot.thing.DEFAULT_CONTEXT
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.schema.*
 import ai.ancf.lmos.wot.thing.schema.ArraySchema
@@ -61,6 +63,15 @@ object ExposedThingBuilder {
             val exposedThing = wot.produce(thingDescription {
                 id = thingAnnotation.id
                 title = thingAnnotation.title
+                objectType = Type(thingAnnotation.type)
+                val contexts = clazz.findAnnotations<Context>()
+                if(contexts.isNotEmpty()){
+                    val context = ai.ancf.lmos.wot.thing.schema.Context(DEFAULT_CONTEXT)
+                    contexts.forEach {
+                        context.addContext(it.prefix, it.url)
+                    }
+                    objectContext = context
+                }
                 description = thingAnnotation.description
                 val versionInfoAnnotation = clazz.findAnnotation<VersionInfo>()
                 if(versionInfoAnnotation != null){
@@ -317,7 +328,8 @@ object ExposedThingBuilder {
                         val inputSchema = generateSchema(parameterTypes)
                         // Handle return type for the output schema
                         val outputSchema = mapTypeToSchema(function.returnType)
-                        action<Any, Any>(actionAnnotation.name) {
+                        action<Any, Any>(function.name) {
+                            description = actionAnnotation.description
                             @Suppress("UNCHECKED_CAST")
                             input = inputSchema as DataSchema<Any>?
                             @Suppress("UNCHECKED_CAST")
@@ -334,9 +346,9 @@ object ExposedThingBuilder {
                         val flowType = function.returnType.arguments.firstOrNull()?.type
                             ?: throw IllegalArgumentException("Event function must return a Flow type")
                         val outputSchema = mapTypeToSchema(flowType)
-                        event<Any, Any, Any>(eventAnnotation.name) {
+                        event<Any, Any, Any>(function.name) {
                             description = eventAnnotation.description
-                            title = eventAnnotation.name
+                            title = eventAnnotation.title
                             @Suppress("UNCHECKED_CAST")
                             data = outputSchema as DataSchema<Any>?
                         }

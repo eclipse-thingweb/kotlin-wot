@@ -9,20 +9,16 @@ arc:
 
 wot:
   servient:
-    credentials:
-      urn:dev:wot:oauth:test:
-        clientId: "node-wot"
-        clientSecret: "isgreat!"
     websocket:
       server:
         enabled: true
         host: localhost
-        port: 8080
+        port: 8081
     http:
       server:
         enabled: false
         host: localhost
-        port: 8080
+        port: 8081
     mqtt:
       server:
         enabled: false

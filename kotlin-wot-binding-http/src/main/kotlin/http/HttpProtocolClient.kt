@@ -100,10 +100,13 @@ class HttpProtocolClient(
     private suspend fun resolveRequestToContent(form: Form, method: HttpMethod, content: Content? = null): Content {
         return try {
             val response: HttpResponse = client.request(form.href) {
+                headers {
+                    append(HttpHeaders.Accept, form.contentType)
+                }
                 this.method = method
                 content?.let {
                     headers {
-                        append(HttpHeaders.ContentType, it.type ?: ContentType.Application.Json.toString())
+                        append(HttpHeaders.ContentType, it.type )
                     }
                     setBody(it.body)
                 }

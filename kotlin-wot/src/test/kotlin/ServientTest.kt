@@ -3,9 +3,9 @@ package ai.ancf.lmos.wot
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.Context
+import ai.ancf.lmos.wot.thing.schema.Context
 import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.Type
+import ai.ancf.lmos.wot.thing.schema.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException

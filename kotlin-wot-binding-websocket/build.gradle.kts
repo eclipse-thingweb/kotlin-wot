@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     api(project(":kotlin-wot"))
+    api(project(":kotlin-wot-lmos-protocol"))
     implementation("org.slf4j:slf4j-api")
     implementation("io.ktor:ktor-server-netty")
     implementation("io.ktor:ktor-server-websockets")
@@ -14,6 +15,7 @@ dependencies {
     implementation("io.ktor:ktor-client-logging")
     implementation("io.ktor:ktor-server-call-logging")
     implementation("io.ktor:ktor-serialization-jackson")
+    implementation("io.ktor:ktor-server-metrics-micrometer")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation(project(":kotlin-wot-binding-http"))
     testImplementation("ch.qos.logback:logback-classic:1.5.12")

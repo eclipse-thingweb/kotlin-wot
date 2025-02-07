@@ -3,6 +3,8 @@ package ai.ancf.lmos.wot.binding.websocket
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.ContentManager
+import ai.ancf.lmos.wot.protocol.LMOSContext
+import ai.ancf.lmos.wot.protocol.LMOS_PROTOCOL_NAME
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.form.Form
@@ -18,6 +20,7 @@ import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -25,8 +28,13 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.util.reflect.*
 import io.ktor.websocket.*
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import org.slf4j.LoggerFactory
 import java.util.*
+
+private const val SUB_PROTOCOL_MEDIA_TYPE = "application/json"
 
 class WebSocketProtocolServer(
     private val wait: Boolean = false,
@@ -95,9 +103,9 @@ class WebSocketProtocolServer(
             // Create a single form that includes all operations and the subprotocol
             val form = Form(
                 href = href,
-                contentType = "application/json",
+                contentType = SUB_PROTOCOL_MEDIA_TYPE,
                 op = operations,
-                subprotocol = "webthingprotocol"
+                subprotocol = LMOS_PROTOCOL_NAME
             )
 
             property.forms += form
@@ -113,14 +121,14 @@ class WebSocketProtocolServer(
             // Create a form for invoking the action
             val form = Form(
                 href = href,
-                contentType = "application/json",
+                contentType = SUB_PROTOCOL_MEDIA_TYPE,
                 op = listOf(Operation.INVOKE_ACTION), // Operation type specific to actions
-                subprotocol = "webthingprotocol" // Specific subprotocol for actions
+                subprotocol = LMOS_PROTOCOL_NAME // Specific subprotocol for actions
             )
 
             // Add the form to the action's forms
             action.forms += form
-            log.debug("Assign '{}' with subprotocol '{}' to Action '{}'", href, "webthingprotocol", name)
+            log.debug("Assign '{}' with subprotocol '{}' to Action '{}'", href, LMOS_PROTOCOL_NAME, name)
         }
     }
 
@@ -132,14 +140,14 @@ class WebSocketProtocolServer(
             // Create a form for subscribing to the event
             val form = Form(
                 href = href,
-                contentType = "application/json",
-                subprotocol = "webthingprotocol",
+                contentType = SUB_PROTOCOL_MEDIA_TYPE,
+                subprotocol = LMOS_PROTOCOL_NAME,
                 op = listOf(Operation.SUBSCRIBE_EVENT, Operation.UNSUBSCRIBE_EVENT) // Operation type specific to events
             )
 
             // Add the form to the event's forms
             event.forms += form
-            log.debug("Assign '{}' with subprotocol '{}' to Event '{}'", href, "webthingprotocol", name)
+            log.debug("Assign '{}' with subprotocol '{}' to Event '{}'", href, LMOS_PROTOCOL_NAME, name)
         }
     }
 }
@@ -158,6 +166,13 @@ fun Application.setupRoutingWithWebSockets(servient: Servient) {
             enable(SerializationFeature.INDENT_OUTPUT)
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
+    }
+    install(MicrometerMetrics) {
+        meterBinders = listOf(
+            JvmMemoryMetrics(),
+            JvmGcMetrics(),
+            ProcessorMetrics()
+        )
     }
     install(WebSockets) {
         contentConverter = JacksonWebsocketContentConverter(JsonMapper.instance)
@@ -438,11 +453,11 @@ private fun createUnsupportedMessageType(thingId: String, correlationId : String
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#unsupported-message-type",
+        type = "${LMOSContext.url}/errors#unsupported-message-type",
         title = "Unsupported Message Type",
         status = "400",
         detail = "Unsupported message type",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }
 
@@ -450,11 +465,11 @@ private fun createPropertyIsReadOnly(thingId: String, correlationId : String, pr
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#operation-not-allowed",
+        type = "${LMOSContext.url}/errors#operation-not-allowed",
         title = "Property Read-Only",
         status = "405",
         detail = "Property '$propertyName' is read-only.",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }
 
@@ -462,11 +477,11 @@ private fun createPropertyIsWriteOnly(thingId: String, correlationId : String, p
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#operation-not-allowed",
+        type = "${LMOSContext.url}/errors#operation-not-allowed",
         title = "Property is write-only",
         status = "405",
         detail = "Property '$propertyName' is write-only.",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }
 
@@ -474,11 +489,11 @@ private fun createThingNotFound(thingId: String, correlationId : String): ErrorM
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
+        type = "${LMOSContext.url}/errors#not-found",
         title = "Thing Not Found",
         status = "404",
         detail = "Thing with ID '$thingId' not found.",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }
 
@@ -486,11 +501,11 @@ private fun createInternalServerError(thingId: String, correlationId : String, e
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#internal-server-error",
+        type = "${LMOSContext.url}/errors#internal-server-error",
         title = "Internal Server Error",
         status = "500",
-        detail = "Error reading property: $exceptionMessage",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        detail = "Internal Server Error: $exceptionMessage",
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }
 
@@ -498,11 +513,11 @@ private fun createPropertyNotFound(thingId: String, correlationId : String, prop
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
+        type = "${LMOSContext.url}/errors#not-found",
         title = "Property Not Found",
         status = "404",
         detail = "Property '$propertyName' not found.",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }
 
@@ -510,11 +525,11 @@ private fun createEventNotFound(thingId: String, correlationId : String, eventNa
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
+        type = "${LMOSContext.url}/errors#not-found",
         title = "Event Not Found",
         status = "404",
         detail = "Event '$eventName' not found.",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }
 
@@ -522,10 +537,10 @@ private fun createActionNotFound(thingId: String, correlationId : String, action
     return ErrorMessage(
         thingId = thingId,
         correlationId = correlationId,
-        type = "https://w3c.github.io/web-thing-protocol/errors#not-found",
+        type = "${LMOSContext.url}/errors#not-found",
         title = "Action Not Found",
         status = "404",
         detail = "Action '$actionName' not found.",
-        instance = "https://mythingserver.com/errors/${UUID.randomUUID()}"
+        instance = "${LMOSContext.url}/errors/${UUID.randomUUID()}"
     )
 }

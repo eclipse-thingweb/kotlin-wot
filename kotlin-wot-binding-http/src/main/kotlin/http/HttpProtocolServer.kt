@@ -22,6 +22,7 @@ import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
@@ -30,6 +31,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.*
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import org.slf4j.LoggerFactory
 import kotlin.collections.set
 
@@ -203,6 +207,13 @@ fun Application.setupRouting(servient: Servient) {
             call.respondText(text = "500: $cause" , status = HttpStatusCode.InternalServerError)
             throw cause // re-throw if you want it to be logged
         }
+    }
+    install(MicrometerMetrics) {
+        meterBinders = listOf(
+            JvmMemoryMetrics(),
+            JvmGcMetrics(),
+            ProcessorMetrics()
+        )
     }
     setupJackson()
     routing {

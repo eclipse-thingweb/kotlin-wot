@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.JsonMapper
+import ai.ancf.lmos.wot.thing.schema.Type
 import com.fasterxml.jackson.core.JsonProcessingException
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option

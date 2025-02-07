@@ -1,10 +1,16 @@
 package ai.ancf.lmos.wot.reflection.annotations
 
-import ai.ancf.lmos.wot.thing.schema.VersionInfo
+import ai.ancf.lmos.wot.thing.DEFAULT_TYPE
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Thing(val id: String, val title: String, val description: String)
+annotation class Thing(val id: String, val title: String, val description: String, val type : String= DEFAULT_TYPE)
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+@Repeatable
+annotation class Context(val prefix: String, val url : String)
+
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
@@ -12,17 +18,17 @@ annotation class VersionInfo(val instance : String, val model : String = "")
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Property(val name: String, val title: String = "", val description: String = "", val readOnly: Boolean = false, val writeOnly: Boolean = false)
+annotation class Property(val title: String = "", val description: String = "", val readOnly: Boolean = false, val writeOnly: Boolean = false)
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Action(val name: String, val title: String = "", val description: String = "",
+annotation class Action(val title: String = "", val description: String = "",
     val safe : Boolean = false, val idempotent : Boolean = false, val synchronous: Boolean = true
 )
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Event(val name: String, val title: String = "", val description: String = "")
+annotation class Event(val title: String = "", val description: String = "")
 
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)

@@ -5,10 +5,10 @@ import org.springframework.boot.runApplication
 
 
 fun main(args: Array<String>) {
-    runApplication<ThingAgentApplication>(*args)
+    runApplication<AgentApplication>(*args)
 }
 
 @SpringBootApplication
-class ThingAgentApplication {
+class AgentApplication {
 
 }

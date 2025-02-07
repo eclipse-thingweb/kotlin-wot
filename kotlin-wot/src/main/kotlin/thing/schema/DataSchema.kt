@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.WoTDSL
-import ai.ancf.lmos.wot.thing.Type
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.annotation.JsonInclude.Include.*
 

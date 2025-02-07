@@ -1,5 +1,7 @@
-package ai.ancf.lmos.wot.thing
+package ai.ancf.lmos.wot.thing.schema
 
+import ai.ancf.lmos.wot.thing.TypeDeserializer
+import ai.ancf.lmos.wot.thing.TypeSerializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 

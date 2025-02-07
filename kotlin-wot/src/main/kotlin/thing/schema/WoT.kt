@@ -2,9 +2,6 @@ package ai.ancf.lmos.wot.thing.schema
 
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.anfc.lmos.wot.binding.ProtocolClient
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.module.kotlin.convertValue
@@ -234,8 +231,6 @@ interface WoTConsumedThing {
      * @return The Thing Description.
      */
     fun getThingDescription(): WoTThingDescription
-
-    fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form>
 }
 
 suspend inline fun <reified T> WoTConsumedThing.genericReadProperty(

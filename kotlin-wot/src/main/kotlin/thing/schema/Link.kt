@@ -1,4 +1,4 @@
-package ai.ancf.lmos.wot.thing
+package ai.ancf.lmos.wot.thing.schema
 
 import com.fasterxml.jackson.annotation.JsonInclude
 

@@ -1,9 +1,7 @@
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import ai.ancf.lmos.wot.thing.schema.IntegerSchema
-import ai.ancf.lmos.wot.thing.schema.StringSchema
-import ai.ancf.lmos.wot.thing.schema.stringSchema
+import ai.ancf.lmos.wot.thing.schema.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.Test

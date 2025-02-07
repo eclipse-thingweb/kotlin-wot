@@ -19,8 +19,8 @@ import java.io.File
 import java.io.IOException
 import java.util.*
 
-private const val DEFAULT_CONTEXT = "https://www.w3.org/2022/wot/td/v1.1"
-private const val DEFAULT_TYPE = "Thing"
+const val DEFAULT_CONTEXT = "https://www.w3.org/2022/wot/td/v1.1"
+const val DEFAULT_TYPE = "Thing"
 
 /**
  * Represents a Thing entity in the Web of Things (WoT) model.

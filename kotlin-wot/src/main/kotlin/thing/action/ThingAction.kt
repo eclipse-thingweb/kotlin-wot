@@ -1,6 +1,6 @@
 package ai.ancf.lmos.wot.thing.action
 
-import ai.ancf.lmos.wot.thing.Type
+import ai.ancf.lmos.wot.thing.schema.Type
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.ActionAffordance
 import ai.ancf.lmos.wot.thing.schema.DataSchema

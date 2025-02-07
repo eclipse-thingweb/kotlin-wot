@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import java.util.concurrent.CountDownLatch
 import kotlin.test.Test
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -22,13 +23,12 @@ class ThingAgentApplicationTest {
     @Test
     fun testGenericReadProperty() = runBlocking {
         // Construct the dynamic server URL
-        val thingDescription = wot.requestThingDescription("http://localhost:$port/agent")
+        val thingDescription = wot.requestThingDescription("http://localhost:$port/chatagent")
 
         logger.warn(thingDescription.toString())
 
         val agent = wot.consume(thingDescription) as ConsumedThing
-        val chat = Chat("Which resources are available?")
-
+        val chat = Chat("Summarize https://eclipse.dev/lmos/docs/lmos_protocol/introduction for me")
         val answer : String = agent.invokeAction(actionName = "ask", input = chat)
 
         logger.info(answer)
@@ -37,7 +37,26 @@ class ThingAgentApplicationTest {
         val modelConfiguration : ModelConfiguration = agent.genericReadProperty("modelConfiguration")
 
         logger.info("Model Configuration: $modelConfiguration")
+    }
 
+    @Test
+    fun testEventDriven() = runBlocking {
+        // Construct the dynamic server URL
+        val scraperAgent = wot.consume(wot.requestThingDescription("http://localhost:$port/scraper")) as ConsumedThing
+        val researchAgent = wot.consume(wot.requestThingDescription("http://localhost:$port/researcher")) as ConsumedThing
+
+        val latch = CountDownLatch(1)
+
+        scraperAgent.subscribeEvent("contentRetrieved", listener =  {
+            val summary : String = researchAgent.invokeAction("ask", Chat("Summarize ${it.value().asText()} for me"))
+            logger.info(summary)
+            latch.countDown()
+        })
+
+        val chat = Chat("Retrieve content from https://eclipse.dev/lmos/docs/lmos_protocol/introduction")
+        scraperAgent.invokeUnitAction(actionName = "ask", input = chat)
+
+        latch.await()
 
     }
 }

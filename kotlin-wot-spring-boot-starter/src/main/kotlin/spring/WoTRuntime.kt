@@ -69,6 +69,7 @@ class WoTRuntime : CommandLineRunner {
             awaitThread.isDaemon = false
             awaitThread.start()
         } catch (e : Exception){
+            log.warn("Failed to start WoTRuntime", e)
             // Ensure not server is left running
             servient.shutdown()
         }

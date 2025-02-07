@@ -2,7 +2,7 @@ package ai.ancf.lmos.wot.thing.property
 
 
 import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.thing.Type
+import ai.ancf.lmos.wot.thing.schema.Type
 import ai.ancf.lmos.wot.thing.schema.*
 import com.fasterxml.jackson.module.kotlin.readValue
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
@@ -30,7 +30,7 @@ class ThingPropertyTest {
     @Test
     fun toJson() {
         val property = IntProperty().apply {
-            objectType=Type("saref:Temperature")
+            objectType= Type("saref:Temperature")
             description = "bla bla"
             observable=true
             readOnly=true
@@ -63,7 +63,7 @@ class ThingPropertyTest {
     @Test
     fun testConstructor() {
         val property = IntProperty().apply {
-            objectType=Type("saref:Temperature")
+            objectType= Type("saref:Temperature")
             observable=true
             readOnly=true
             writeOnly=false

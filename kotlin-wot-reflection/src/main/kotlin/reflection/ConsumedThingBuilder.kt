@@ -1,20 +1,6 @@
 package ai.ancf.lmos.wot.reflection
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.reflection.annotations.Action
-import ai.ancf.lmos.wot.reflection.annotations.Property
-import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.schema.InteractionInput
-import kotlinx.coroutines.runBlocking
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resumeWithException
-import kotlin.reflect.KClass
-import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.findAnnotation
-
+/*
 class ConsumedThingBuilder {
     companion object {
         fun <T : Any> create(clazz: KClass<T>, consumedThing: ConsumedThing): T {

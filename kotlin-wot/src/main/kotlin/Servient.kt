@@ -2,13 +2,13 @@ package ai.ancf.lmos.wot
 
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.ThingDescription
+import ai.ancf.lmos.wot.thing.*
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.*
+import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -26,7 +26,9 @@ import java.util.*
 class Servient(
     private val servers: List<ProtocolServer> = emptyList(),
     clientFactories: List<ProtocolClientFactory> = emptyList(),
-    val things: MutableMap<String, ExposedThing> = mutableMapOf()
+    val things: MutableMap<String, ExposedThing> = mutableMapOf(),
+    private val credentialStore: Map<String, JsonNode> = mapOf(),
+    private val clients: MutableMap<String, ProtocolClient> = mutableMapOf()
 ) {
     private val clientFactories: Map<String, ProtocolClientFactory> = clientFactories.associateBy { it.scheme }
 
