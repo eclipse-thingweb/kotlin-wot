@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
     kotlin("plugin.spring") version "1.9.10"
     id("org.springframework.boot") version "3.1.5" // Use the latest compatible version
@@ -15,4 +17,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(project(":kotlin-wot-binding-http"))
     testImplementation(project(":kotlin-wot-binding-websocket"))
+}
+
+tasks.getByName<BootJar>("bootJar") {
+    enabled = false
+}
+
+tasks.getByName<Jar>("jar") {
+    enabled = true
 }

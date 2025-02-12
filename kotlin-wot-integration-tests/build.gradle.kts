@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
     kotlin("plugin.spring") version "1.9.10"
     id("org.springframework.boot") version "3.1.5" // Use the latest compatible version
@@ -18,4 +20,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.hivemq:hivemq-mqtt-client:1.3.3")
     implementation("org.testcontainers:testcontainers:1.20.3")
+}
+
+tasks.withType<BootJar> {
+    mainClass.set("integration.AgentApplication")
 }
