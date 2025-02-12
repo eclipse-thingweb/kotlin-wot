@@ -12,4 +12,7 @@ dependencies {
     compileOnly(project(":kotlin-wot-binding-http"))
     compileOnly(project(":kotlin-wot-binding-mqtt"))
     compileOnly(project(":kotlin-wot-binding-websocket"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation(project(":kotlin-wot-binding-http"))
+    testImplementation(project(":kotlin-wot-binding-websocket"))
 }

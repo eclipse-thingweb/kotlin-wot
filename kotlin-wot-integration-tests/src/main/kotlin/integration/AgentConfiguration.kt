@@ -6,9 +6,14 @@ import ai.ancf.lmos.arc.agents.functions.ParameterSchema
 import ai.ancf.lmos.arc.agents.functions.ParameterType
 import ai.ancf.lmos.arc.spring.Agents
 import ai.ancf.lmos.arc.spring.Functions
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
+import ai.ancf.lmos.wot.security.BearerSecurityScheme
+import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.schema.*
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import kotlinx.coroutines.runBlocking
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -20,7 +25,7 @@ class AgentConfiguration {
     @Bean
     fun chatArcAgent(agent: Agents) = agent {
         name = "ChatAgent"
-        prompt { "You are a helpful agent." }
+        prompt { "You are a helpful smart home agent that can control devices." }
         model = { "GPT-4o" }
         tools = AllTools
     }
@@ -43,24 +48,27 @@ class AgentConfiguration {
 
     @Bean
     fun discoverTools(functions: Functions, wot: Wot) : List<LLMFunction> = runBlocking {
-        discoverTool(wot, functions, "http://localhost:8081/scraper")
+        //discoverTool(wot, functions, "http://localhost:8081/scraper")
+        discoverTool(wot, functions, "https://plugfest.webthings.io/things/virtual-things-2",
+            BearerSecurityScheme())
     }
 
-    private suspend fun discoverTool(wot: Wot, functions: Functions, url : String) : List<LLMFunction> {
+    private suspend fun discoverTool(wot: Wot, functions: Functions, url : String,
+                                     securityScheme: SecurityScheme) : List<LLMFunction> {
         val thingDescription =
-            wot.requestThingDescription(url)
+            wot.requestThingDescription(url, securityScheme)
 
-        val testThing = wot.consume(thingDescription)
+        val thing = wot.consume(thingDescription)
 
-        return mapThingDescriptionToFunctions(thingDescription, functions, testThing)
+        return mapThingDescriptionToFunctions(thingDescription, functions, thing)
     }
 
     private suspend fun mapThingDescriptionToFunctions(
         thingDescription: WoTThingDescription,
         functions: Functions,
-        testThing: WoTConsumedThing
-    ): List<LLMFunction> =
-        thingDescription.actions.flatMap { (actionName, action) ->
+        thing: WoTConsumedThing
+    ): List<LLMFunction> {
+        val actionFunctions = thingDescription.actions.flatMap { (actionName, action) ->
 
             val params = action.input?.let { input ->
                 listOf(Pair(mapDataSchemaToParam(input), true))
@@ -73,9 +81,68 @@ class AgentConfiguration {
                 params ?: emptyList(),
             ) {
                 (url) ->
-                testThing.invokeAction("fetchContent", TextNode(url)).asText()
+                thing.invokeAction(actionName, TextNode(url)).asText()
             }
         }
+        val propertiesFunctions = functions(
+            "readAllProperties",
+            "Read all properties of a thing",
+            "This function retrieves all properties of a thing"
+        ) {
+            thing.readAllProperties().map { (propertyName, futureValue) ->
+                "$propertyName: ${futureValue.value().asText()}"
+            }.joinToString("\n")
+        }
+
+        val propertyFunctions = thingDescription.properties.flatMap { (propertyName, property) ->
+            if (property.readOnly) {
+                functions(
+                    "read$propertyName",
+                    property.description ?: "Can be used to read the $propertyName property",
+                    thingDescription.title
+                ) {
+                    thing.readProperty(propertyName).value().asText()
+                }
+            } else if (property.writeOnly) {
+                functions(
+                    "set$propertyName",
+                    property.description ?: "Can be used to set the $propertyName property",
+                    thingDescription.title,
+                    listOf(Pair(mapDataSchemaToParam(property), true))
+                ) {
+                    (propertyValue) ->
+                    thing.writeProperty(propertyName, TextNode(propertyValue))
+                    "Property $propertyName set to $propertyValue"
+                }
+            } else {
+                functions(
+                    "read$propertyName",
+                    property.description ?: "Can be used to read the $propertyName property",
+                    thingDescription.title
+                ) {
+                    thing.readProperty(propertyName).value().asText()
+                }
+                functions(
+                    "set$propertyName",
+                    property.description ?: "Can be used to set the $propertyName property",
+                    thingDescription.title,
+                    listOf(Pair(mapDataSchemaToParam(property), true))
+                ) {
+                        (propertyValue) ->
+                    if(propertyValue != null){
+                        val input : JsonNode = JsonMapper.instance.convertValue(propertyValue)
+                        thing.writeProperty(propertyName, input)
+                        "Property $propertyName set to $propertyValue"
+                    }else{
+                        "Function call failed"
+                    }
+                }
+            }
+        }
+        return actionFunctions + propertyFunctions + propertiesFunctions
+    }
+
+
 
     /*
 

@@ -9,10 +9,11 @@ arc:
 
 wot:
   servient:
-    credentials:
-      urn:dev:wot:oauth:test:
-        clientId: "node-wot"
-        clientSecret: "isgreat!"
+    security:
+      credentials:
+        "[https://plugfest.webthings.io]":
+          type: "bearer"
+          token: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjE1OWM4MzhlLWYxZmItNGE3ZC1iZDY2LTBlNmI1ZDZjNWVhMCJ9.eyJyb2xlIjoidXNlcl90b2tlbiIsImlhdCI6MTczMjI5MjczNSwiaXNzIjoiaHR0cHM6Ly9wbHVnZmVzdC53ZWJ0aGluZ3MuaW8ifQ.CpQ5MLSygmCJFS6yz4Xdf0xyImwqBWvNfKNZPX9DNHjyjuq5wzq0mWurSu11wR-BwnZ2lnFcIId3ytfbo9hBwg"
     websocket:
       server:
         enabled: true

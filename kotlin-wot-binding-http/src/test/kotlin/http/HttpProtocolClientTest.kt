@@ -44,7 +44,7 @@ class HttpProtocolClientTest {
             statusCode = 200
         }
 
-        every { form.href } returns "${wiremock.baseUrl()}/foo"
+        val form = Form("${wiremock.baseUrl()}/foo")
 
         val client = HttpProtocolClient()
         client.readResource(form)
@@ -64,7 +64,7 @@ class HttpProtocolClientTest {
             statusCode = 200
         }
 
-        every { form.href } returns "${wiremock.baseUrl()}/foo"
+        val form = Form("${wiremock.baseUrl()}/foo")
         val jsonContent = """{"key": "value"}"""
         val content = Content("application/json", jsonContent.toByteArray())
 
@@ -86,7 +86,7 @@ class HttpProtocolClientTest {
             statusCode = 200
         }
 
-        every { form.href } returns "${wiremock.baseUrl()}/foo"
+        val form = Form("${wiremock.baseUrl()}/foo")
         val jsonContent = """{"key": "value"}"""
         val content = Content("application/json", jsonContent.toByteArray())
 
@@ -112,48 +112,6 @@ class HttpProtocolClientTest {
         val client = HttpProtocolClient()
         client.subscribeResource(form)
 
-    }
-
-    @Test
-    fun setSecurityHandlesBasicSecurityScheme() {
-        val client = HttpProtocolClient()
-        val credentials = mapOf("username" to "user", "password" to "pass")
-        val securityScheme = BasicSecurityScheme()
-
-        val result = client.setSecurity(listOf(securityScheme), credentials)
-
-        assert(result)
-    }
-
-    @Test
-    fun setSecurityHandlesBearerSecurityScheme() {
-        val client = HttpProtocolClient()
-        val credentials = mapOf("token" to "token123")
-        val securityScheme = BearerSecurityScheme()
-
-        val result = client.setSecurity(listOf(securityScheme), credentials)
-
-        assert(result)
-    }
-
-    @Test
-    fun setSecurityHandlesNoSecurityScheme() {
-        val client = HttpProtocolClient()
-        val securityScheme = NoSecurityScheme()
-
-        val result = client.setSecurity(listOf(securityScheme), emptyMap())
-
-        assert(result)
-    }
-
-    @Test
-    fun setSecurityThrowsExceptionForUnknownScheme() {
-        val client = HttpProtocolClient()
-        val securityScheme = mockk<SecurityScheme>()
-
-        val result = client.setSecurity(listOf(securityScheme), emptyMap())
-
-        assert(!result)
     }
 
     @Test

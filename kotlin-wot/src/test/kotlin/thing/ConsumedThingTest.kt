@@ -33,10 +33,10 @@ class ConsumedThingTest {
 
     @BeforeTest
     fun setUp() {
-        protocolClient = mockk()
+        protocolClient = mockk(relaxed = true)
         protocolClientFactory = mockk()
         every { protocolClientFactory.scheme } returns "https"
-        every { protocolClientFactory.client } returns protocolClient
+        every { protocolClientFactory.createClient() } returns protocolClient
         servient = Servient(clientFactories = listOf(protocolClientFactory))
         val thingDescription = thingDescription {
             title = "Test Thing"

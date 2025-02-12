@@ -2,7 +2,7 @@ package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.schema.genericReadProperty
+import integration.ConversationalAgent
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,21 +22,9 @@ class ThingAgentApplicationTest {
 
     @Test
     fun testGenericReadProperty() = runBlocking {
-        // Construct the dynamic server URL
-        val thingDescription = wot.requestThingDescription("http://localhost:$port/chatagent")
-
-        logger.warn(thingDescription.toString())
-
-        val agent = wot.consume(thingDescription) as ConsumedThing
-        val chat = Chat("Summarize https://eclipse.dev/lmos/docs/lmos_protocol/introduction for me")
-        val answer : String = agent.invokeAction(actionName = "ask", input = chat)
-
+        val agent = ConversationalAgent.create(wot, "http://localhost:$port/chatagent")
+        val answer = agent.chat("What is the state of my lamp?")
         logger.info(answer)
-
-        // Read the Model Configuration property
-        val modelConfiguration : ModelConfiguration = agent.genericReadProperty("modelConfiguration")
-
-        logger.info("Model Configuration: $modelConfiguration")
     }
 
     @Test

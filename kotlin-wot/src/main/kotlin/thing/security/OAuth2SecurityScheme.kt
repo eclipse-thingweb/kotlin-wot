@@ -10,11 +10,11 @@ import com.fasterxml.jackson.annotation.JsonInclude
  * then they are considered to be empty.<br></br> See also: https://www.w3.org/2019/wot/security#oauth2securityscheme
  */
 class OAuth2SecurityScheme(
-    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val authorization: String,
+    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val authorization: String?,
     @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val flow: String,
-    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val token: String,
-    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val refresh: String,
-    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val scopes: List<String>
+    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val token: String?,
+    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val refresh: String?,
+    @field:JsonInclude(JsonInclude.Include.NON_EMPTY) val scopes: List<String>?
 ) : SecurityScheme {
 
     override fun toString(): String {

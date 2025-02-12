@@ -1,7 +1,8 @@
 package ai.ancf.lmos.wot.binding.mqtt
 
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.credentials.CredentialsProvider
+import ai.ancf.lmos.wot.thing.schema.WoTForm
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import com.hivemq.client.mqtt.datatypes.MqttQos
@@ -32,7 +33,7 @@ class MqttProtocolClient(
 
     private val topicChannels = ConcurrentHashMap<String, Channel<Content>>()
 
-    override suspend fun invokeResource(form: Form, content: Content?): Content {
+    override suspend fun invokeResource(form: WoTForm, content: Content?): Content {
         val topic = try {
             URI(form.href).path.substring(1)
         } catch (e: URISyntaxException) {
@@ -41,7 +42,7 @@ class MqttProtocolClient(
         return requestReply(form, content, topic)
     }
 
-    override suspend fun subscribeResource(form: Form): Flow<Content> {
+    override suspend fun subscribeResource(form: WoTForm): Flow<Content> {
         val topic = try {
             URI(form.href).path.substring(1)
         }
@@ -51,7 +52,7 @@ class MqttProtocolClient(
         return subscribeToTopic(form, topic)
     }
 
-    override suspend fun unlinkResource(form: Form) {
+    override suspend fun unlinkResource(form: WoTForm) {
         val topic = try {
             URI(form.href).path.substring(1)
         }
@@ -95,7 +96,7 @@ class MqttProtocolClient(
     }
 
     // Function to observe a topic using HiveMQ Mqtt5AsyncClient
-    private suspend fun subscribeToTopic(form: Form, topic: String): Flow<Content> {
+    private suspend fun subscribeToTopic(form: WoTForm, topic: String): Flow<Content> {
         log.debug("MqttClient connected to broker at '{}:{}' subscribing to topic '{}'", client.config.serverHost, client.config.serverPort, topic)
 
         // Create a channel for the topic
@@ -141,7 +142,7 @@ class MqttProtocolClient(
 
 
     // Function to publish content to a topic and return a response
-    private suspend fun requestReply(form: Form, content: Content?, topic: String): Content {
+    private suspend fun requestReply(form: WoTForm, content: Content?, topic: String): Content {
         // Generate a unique response topic for this request
         val responseTopic = "${topic}/reply/${UUID.randomUUID()}"
 
@@ -209,8 +210,11 @@ class MqttProtocolClient(
         }
     }
 
+    override fun setCredentialsProvider(credentialsProvider: CredentialsProvider) {
+    }
+
     // Function to read the resource using the request-reply pattern
-    override suspend fun readResource(form: Form): Content {
+    override suspend fun readResource(form: WoTForm): Content {
         // Extract the content type from the form or use a default if not provided
 
         // Extract the topic from the URI
@@ -227,7 +231,7 @@ class MqttProtocolClient(
     }
 
     // Function to write the resource using the request-reply pattern
-    override suspend fun writeResource(form: Form, content: Content) {
+    override suspend fun writeResource(form: WoTForm, content: Content) {
         // Extract the topic from the URI
         val requestUri = URI(form.href)
         val topic = requestUri.path.removePrefix("/") // Removing leading "/"

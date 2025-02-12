@@ -12,6 +12,8 @@ enum class Operation(private val tdValue: String) {
     WRITE_PROPERTY("writeproperty"),
     OBSERVE_PROPERTY("observeproperty"),
     UNOBSERVE_PROPERTY("unobserveproperty"),
+    OBSERVE_ALL_PROPERTIES("observeallproperties"),
+    UNOBSERVE_ALL_PROPERTIES("unobserveallproperties"),
     READ_ALL_PROPERTIES("readallproperties"),
     WRITE_ALL_PROPERTIES("writeallproperties"),
     READ_MULTIPLE_PROPERTIES("readmultipleproperties"),

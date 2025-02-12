@@ -1,5 +1,6 @@
 package ai.ancf.lmos.wot.binding.mqtt
 
+import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 
@@ -9,20 +10,19 @@ open class MqttsProtocolClientFactory(private val mqttClientConfig: MqttClientCo
     }
     override val scheme: String
         get() = "mqtts"
-    override val client: MqttProtocolClient
-        get() = MqttProtocolClient(Mqtt5Client.builder()
+
+    override suspend fun init() {
+    }
+
+    override suspend fun destroy() {
+    }
+
+    override fun createClient(): ProtocolClient =
+        MqttProtocolClient(Mqtt5Client.builder()
             .identifier(mqttClientConfig.clientId)
             .serverHost(mqttClientConfig.host)
             .serverPort(mqttClientConfig.port)
             .sslWithDefaultConfig()
             .automaticReconnect().applyAutomaticReconnect()
             .build().toAsync(), true)
-
-    override suspend fun init() {
-        client.start()
-    }
-
-    override suspend fun destroy() {
-        client.stop()
-    }
 }

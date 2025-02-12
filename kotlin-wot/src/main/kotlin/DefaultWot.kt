@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot
 
 
+import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.ConsumedThing
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.ThingDescription
@@ -48,13 +49,13 @@ class DefaultWot(private val servient: Servient) : Wot {
 
     override fun consume(thingDescription: WoTThingDescription) = ConsumedThing(servient, thingDescription)
 
-    override suspend fun requestThingDescription(url: URI): WoTThingDescription {
-        return servient.fetch(url)
+    override suspend fun requestThingDescription(url: URI, securityScheme: SecurityScheme): WoTThingDescription {
+        return servient.fetch(url, securityScheme)
     }
 
     @Throws(URISyntaxException::class)
-    override suspend fun requestThingDescription(url: String): WoTThingDescription {
-        return servient.fetch(url)
+    override suspend fun requestThingDescription(url: String, securityScheme: SecurityScheme): WoTThingDescription {
+        return servient.fetch(url, securityScheme)
     }
 
     suspend fun destroy() {

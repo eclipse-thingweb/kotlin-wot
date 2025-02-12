@@ -1,14 +1,10 @@
 package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import ai.ancf.lmos.wot.security.BearerSecurityScheme
-import ai.ancf.lmos.wot.security.NoSecurityScheme
-import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.credentials.CredentialsProvider
+import ai.ancf.lmos.wot.thing.schema.WoTForm
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
-import http.HttpClientConfig
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
@@ -21,31 +17,29 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.*
 
 /**
  * Allows consuming Things via HTTP.
  */
 class HttpProtocolClient(
-    private val httpClientConfig: HttpClientConfig? = null,
     private val client: HttpClient = createHttpClient()
 ) : ProtocolClient {
 
-    private var authorization: String? = null
+    private var credentialsProvider: CredentialsProvider? = null
 
-    override suspend fun readResource(form: Form):Content {
+    override suspend fun readResource(form: WoTForm):Content {
         return resolveRequestToContent(form, HttpMethod.Get)
     }
 
-    override suspend fun writeResource(form: Form, content: Content) {
+    override suspend fun writeResource(form: WoTForm, content: Content) {
         resolveRequestToContent(form, HttpMethod.Put, content)
     }
 
-    override suspend fun invokeResource(form: Form, content: Content?): Content {
+    override suspend fun invokeResource(form: WoTForm, content: Content?): Content {
         return resolveRequestToContent(form, HttpMethod.Post, content)
     }
 
-    override suspend fun subscribeResource(form: Form) = flow {
+    override suspend fun subscribeResource(form: WoTForm) = flow {
         // Long-polling logic using Ktor client
         while (true) {
             try {
@@ -68,36 +62,11 @@ class HttpProtocolClient(
         TODO("Not yet implemented")
     }
 
-    override fun setSecurity(metadata: List<SecurityScheme>, credentials: Map<String, String>): Boolean {
-        if (metadata.isEmpty()) {
-            log.warn("HttpClient without security")
-            return false
-        }
-
-        return when (val security = metadata.firstOrNull()) {
-            is BasicSecurityScheme -> {
-                val credentialsMap = credentials
-                val username = credentialsMap["username"]
-                val password = credentialsMap["password"]
-                val basicAuth = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
-                authorization = "Basic $basicAuth"
-                true
-            }
-            is BearerSecurityScheme -> {
-                val credentialsMap = credentials
-                val token = credentialsMap["token"]
-                authorization = "Bearer $token"
-                true
-            }
-            is NoSecurityScheme -> true
-            else -> {
-                log.error("HttpClient cannot set security scheme '{}'", security)
-                false
-            }
-        }
+    override fun setCredentialsProvider(credentialsProvider: CredentialsProvider){
+        this.credentialsProvider = credentialsProvider
     }
 
-    private suspend fun resolveRequestToContent(form: Form, method: HttpMethod, content: Content? = null): Content {
+    private suspend fun resolveRequestToContent(form: WoTForm, method: HttpMethod, content: Content? = null): Content {
         return try {
             val response: HttpResponse = client.request(form.href) {
                 headers {
@@ -106,11 +75,11 @@ class HttpProtocolClient(
                 this.method = method
                 content?.let {
                     headers {
-                        append(HttpHeaders.ContentType, it.type )
+                        append(HttpHeaders.ContentType, form.contentType )
                     }
                     setBody(it.body)
                 }
-                authorization?.let { headers.append(HttpHeaders.Authorization, it) }
+                credentialsProvider?.getCredentials(form).let { headers.append(HttpHeaders.Authorization, it.toString()) }
             }
             checkResponse(response)
         } catch (e: Exception) {

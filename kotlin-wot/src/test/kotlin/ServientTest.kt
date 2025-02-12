@@ -3,10 +3,10 @@ package ai.ancf.lmos.wot
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.schema.Context
 import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.schema.Type
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.Context
+import ai.ancf.lmos.wot.thing.schema.Type
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
@@ -26,7 +26,7 @@ class ServientTest {
     private val mockClient = mockk<ProtocolClient>()
     private val factoryMock = mockk<ProtocolClientFactory>{
         every { scheme } returns "http"
-        every { client } returns mockClient
+        every { createClient() } returns mockClient
         coEvery { init() } just Runs
         coEvery { destroy() } just Runs
     }
@@ -178,7 +178,7 @@ class ServientTest {
             runBlocking { servient.fetch(url) }
         }
         assertEquals("Unable to fetch thing description: Client error", exception.message)
-        verify { servient.getClientFor(scheme) }
+        coVerify { servient.getClientFor(scheme) }
         coVerify { mockClient.readResource(any<Form>()) }
     }
 

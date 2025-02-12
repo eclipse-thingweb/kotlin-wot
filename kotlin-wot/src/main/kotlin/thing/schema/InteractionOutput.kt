@@ -17,11 +17,11 @@ class InteractionOutput(
     private val lazyValue: JsonNode? by lazy {
         schema?.let { ContentManager.contentToValue(content, schema) }
     }
-    override suspend fun arrayBuffer(): ByteArray {
+    override fun arrayBuffer(): ByteArray {
         return content.body
     }
 
-    override suspend fun value(): JsonNode {
+    override fun value(): JsonNode {
         return ContentManager.contentToValue(content, schema)
     }
 }

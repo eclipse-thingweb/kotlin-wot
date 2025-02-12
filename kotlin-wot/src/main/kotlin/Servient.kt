@@ -2,13 +2,15 @@ package ai.ancf.lmos.wot
 
 import ai.ancf.lmos.wot.content.ContentCodecException
 import ai.ancf.lmos.wot.content.ContentManager
+import ai.ancf.lmos.wot.credentials.Credentials
+import ai.ancf.lmos.wot.credentials.DefaultCredentialsProvider
+import ai.ancf.lmos.wot.security.*
 import ai.ancf.lmos.wot.thing.*
 import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import ai.anfc.lmos.wot.binding.*
-import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -27,8 +29,7 @@ class Servient(
     private val servers: List<ProtocolServer> = emptyList(),
     clientFactories: List<ProtocolClientFactory> = emptyList(),
     val things: MutableMap<String, ExposedThing> = mutableMapOf(),
-    private val credentialStore: Map<String, JsonNode> = mapOf(),
-    private val clients: MutableMap<String, ProtocolClient> = mutableMapOf()
+    val credentialStore: Map<String, Credentials> = mapOf(),
 ) {
     private val clientFactories: Map<String, ProtocolClientFactory> = clientFactories.associateBy { it.scheme }
 
@@ -51,8 +52,8 @@ class Servient(
         }
 
         // Launch coroutines for initializing client factories
-        val clientJobs = clientFactories.values.map { client ->
-            async { client.init() } // Launching client factory initialization in a coroutine
+        val clientJobs = clientFactories.values.map { clientFactory ->
+            async { clientFactory.init() } // Launching client factory initialization in a coroutine
         }
 
         // Wait for all jobs to complete
@@ -75,8 +76,8 @@ class Servient(
         }
 
         // Launch coroutines for initializing client factories
-        val clientJobs = clientFactories.values.map { client ->
-            async { client.destroy() } // Launching client factory initialization in a coroutine
+        val clientJobs = clientFactories.values.map { clientFactory ->
+            async { clientFactory.destroy() }
         }
 
         // Wait for all jobs to complete
@@ -155,8 +156,8 @@ class Servient(
      * @param url
      * @return
      */
-    suspend fun fetch(url: String): ThingDescription {
-        return fetch(URI(url))
+    suspend fun fetch(url: String, securityScheme: SecurityScheme = NoSecurityScheme()): ThingDescription {
+        return fetch(URI(url), securityScheme)
     }
 
     /**
@@ -166,11 +167,11 @@ class Servient(
      * @param url
      * @return
      */
-     suspend fun fetch(url: URI): ThingDescription {
+     suspend fun fetch(url: URI, securityScheme: SecurityScheme = NoSecurityScheme()): ThingDescription {
         log.debug("Fetching thing description from '{}'", url)
         val scheme = url.scheme
         try {
-            val client = getClientFor(scheme)
+            val client = getClientFor(scheme, securityScheme)
             if (client != null) {
                 val form = Form(href = url.toString(), contentType = "application/json")
                 val content = client.readResource(form)
@@ -185,12 +186,6 @@ class Servient(
         } catch (e: ProtocolClientException) {
             throw ServientException("Unable to fetch thing description: ${e.message}", e)
         }
-    }
-
-
-    fun getCredentials(id: String?): String {
-        log.debug("Servient looking up credentials for '{}'", id)
-        return "credentialStore.get(id)"
     }
 
     /*
@@ -245,16 +240,17 @@ class Servient(
 
      */
 
-    fun getClientFor(scheme: String): ProtocolClient? {
+    fun getClientFor(scheme: String, securityScheme: SecurityScheme = NoSecurityScheme()): ProtocolClient? {
         val factory = clientFactories[scheme]
         return if (factory != null) {
-            factory.client
+            val client = factory.createClient()
+            client.setCredentialsProvider(DefaultCredentialsProvider(listOf(securityScheme), credentialStore))
+            return client
         } else {
             log.warn("Servient has no ClientFactory for scheme '{}'", scheme)
             null
         }
     }
-
     /**
      * Adds `thing` to the Thing Directory `directory`.
      *
@@ -350,7 +346,7 @@ class Servient(
         // Try to run a discovery with every available protocol binding
         for (factory in clientFactories.values) {
             try {
-                val client = factory.client
+                val client = factory.createClient()
                 val clientFlow = client.discover(filter) // Assuming discover now returns Flow
                 emitAll(clientFlow) // Merges the flow from the client
                 foundAtLeastOne = true

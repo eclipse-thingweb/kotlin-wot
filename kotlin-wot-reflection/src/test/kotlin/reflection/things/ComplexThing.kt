@@ -14,112 +14,112 @@ import kotlin.random.Random
     description = "A thing with complex properties, actions, and events."
 )
 @VersionInfo(instance = "1.0.0")
-class ComplexThing(@Property(name = "constructorProperty", readOnly = true) val constructorProperty: String = "Hello World") {
+class ComplexThing(@Property(readOnly = true) val constructorProperty: String = "Hello World") {
 
     private val statusChangedFlow = MutableSharedFlow<String>(replay = 1) // Replay last emitted value
 
-    @Property(name = "observableProperty", readOnly = true)
+    @Property(readOnly = true)
     val observableProperty : MutableStateFlow<String> = MutableStateFlow("Hello World")
 
     // A nested configuration represented as a read-only property
-    @Property(name = "nestedConfig", description = "A nested configuration object", readOnly = true)
+    @Property(description = "A nested configuration object", readOnly = true)
     val nestedConfig: NestedConfig = NestedConfig(
         name = "defaultValue",
         values = listOf(1, 2, 3)
     )
 
-    @Property(name = "exampleStringProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleStringProperty: String = "Hello World"
 
-    @Property(name = "exampleIntProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleIntProperty: Int = 42
 
-    @Property(name = "exampleBooleanProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleBooleanProperty: Boolean = true
 
-    @Property(name = "exampleNumberProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleNumberProperty: Number = 3.14
 
     // New properties of specific types (Double, Float, and Long)
-    @Property(name = "exampleDoubleProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleDoubleProperty: Double = 3.1415
 
-    @Property(name = "exampleFloatProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleFloatProperty: Float = 2.71f
 
-    @Property(name = "exampleLongProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleLongProperty: Long = 10000000000L
 
-    @Property(name = "exampleIntArrayProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleIntArrayProperty: Array<Int> = arrayOf(1, 2, 3)
 
-    @Property(name = "exampleStringArrayProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleStringArrayProperty: Array<String> = arrayOf("apple", "banana", "cherry")
 
-    @Property(name = "exampleBooleanArrayProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleBooleanArrayProperty: Array<Boolean> = arrayOf(true, false, true)
 
-    @Property(name = "exampleNumberArrayProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleNumberArrayProperty: Array<Number> = arrayOf(3.14, 42, 99.9)
 
-    @Property(name = "exampleListProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleListProperty: List<String> = listOf("item1", "item2", "item3")
 
-    @Property(name = "exampleSetProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleSetProperty: Set<String> = setOf("itemA", "itemB", "itemC")
 
-    @Property(name = "exampleMapProperty", readOnly = true)
+    @Property(readOnly = true)
     val exampleMapProperty: Map<String, Int> = mapOf("key1" to 1, "key2" to 2, "key3" to 3)
 
-    @Action(name = "processData")
+    @Action()
     fun processData(input1: Int, input2: String): ComplexResult {
         return ComplexResult("Processed: $input2", input1 * 2)
     }
 
-    @Action(name = "compute")
+    @Action()
     fun compute(params: ComputationParams): ComputationResult {
         return ComputationResult(params.a + params.b, params.a * params.b)
     }
 
-    @Action(name = "returnString")
+    @Action()
     fun returnString(): String {
         return "Hello from action!"
     }
 
-    @Action(name = "returnInt")
+    @Action()
     fun returnInt(): Int {
         return 100
     }
 
-    @Action(name = "returnBoolean")
+    @Action()
     fun returnBoolean(): Boolean {
         return true
     }
 
-    @Action(name = "doNothing")
+    @Action()
     fun doNothing() {
         // This action returns nothing and does nothing
     }
 
-    @Action(name = "processInput")
+    @Action()
     fun processInput(input: String) {
         // This action takes an input and does not return anything
         println("Processed input: $input")
     }
 
-    @Action(name = "sum")
+    @Action()
     fun sum(a: Int, b: Int): Int {
         return a + b
     }
 
     // Event example for dynamic updates (optional for the test, but a useful addition)
-    @Event(name = "statusChanged", description = "Fires when the status changes")
+    @Event(description = "Fires when the status changes")
     fun statusChanged(): Flow<String> {
         return statusChangedFlow
     }
 
     // Event stream that emits computation results periodically
-    @Event(name = "computationUpdates", description = "Stream of periodic computation results")
+    @Event(description = "Stream of periodic computation results")
     fun computationUpdates(): Flow<ComputationResult> {
         return flow {
             while (true) {

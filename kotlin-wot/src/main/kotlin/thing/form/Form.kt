@@ -1,5 +1,8 @@
 package ai.ancf.lmos.wot.thing.form
 
+import ai.ancf.lmos.wot.thing.schema.WoTAdditionalExpectedResponse
+import ai.ancf.lmos.wot.thing.schema.WoTExpectedResponse
+import ai.ancf.lmos.wot.thing.schema.WoTForm
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -23,37 +26,41 @@ import java.net.URISyntaxException
  * @property op Indicates the semantic intention of performing the operation(s) described by the form. Default is "readproperty". Optional.
  */
 @JsonInclude(NON_EMPTY)
-data class Form(
+data class Form (
     @JsonInclude(Include.ALWAYS)
-    val href: String, // Target IRI of a link or submission target of a form. Mandatory
+    override val href: String, // Target IRI of a link or submission target of a form. Mandatory
 
     @JsonInclude(NON_EMPTY)
-    val contentType: String = "application/json", // Assign a content type. Default is "application/json"
+    override val contentType: String = "application/json", // Assign a content type. Default is "application/json"
 
     @JsonInclude(NON_EMPTY)
-    val contentCoding: String? = null, // Optional content coding values
+    override val contentCoding: String? = null, // Optional content coding values
 
     @JsonInclude(NON_EMPTY)
-    val security: List<String>? = null, // Optional set of security definition names
+    override val security: List<String>? = null, // Optional set of security definition names
 
     @JsonInclude(NON_EMPTY)
-    val scopes: List<String>? = null, // Optional set of authorization scope identifiers
+    override val scopes: List<String>? = null, // Optional set of authorization scope identifiers
 
     @JsonInclude(NON_EMPTY)
-    val response: ExpectedResponse? = null, // Optional term for output communication metadata
+    override val response: ExpectedResponse? = null, // Optional term for output communication metadata
 
     @JsonInclude(NON_EMPTY)
-    val additionalResponses: List<AdditionalExpectedResponse>? = null, // Optional additional expected responses
+    override val additionalResponses: List<AdditionalExpectedResponse>? = null, // Optional additional expected responses
 
     @JsonInclude(NON_EMPTY)
-    val subprotocol: String? = null, // Optional term for the interaction mechanism
+    override val subprotocol: String? = null, // Optional term for the interaction mechanism
 
     @JsonInclude(NON_EMPTY)
-    val op: List<Operation>? = null, // Default op values
+    override val op: List<Operation>? = null, // Default op values
 
     @JsonInclude(NON_EMPTY)
-    val optionalProperties : MutableMap<String, Any> = mutableMapOf()
-) {
+    override val optionalProperties : MutableMap<String, Any> = mutableMapOf()
+) : WoTForm {
+
+    companion object {
+        private val log = LoggerFactory.getLogger(Form::class.java)
+    }
 
     @get:JsonIgnore
     val hrefScheme: String?
@@ -66,21 +73,18 @@ data class Form(
             null
         }
 
-    companion object {
-        private val log = LoggerFactory.getLogger(Form::class.java)
-    }
-
     // This method is called for any unknown fields during deserialization
     @JsonAnySetter
     fun setAdditionalProperties(key: String, value: Any) {
         optionalProperties[key] = value
     }
 
+
     @JsonInclude(NON_EMPTY)
     data class ExpectedResponse(
         @JsonInclude(Include.ALWAYS)
-        val contentType: String // Assign a content type based on a media type. Mandatory
-    )
+        override val contentType: String // Assign a content type based on a media type. Mandatory
+    ) : WoTExpectedResponse
 
     /**
      * Communication metadata describing the expected response message for additional responses.
@@ -94,13 +98,14 @@ data class Form(
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     data class AdditionalExpectedResponse(
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        val success: Boolean = false, // Signals if an additional response should not be considered an error. Default is false.
+        override val success: Boolean = false, // Signals if an additional response should not be considered an error. Default is false.
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        val contentType: String = "text/plain", // Assign a content type. Default is "text/plain".
+        override val contentType: String = "text/plain", // Assign a content type. Default is "text/plain".
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        val schema: String? = null // Used to define the output data schema for an additional response. Optional.
-    )
+        override val schema: String? = null // Used to define the output data schema for an additional response. Optional.
+    ) : WoTAdditionalExpectedResponse
+
 }
 

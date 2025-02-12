@@ -15,47 +15,47 @@ class SimpleThing {
 
     var counter = 0
 
-    @Property(name = "observableProperty", title = "Observable Property", readOnly = true)
+    @Property(title = "Observable Property", readOnly = true)
     val observableProperty : MutableStateFlow<String> = MutableStateFlow("Hello World")
 
-    @Property(name = "mutableProperty")
+    @Property()
     var mutableProperty: String = "test"
 
-    @Property(name = "readyOnlyProperty", readOnly = true)
+    @Property(readOnly = true)
     val readyOnlyProperty: String = "test"
 
-    @Property(name = "writeOnlyProperty", writeOnly = true)
+    @Property(writeOnly = true)
     var writeOnlyProperty: String = "test"
 
-    @Action(name = "voidAction")
+    @Action()
     fun voidAction() {
         println("Action executed")
         counter += 1
     }
 
-    @Action(name = "changeObservableProperty")
+    @Action()
     fun changeObservableProperty(){
         observableProperty.value = "Hello from action!"
     }
 
-    @Action(name = "outputAction")
+    @Action()
     fun outputAction() : String {
         return "test"
     }
 
-    @Action(name = "inputAction")
+    @Action()
     fun inputAction(input : String) {
         println("Action executed")
         counter += 1
     }
 
-    @Action(name = "inOutAction")
+    @Action()
     fun inOutAction(input : String) : String {
         println("Action executed")
         return "$input output"
     }
 
-    @Event(name = "statusUpdated")
+    @Event()
     fun statusUpdated(): Flow<String> {
         return flow {
             emit("Status updated")

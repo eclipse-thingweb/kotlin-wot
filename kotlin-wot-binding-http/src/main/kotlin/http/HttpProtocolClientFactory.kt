@@ -1,19 +1,17 @@
 package ai.ancf.lmos.wot.binding.http
 
+import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
-import http.HttpClientConfig
 
 /**
  * Creates new [HttpProtocolClient] instances.
  */
-open class HttpProtocolClientFactory(private val httpClientConfig: HttpClientConfig? = null) : ProtocolClientFactory {
+open class HttpProtocolClientFactory() : ProtocolClientFactory {
     override fun toString(): String {
         return "HttpClient"
     }
     override val scheme: String
         get() = "http"
-    override val client: HttpProtocolClient
-        get() = HttpProtocolClient(httpClientConfig)
 
     override suspend fun init() {
        // TODO
@@ -22,4 +20,6 @@ open class HttpProtocolClientFactory(private val httpClientConfig: HttpClientCon
     override suspend fun destroy() {
         // TODO
     }
+
+    override fun createClient(): ProtocolClient = HttpProtocolClient()
 }

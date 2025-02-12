@@ -4,6 +4,7 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
+import ai.ancf.lmos.wot.binding.http.HttpsProtocolClientFactory
 import ai.ancf.lmos.wot.binding.mqtt.MqttClientConfig
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolClientFactory
 import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolServer
@@ -21,7 +22,7 @@ import org.springframework.context.annotation.Configuration
 
 
 @AutoConfiguration
-@EnableConfigurationProperties(HttpServerProperties::class, MqttServerProperties::class, MqttClientProperties::class)
+@EnableConfigurationProperties(CredentialsProperties::class, HttpServerProperties::class, MqttServerProperties::class, MqttClientProperties::class)
 class ServientAutoConfiguration {
 
     @Bean
@@ -33,11 +34,13 @@ class ServientAutoConfiguration {
     @Bean
     fun servient(
         servers : List<ProtocolServer>,
-        clientFactories: List<ProtocolClientFactory>
+        clientFactories: List<ProtocolClientFactory>,
+        credentialsProperties: CredentialsProperties
     ): Servient {
         return Servient(
             clientFactories = clientFactories,
-            servers = servers
+            servers = servers,
+            credentialStore = credentialsProperties.credentials.mapValues { it.value.convert() }
         )
     }
 
@@ -81,6 +84,17 @@ class ServientAutoConfiguration {
         )
         fun httpProtocolServer(httpServerProperties: HttpServerProperties): HttpProtocolServer {
             return HttpProtocolServer(bindHost = httpServerProperties.host, bindPort = httpServerProperties.port)
+        }
+
+        @Bean
+        @ConditionalOnProperty(
+            prefix = "wot.servient.http.client",
+            name = ["enabled"],
+            havingValue = "true",
+            matchIfMissing = true // By default, enable the client
+        )
+        fun httpsProtocolClientFactory(): HttpsProtocolClientFactory {
+            return HttpsProtocolClientFactory()
         }
 
         @Bean

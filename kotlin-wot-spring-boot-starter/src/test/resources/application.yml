@@ -1,0 +1,15 @@
+wot:
+  servient:
+    security:
+      credentials:
+        "[urn:dev:wot:org:eclipse:thingweb:security-example]":
+          type: bearer
+          token: test
+    websocket:
+      server:
+        enabled: false
+        port: 9090
+    http:
+      server:
+        enabled: false
+        port: 9090

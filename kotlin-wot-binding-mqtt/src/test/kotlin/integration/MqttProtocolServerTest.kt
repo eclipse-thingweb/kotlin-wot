@@ -10,6 +10,7 @@ import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.StringSchema
 import ai.ancf.lmos.wot.thing.schema.stringSchema
 import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
+import ai.anfc.lmos.wot.binding.ProtocolClient
 import app.cash.turbine.test
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
@@ -34,7 +35,7 @@ class MqttProtocolServerTest {
 
         private lateinit var hiveMqContainer: GenericContainer<*>
         private lateinit var mqttClient: Mqtt5AsyncClient
-        private lateinit var protocolClient: MqttProtocolClient
+        private lateinit var protocolClient: ProtocolClient
         private lateinit var mqttServer: MqttProtocolServer
         private lateinit var exposedThing: ExposedThing
         private lateinit var brokerUrl: String
@@ -67,8 +68,8 @@ class MqttProtocolServerTest {
             val serverConfig = MqttClientConfig(host, mappedPort, "server")
 
             val clientFactory = MqttProtocolClientFactory(clientConfig)
-            clientFactory.init()
-            protocolClient = clientFactory.client
+            protocolClient = clientFactory.createClient()
+            protocolClient.start()
 
             val servient = Servient()
             mqttServer = MqttProtocolServer(serverConfig)

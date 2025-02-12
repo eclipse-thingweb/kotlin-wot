@@ -12,6 +12,6 @@ class HttpProtocolClientFactoryTest {
 
     @Test
     fun getClient() {
-        assertIs<HttpProtocolClient>( HttpProtocolClientFactory().client)
+        assertIs<HttpProtocolClient>( HttpProtocolClientFactory().createClient())
     }
 }

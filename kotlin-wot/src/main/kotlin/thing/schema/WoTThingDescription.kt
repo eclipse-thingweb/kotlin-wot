@@ -5,6 +5,7 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ThingEvent
 import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.form.Operation
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
@@ -151,6 +152,29 @@ interface WoTThingDescription : BaseSchema {
      */
     @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
     var uriVariables: MutableMap<String, DataSchema<Any>>? // Optional: Map of DataSchema
+}
+
+interface WoTForm {
+    val href: String
+    val contentType: String
+    val contentCoding: String?
+    val security: List<String>?
+    val scopes: List<String>?
+    val response: WoTExpectedResponse?
+    val additionalResponses: List<WoTAdditionalExpectedResponse>?
+    val subprotocol: String?
+    val op: List<Operation>?
+    val optionalProperties: MutableMap<String, Any>
+}
+
+interface WoTExpectedResponse {
+    val contentType: String
+}
+
+interface WoTAdditionalExpectedResponse {
+    val success: Boolean
+    val contentType: String
+    val schema: String?
 }
 
 /**

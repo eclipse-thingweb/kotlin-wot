@@ -4,6 +4,6 @@ import ai.ancf.lmos.wot.reflection.annotations.Action
 
 interface SimpleThingInterface {
 
-    @Action(name = "outputAction")
+    @Action()
     suspend fun outputAction() : String
 }

@@ -1,10 +1,12 @@
 package ai.ancf.lmos.wot.thing
 
+import AugmentedForm
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.ServientException
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
+import ai.ancf.lmos.wot.credentials.DefaultCredentialsProvider
 import ai.ancf.lmos.wot.parseInteractionOptions
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
@@ -49,7 +51,7 @@ data class ConsumedThing(
         return try {
             // Ensure the property exists
             // Retrieve the client and form for the property
-            val (client, form) = getClientFor(property.forms, Operation.READ_PROPERTY)
+            val (client, form) = getClientFor(property.forms, Operation.READ_PROPERTY, options)
 
             // Log the action
             log.debug("ConsumedThing '{}' reading {}", this.title, form.href)
@@ -70,7 +72,7 @@ data class ConsumedThing(
 
     private fun handleInteractionOutput(
         content: Content,
-        form: Form,
+        form: WoTForm,
         outputDataSchema: DataSchema<*>?
     ): WoTInteractionOutput {
 
@@ -93,7 +95,7 @@ data class ConsumedThing(
         for ((propertyName, property) in properties) {
             try {
                 // Get the form for the "readproperty" action
-                val form = getClientFor(property.forms, Operation.READ_PROPERTY)
+                val form = getClientFor(property.forms, Operation.READ_PROPERTY, options)
                 // If a valid form is found, add the property name to the list
                 propertyNames.add(propertyName)
             } catch (e: Exception) {
@@ -153,7 +155,7 @@ data class ConsumedThing(
         return try {
             // Ensure the property exists
             // Retrieve the client and form for the property
-            val (client, form) = getClientFor(property.forms, Operation.WRITE_PROPERTY)
+            val (client, form) = getClientFor(property.forms, Operation.WRITE_PROPERTY, options)
 
             // Log the action
             log.debug("ConsumedThing '{}' reading {}", this.title, form.href)
@@ -198,7 +200,7 @@ data class ConsumedThing(
 
         try {
             // Retrieve the client and form for the action
-            val (client, form) = getClientFor(action.forms, Operation.INVOKE_ACTION)
+            val (client, form) = getClientFor(action.forms, Operation.INVOKE_ACTION, options)
 
             // Log the action
             log.debug("ConsumedThing '{}' invoke {}", this.title, form.href)
@@ -267,7 +269,7 @@ data class ConsumedThing(
         val property = this.properties[propertyName]
         requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
 
-        val (client, form) = getClientFor(property.forms, Operation.OBSERVE_PROPERTY)
+        val (client, form) = getClientFor(property.forms, Operation.OBSERVE_PROPERTY, options)
 
         if (observedProperties.containsKey(propertyName)) {
             throw IllegalStateException("ConsumedThing '$title' already has a function subscribed to $property. You can only observe once.")
@@ -305,7 +307,7 @@ data class ConsumedThing(
             "ConsumedThing '$title', no event found for '$eventName'"
         }
 
-        val (client, form) = getClientFor(eventAffordance.forms, Operation.SUBSCRIBE_EVENT)
+        val (client, form) = getClientFor(eventAffordance.forms, Operation.SUBSCRIBE_EVENT, options)
 
         if (subscribedEvents.containsKey(eventName)) {
             return flow {
@@ -331,7 +333,7 @@ data class ConsumedThing(
             "ConsumedThing '$title', no event found for '$eventName'"
         }
 
-        val (client, form) = getClientFor(eventAffordance.forms, Operation.SUBSCRIBE_EVENT)
+        val (client, form) = getClientFor(eventAffordance.forms, Operation.SUBSCRIBE_EVENT, options)
 
         if (subscribedEvents.containsKey(eventName)) {
             throw IllegalStateException("ConsumedThing '$title' already has a function subscribed to $eventName. You can only subscribe once.")
@@ -365,10 +367,10 @@ data class ConsumedThing(
     }
 
     fun getClientFor(
-        form: Form,
+        form: WoTForm,
         op: Operation
-    ): Pair<ProtocolClient?, Form> {
-        return getClientFor(listOf(form), op)
+    ): Pair<ProtocolClient?, WoTForm> {
+        return getClientFor(listOf(form), op, InteractionOptions())
     }
 
     /**
@@ -381,14 +383,17 @@ data class ConsumedThing(
      * @throws ConsumedThingException
      */
 
-    private fun getClientFor(forms: List<Form>, op: Operation): Pair<ProtocolClient, Form> {
+    private fun getClientFor(forms: List<WoTForm>, op: Operation, options: InteractionOptions?): Pair<ProtocolClient, WoTForm> {
         require(forms.isNotEmpty()) { "No forms available for operation $op on $id" }
 
         // Get supported schemes in the order of preference
         val supportedSchemes = servient.getClientSchemes()
 
         // Find schemes in forms sorted by supported schemes preference
-        val schemes = forms.asSequence()
+        val augmentedForms = forms
+            .map { AugmentedForm(it, thingDescription) }
+
+        val schemes = augmentedForms
             .mapNotNull { it.hrefScheme }
             .distinct()
             .sortedBy { supportedSchemes.indexOf(it).takeIf { index -> index >= 0 } ?: Int.MAX_VALUE }
@@ -406,7 +411,7 @@ data class ConsumedThing(
 
         log.debug("'$id' chose client for scheme '$scheme'")
 
-        val form = getFormForOpAndScheme(forms, op, scheme)
+        val form = getFormForOpAndScheme(augmentedForms, op, scheme)
         return client to form
     }
 
@@ -419,8 +424,9 @@ data class ConsumedThing(
                     // Initialize client security system if security details are provided
                     security.takeIf { it.isNotEmpty() }?.let {
                         log.debug("'{}' setting credentials for '{}'", id, client)
-                        val metadata = security.mapNotNull { key -> securityDefinitions[key] }
-                        client.setSecurity(metadata, mapOf("credentials" to servient.getCredentials(id)))
+                        val securitySchemes = security.mapNotNull { key -> securityDefinitions[key] }
+                        client.setCredentialsProvider(DefaultCredentialsProvider(securitySchemes, servient.credentialStore))
+
                     }
                     return scheme to client
                 }
@@ -432,10 +438,10 @@ data class ConsumedThing(
     }
 
     private fun getFormForOpAndScheme(
-        forms: List<Form>,
+        forms: List<AugmentedForm>,
         op: Operation,
         scheme: String?
-    ): Form {
+    ): AugmentedForm {
         // Find a form that matches the operation and scheme
         return forms.firstOrNull { it.op?.contains(op) == true && it.hrefScheme == scheme }
             ?: forms.firstOrNull { it.op.isNullOrEmpty() && it.hrefScheme == scheme }
@@ -463,18 +469,21 @@ data class ConsumedThing(
     fun handleUriVariables(
         thing: WoTConsumedThing,
         ti: InteractionAffordance,
-        form: Form,
+        form: WoTForm,
         options: InteractionOptions?
-    ): Form {
+    ): WoTForm {
         val uriTemplate = UriTemplate.fromTemplate(form.href)
         val uriVariables = parseInteractionOptions(thingDescription, ti, options).uriVariables ?: emptyMap()
         val updatedHref = uriTemplate.expand(uriVariables)
 
         return if (updatedHref != form.href) {
             // Create a shallow copy and update href
+            /*
             form.copy(href = updatedHref).also {
                 log.debug("ConsumedThing '${thingDescription.title}' updated form URI to ${it.href}")
             }
+            */
+            form
         } else {
             form
         }
@@ -548,14 +557,14 @@ data class ConsumedThing(
         thing: ConsumedThing,
         name: String,
         client: ProtocolClient,
-        form: Form,
+        form: WoTForm,
         override var active: Boolean = true
     ) : InternalSubscription(thing, name, client) {
 
         private var formIndex: Int = -1
 
         init {
-            val index = thing.properties[name]?.forms?.indexOf(form)
+            val index = thing.properties[name]?.forms?.indexOfFirst { it.href == form.href }
             if (index == null || index < 0) {
                 throw Error("Could not find form ${form.href} in property $name")
             }
@@ -571,7 +580,7 @@ data class ConsumedThing(
             val property = thing.properties[name]
             requireNotNull(property) { "ConsumedThing '${thing.title}' does not have property $name" }
             options.formIndex = options.formIndex ?: matchingUnsubscribeForm()
-            val ( client, form ) = thing.getClientFor(property.forms, Operation.UNOBSERVE_PROPERTY)
+            val ( client, form ) = thing.getClientFor(property.forms, Operation.UNOBSERVE_PROPERTY, options)
 
 
             val formWithoutURIvariables = thing.handleUriVariables(thing, property, form, options)
@@ -596,14 +605,15 @@ data class ConsumedThing(
         thing: ConsumedThing,
         name: String,
         client: ProtocolClient,
-        private val form: Form,
+        private val form: WoTForm,
         override var active: Boolean = true
     ) : InternalSubscription(thing, name, client) {
 
         private var formIndex: Int = -1
 
         init {
-            val index = thing.events[name]?.forms?.indexOf(form)
+            val forms = thing.events[name]?.forms
+            val index = forms?.indexOfFirst { it.href == form.href }
             if (index == null || index < 0) {
                 throw Error("Could not find form ${form.href} in event $name")
             }
@@ -620,7 +630,7 @@ data class ConsumedThing(
                 "ConsumedThing '${thing.title}', no event found for '$name'"
             }
             options.formIndex = options.formIndex ?: matchingUnsubscribeForm()
-            val ( client, form ) = thing.getClientFor(event.forms, Operation.UNSUBSCRIBE_EVENT)
+            val ( client, form ) = thing.getClientFor(event.forms, Operation.UNSUBSCRIBE_EVENT, options)
 
             val formWithoutURIvariables = thing.handleUriVariables(thing, event, form, options)
             log.debug("ConsumedThing '${thing.title}' unsubscribing to ${form.href}")

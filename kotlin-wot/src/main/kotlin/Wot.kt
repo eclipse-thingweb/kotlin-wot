@@ -1,5 +1,7 @@
 package ai.ancf.lmos.wot
 
+import ai.ancf.lmos.wot.security.NoSecurityScheme
+import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.ConsumedThing
 import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
@@ -60,7 +62,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun requestThingDescription(url: URI): WoTThingDescription
+    suspend fun requestThingDescription(url: URI, securityScheme: SecurityScheme = NoSecurityScheme()): WoTThingDescription
 
     /**
      * Accepts an [String] containing an url (e.g. "file:..." or "http://...") to a resource
@@ -69,7 +71,7 @@ interface Wot {
      * @param url
      * @return
      */
-    suspend fun requestThingDescription(url: String): WoTThingDescription
+    suspend fun requestThingDescription(url: String, securityScheme : SecurityScheme = NoSecurityScheme()): WoTThingDescription
 
     companion object {
         // Factory method to create an instance of WoT with a given Servient

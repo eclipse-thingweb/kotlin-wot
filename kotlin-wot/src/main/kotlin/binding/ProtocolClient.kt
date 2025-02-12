@@ -1,11 +1,11 @@
 package ai.anfc.lmos.wot.binding
 
 import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.security.SecurityScheme
+import ai.ancf.lmos.wot.credentials.CredentialsProvider
 import ai.ancf.lmos.wot.thing.ExposedThing
 import ai.ancf.lmos.wot.thing.ThingDescription
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
-import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.thing.schema.WoTForm
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -23,9 +23,7 @@ interface ProtocolClient {
      * @param credentials
      * @return
      */
-    fun setSecurity(metadata: List<SecurityScheme>, credentials: Map<String, String>): Boolean {
-        return false
-    }
+    fun setCredentialsProvider(credentialsProvider: CredentialsProvider)
 
     /**
      * Starts the discovery process that will provide Things that match the `filter`
@@ -55,7 +53,7 @@ interface ProtocolClient {
      * @param form
      * @return
      */
-    suspend fun readResource(form: Form): Content {
+    suspend fun readResource(form: WoTForm): Content {
         throw ProtocolClientNotImplementedException(javaClass, "read")
     }
 
@@ -67,7 +65,7 @@ interface ProtocolClient {
      * @param content
      * @return
      */
-    suspend fun writeResource(form: Form, content: Content) {
+    suspend fun writeResource(form: WoTForm, content: Content) {
         throw ProtocolClientNotImplementedException(javaClass, "write")
     }
 
@@ -91,7 +89,7 @@ interface ProtocolClient {
      * @param form
      * @return
      */
-    suspend fun invokeResource(form: Form): Content {
+    suspend fun invokeResource(form: WoTForm): Content {
         return invokeResource(form, null)
     }
 
@@ -117,7 +115,7 @@ interface ProtocolClient {
      * @param content
      * @return
      */
-    suspend fun invokeResource(form: Form, content: Content?): Content {
+    suspend fun invokeResource(form: WoTForm, content: Content?): Content {
         throw ProtocolClientNotImplementedException(javaClass, "invoke")
     }
 
@@ -139,7 +137,7 @@ interface ProtocolClient {
      * @param form
      * @return
      */
-    suspend fun subscribeResource(form: Form): Flow<Content> {
+    suspend fun subscribeResource(form: WoTForm): Flow<Content> {
         throw ProtocolClientNotImplementedException(javaClass, "subscribeResource")
     }
 
@@ -147,7 +145,7 @@ interface ProtocolClient {
         unlinkResource(resource.form)
     }
 
-    suspend fun unlinkResource(form: Form) {
+    suspend fun unlinkResource(form: WoTForm) {
         throw ProtocolClientNotImplementedException(javaClass, "unlinkResource")
     }
 
@@ -158,7 +156,7 @@ interface ProtocolClient {
     suspend fun stop()
 }
 
-data class Resource(val thingId: String, val name: String, val form: Form)
+data class Resource(val thingId: String, val name: String, val form: WoTForm)
 
 enum class ResourceType{
     EVENT,

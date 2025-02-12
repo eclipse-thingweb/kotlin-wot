@@ -3,7 +3,8 @@ package ai.ancf.lmos.wot.binding.websocket
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.form.Form
+import ai.ancf.lmos.wot.credentials.CredentialsProvider
+import ai.ancf.lmos.wot.thing.schema.WoTForm
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.Resource
@@ -63,6 +64,10 @@ class WebSocketProtocolClient(
             sessionCache.clear()
         }
         scope.cancel() // Cancel all ongoing coroutines
+    }
+
+    override fun setCredentialsProvider(credentialsProvider: CredentialsProvider) {
+
     }
 
     override suspend fun readResource(resource: Resource): Content {
@@ -233,7 +238,7 @@ class WebSocketProtocolClient(
         }
     }
 
-    private suspend fun requestAndReply(form: Form, message: WoTMessage, timeoutMillis: Long = 5000L): Content {
+    private suspend fun requestAndReply(form: WoTForm, message: WoTMessage, timeoutMillis: Long = 5000L): Content {
         val session = getOrCreateSession(form.href)
         val deferred = CompletableDeferred<Content>()
 

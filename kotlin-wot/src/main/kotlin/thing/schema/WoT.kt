@@ -89,8 +89,8 @@ interface WoTInteractionOutput {
     val dataUsed: Boolean
     //val form: Form?
     val schema: DataSchema<*>?
-    suspend fun arrayBuffer(): ByteArray
-    suspend fun value(): JsonNode
+    fun arrayBuffer(): ByteArray
+    fun value(): JsonNode
 }
 
 
@@ -237,6 +237,15 @@ suspend inline fun <reified T> WoTConsumedThing.genericReadProperty(
     propertyName: String,
     options: InteractionOptions? = InteractionOptions()
 ): T {
-    val result = readProperty(propertyName, options).value() // Call your existing function
+    val result = readProperty(propertyName, options).value()
     return JsonMapper.instance.convertValue<T>(result)
+}
+
+suspend inline fun <reified I> WoTConsumedThing.genericWriteProperty(
+    propertyName: String,
+    value: I,
+    options: InteractionOptions? = InteractionOptions()
+){
+    val input : JsonNode = JsonMapper.instance.valueToTree(value)
+    writeProperty(propertyName, input, options)
 }

@@ -9,8 +9,6 @@ interface ProtocolClientFactory {
 
     val scheme: String
 
-    val client: ProtocolClient
-
     /**
      * Is called on servient start.
      *
@@ -24,4 +22,7 @@ interface ProtocolClientFactory {
      * @return
      */
     suspend fun destroy()
+
+    /** Creates a new [ProtocolClient] */
+    fun createClient(): ProtocolClient
 }
