@@ -1,8 +1,5 @@
-plugins {
-    id("io.ktor.plugin") version "3.0.0"
-}
-
 dependencies {
+    implementation(platform("io.ktor:ktor-bom:3.0.3"))
     api(project(":kotlin-wot"))
     implementation("org.slf4j:slf4j-api")
     implementation("io.ktor:ktor-server-core")

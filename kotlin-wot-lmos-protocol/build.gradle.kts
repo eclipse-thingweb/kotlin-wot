@@ -1,7 +1,4 @@
-plugins {
-    id("io.ktor.plugin") version "3.0.0"
-}
-
 dependencies {
+    implementation(platform("io.ktor:ktor-bom:3.0.3"))
     implementation("io.ktor:ktor-serialization-jackson")
 }
