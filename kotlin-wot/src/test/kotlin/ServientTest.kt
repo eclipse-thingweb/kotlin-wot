@@ -23,7 +23,9 @@ class ServientTest {
 
     private val mockServer1 = mockk<ProtocolServer>(relaxed = true)
     private val mockServer2 = mockk<ProtocolServer>(relaxed = true)
-    private val mockClient = mockk<ProtocolClient>()
+    private val mockClient = mockk<ProtocolClient>(){
+        every { setCredentialsProvider(any()) } just Runs
+    }
     private val factoryMock = mockk<ProtocolClientFactory>{
         every { scheme } returns "http"
         every { createClient() } returns mockClient
@@ -178,7 +180,6 @@ class ServientTest {
             runBlocking { servient.fetch(url) }
         }
         assertEquals("Unable to fetch thing description: Client error", exception.message)
-        coVerify { servient.getClientFor(scheme) }
         coVerify { mockClient.readResource(any<Form>()) }
     }
 

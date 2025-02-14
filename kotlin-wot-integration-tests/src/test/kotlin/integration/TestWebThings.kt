@@ -9,21 +9,28 @@ import ai.ancf.lmos.wot.security.BearerSecurityScheme
 import ai.ancf.lmos.wot.thing.schema.genericReadProperty
 import ai.ancf.lmos.wot.thing.schema.genericWriteProperty
 import kotlinx.coroutines.test.runTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class TestWebThings {
 
-    @Test
-    fun `Should control devices`() = runTest {
+    private lateinit var wot: Wot
+
+    @BeforeTest
+    fun setup() = runTest {
         val http = HttpProtocolClientFactory()
         val https = HttpsProtocolClientFactory()
-        val servient = Servient(clientFactories = listOf(http, https), credentialStore =
-            mapOf("https://plugfest.webthings.io" to
-                BearerCredentials("eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjE1OWM4MzhlLWYxZmItNGE3ZC1iZDY2LTBlNmI1ZDZjNWVhMCJ9.eyJyb2xlIjoidXNlcl90b2tlbiIsImlhdCI6MTczMjI5MjczNSwiaXNzIjoiaHR0cHM6Ly9wbHVnZmVzdC53ZWJ0aGluZ3MuaW8ifQ.CpQ5MLSygmCJFS6yz4Xdf0xyImwqBWvNfKNZPX9DNHjyjuq5wzq0mWurSu11wR-BwnZ2lnFcIId3ytfbo9hBwg")
-            ))
+        val servient = Servient(
+            clientFactories = listOf(http, https),
+            credentialStore = mapOf("https://plugfest.webthings.io" to
+                    BearerCredentials("dummy")
+            )
+        )
+        wot =  Wot.create(servient)
+    }
 
-        val wot = Wot.create(servient)
-
+    @Test
+    fun `Should control devices`() = runTest {
         val thingDescription = wot.requestThingDescription("https://plugfest.webthings.io/things/virtual-things-2",
             BearerSecurityScheme())
 
@@ -34,7 +41,5 @@ class TestWebThings {
 
         testThing.genericWriteProperty("level", 50)
         testThing.genericWriteProperty("on", true)
-
-
     }
 }
