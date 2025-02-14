@@ -24,15 +24,23 @@ interface Wot {
      * @param filter
      * @return
      */
-    suspend fun discover(filter: ThingFilter): Flow<WoTExposedThing>
+    fun discover(filter: ThingFilter): Flow<WoTThingDescription>
 
     /**
      * Starts the discovery process that will provide all available Things.
      *
      * @return
      */
+    fun discover(): Flow<WoTThingDescription>
 
-    suspend fun discover(): Flow<WoTExposedThing>
+    /**
+     * Starts the discovery process that will provide Things that match the `filter`
+     * argument from a given Thing Directory.
+     *
+     * @param filter
+     * @return
+     */
+    suspend fun exploreDirectory(directoryUrl: String, securityScheme: SecurityScheme = NoSecurityScheme()): Set<WoTThingDescription>
 
     /**
      * Accepts a `thing` argument of type [ThingDescription] and returns an [ ] object.<br></br> The result can be used to start exposing interfaces for thing

@@ -24,13 +24,17 @@ class DefaultWot(private val servient: Servient) : Wot {
                 '}'
     }
     @Throws(WotException::class)
-    override suspend fun discover(filter: ThingFilter): Flow<WoTExposedThing> {
+    override fun discover(filter: ThingFilter): Flow<WoTThingDescription> {
         return servient.discover(filter)
     }
 
     @Throws(WotException::class)
-    override suspend fun discover(): Flow<WoTExposedThing> {
+    override fun discover(): Flow<WoTThingDescription> {
         return discover(ThingFilter(method = DiscoveryMethod.ANY))
+    }
+
+    override suspend fun exploreDirectory(directoryUrl: String, securityScheme: SecurityScheme): Set<WoTThingDescription> {
+        return servient.exploreDirectory(directoryUrl, securityScheme)
     }
 
     override fun produce(thingDescription: WoTThingDescription): WoTExposedThing {

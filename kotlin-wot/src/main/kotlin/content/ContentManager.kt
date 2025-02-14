@@ -147,7 +147,7 @@ object ContentManager {
      * @param contentType
      * @return
      */
-    internal fun getMediaType(contentType: String?): String {
+     fun getMediaType(contentType: String?): String {
         if (contentType == null) {
             return DEFAULT_MEDIA_TYPE
         }

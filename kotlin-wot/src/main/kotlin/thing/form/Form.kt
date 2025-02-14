@@ -1,13 +1,16 @@
 package ai.ancf.lmos.wot.thing.form
 
+import ai.ancf.lmos.wot.thing.OperationsDeserializer
 import ai.ancf.lmos.wot.thing.schema.WoTAdditionalExpectedResponse
 import ai.ancf.lmos.wot.thing.schema.WoTExpectedResponse
 import ai.ancf.lmos.wot.thing.schema.WoTForm
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URISyntaxException
@@ -52,6 +55,7 @@ data class Form (
     override val subprotocol: String? = null, // Optional term for the interaction mechanism
 
     @JsonInclude(NON_EMPTY)
+    @JsonDeserialize(using = OperationsDeserializer::class)
     override val op: List<Operation>? = null, // Default op values
 
     @JsonInclude(NON_EMPTY)
@@ -81,9 +85,12 @@ data class Form (
 
 
     @JsonInclude(NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class ExpectedResponse(
-        @JsonInclude(Include.ALWAYS)
-        override val contentType: String // Assign a content type based on a media type. Mandatory
+        @get:JsonInclude(NON_EMPTY)
+        override val contentType: String = "application/json", // Assign a content type based on a media type. Mandatory
+        @get:JsonInclude(NON_EMPTY)
+        override val description: String?
     ) : WoTExpectedResponse
 
     /**
@@ -95,16 +102,19 @@ data class Form (
      * @property schema Used to define the output data schema for an additional response
      * if it differs from the default output data schema. Optional.
      */
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class AdditionalExpectedResponse(
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        @get:JsonInclude(NON_EMPTY)
         override val success: Boolean = false, // Signals if an additional response should not be considered an error. Default is false.
 
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        @get:JsonInclude(NON_EMPTY)
         override val contentType: String = "text/plain", // Assign a content type. Default is "text/plain".
 
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        override val schema: String? = null // Used to define the output data schema for an additional response. Optional.
+        @get:JsonInclude(NON_EMPTY)
+        override val schema: String? = null, // Used to define the output data schema for an additional response. Optional.
+        @get:JsonInclude(NON_EMPTY)
+        override val description: String? = null
     ) : WoTAdditionalExpectedResponse
 
 }

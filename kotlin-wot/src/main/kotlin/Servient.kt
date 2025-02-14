@@ -10,7 +10,9 @@ import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
 import ai.ancf.lmos.wot.thing.filter.ThingFilter
 import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
+import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
 import ai.anfc.lmos.wot.binding.*
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -314,7 +316,7 @@ class Servient(
      * @return
      */
 
-    suspend fun discover(): Flow<WoTExposedThing> {
+    fun discover(): Flow<WoTThingDescription> {
         return discover(ThingFilter(method = ANY))
     }
 
@@ -331,7 +333,7 @@ class Servient(
      * @return
      */
 
-    suspend fun discover(filter: ThingFilter): Flow<WoTExposedThing> {
+    fun discover(filter: ThingFilter): Flow<WoTThingDescription> {
         return when (filter.method) {
             DIRECTORY -> discoverDirectory(filter)
             LOCAL -> discoverLocal(filter)
@@ -341,7 +343,7 @@ class Servient(
 
     // Discover any available Things across all protocols
     @Throws(ServientException::class)
-    private suspend fun discoverAny(filter: ThingFilter): Flow<WoTExposedThing> = flow {
+    private fun discoverAny(filter: ThingFilter): Flow<WoTThingDescription> = flow {
         var foundAtLeastOne = false
         // Try to run a discovery with every available protocol binding
         for (factory in clientFactories.values) {
@@ -364,7 +366,7 @@ class Servient(
         emitAll(discoverLocal(filter))
     }
 
-    private suspend fun discoverDirectory(
+    private fun discoverDirectory(
         filter: ThingFilter
     ): Flow<ExposedThing> = flow {
         //val discoveredThings = filter.url?.let { fetchDirectory(it) } TODO
@@ -376,7 +378,7 @@ class Servient(
         filteredThings?.forEach { emit(it) } // Emit each thing one by one
     }
 
-    private fun discoverLocal(filter: ThingFilter): Flow<WoTExposedThing> = flow {
+    private fun discoverLocal(filter: ThingFilter): Flow<WoTThingDescription> = flow {
         val myThings = things.values.toList()
 
         // Apply the filter query if available
@@ -385,6 +387,16 @@ class Servient(
     }
 
     fun hasClientFor(scheme: String): Boolean = clientFactories.containsKey(scheme)
+
+    suspend fun exploreDirectory(directoryUrl: String, securityScheme: SecurityScheme): Set<WoTThingDescription> {
+        val directoryThingDescription = fetch(directoryUrl, securityScheme)
+        val consumedDirectory = ConsumedThing(this@Servient, directoryThingDescription)
+        val thingsPropertyOutput = consumedDirectory.readProperty("things")
+        val thingsAsJsonNode = thingsPropertyOutput.value()
+
+        val thingDescriptions : Set<ThingDescription> = JsonMapper.instance.treeToValue<Set<ThingDescription>>(thingsAsJsonNode)
+        return thingDescriptions
+    }
 
     companion object {
         private val log = LoggerFactory.getLogger(Servient::class.java)

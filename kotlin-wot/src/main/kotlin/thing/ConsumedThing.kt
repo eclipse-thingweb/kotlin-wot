@@ -78,7 +78,7 @@ data class ConsumedThing(
 
         // Check if returned media type matches the expected media type from TD
         form.response?.let { response ->
-            if (content.type != response.contentType) {
+            if (ContentManager.getMediaType(content.type) != ContentManager.getMediaType(response.contentType)) {
                 throw IllegalArgumentException(
                     "Unexpected type '${content.type}' in response. Expected '${response.contentType}'"
                 )

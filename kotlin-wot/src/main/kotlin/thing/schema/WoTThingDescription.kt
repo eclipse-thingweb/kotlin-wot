@@ -169,12 +169,14 @@ interface WoTForm {
 
 interface WoTExpectedResponse {
     val contentType: String
+    val description: String?
 }
 
 interface WoTAdditionalExpectedResponse {
     val success: Boolean
     val contentType: String
     val schema: String?
+    val description: String?
 }
 
 /**
