@@ -1,7 +1,6 @@
 package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.thing.ConsumedThing
 import integration.ConversationalAgent
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
@@ -30,19 +29,19 @@ class ThingAgentApplicationTest {
     @Test
     fun testEventDriven() = runBlocking {
         // Construct the dynamic server URL
-        val scraperAgent = wot.consume(wot.requestThingDescription("http://localhost:$port/scraper")) as ConsumedThing
-        val researchAgent = wot.consume(wot.requestThingDescription("http://localhost:$port/researcher")) as ConsumedThing
+
+        val scraperAgent = ConversationalAgent.create(wot, "http://localhost:$port/scraper")
+        val researchAgent = ConversationalAgent.create(wot, "http://localhost:$port/researcher")
 
         val latch = CountDownLatch(1)
 
-        scraperAgent.subscribeEvent("contentRetrieved", listener =  {
-            val summary : String = researchAgent.invokeAction("ask", Chat("Summarize ${it.value().asText()} for me"))
+        scraperAgent.consumeEvent("contentRetrieved") {
+            val summary: String = researchAgent.chat("Summarize ${it.value().asText()} for me")
             logger.info(summary)
             latch.countDown()
-        })
+        }
 
-        val chat = Chat("Retrieve content from https://eclipse.dev/lmos/docs/lmos_protocol/introduction")
-        scraperAgent.invokeUnitAction(actionName = "ask", input = chat)
+        scraperAgent.chat("Retrieve content from https://eclipse.dev/lmos/docs/lmos_protocol/introduction")
 
         latch.await()
 
