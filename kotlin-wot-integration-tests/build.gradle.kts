@@ -6,9 +6,6 @@ plugins {
     id("io.spring.dependency-management") version "1.1.3"
 }
 
-tasks.named<Test>("test") {
-    enabled = false
-}
 
 dependencies {
     api(project(":kotlin-wot-binding-http"))

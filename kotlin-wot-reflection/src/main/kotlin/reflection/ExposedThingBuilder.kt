@@ -320,20 +320,25 @@ object ExposedThingBuilder {
                 // 4. Inspect the functions of the class and find @Action and @Event annotations
                 clazz.declaredMemberFunctions.forEach { function ->
                     val actionAnnotation = function.findAnnotation<Action>()
+                    val actionInputAnnotation = function.findAnnotation<ActionInput>()
+                    val actionOutputAnnotation = function.findAnnotation<ActionOutput>()
                     val eventAnnotation = function.findAnnotation<Event>()
                     if (actionAnnotation != null) {
                         log.debug("Found @Action annotation on function: ${function.name}")
                         actionsMap[function.name] = function
                         val parameterTypes = function.parameters.drop(1) // Skip the first parameter which is the receiver
-                        val inputSchema = generateSchema(parameterTypes)
+                        @Suppress("UNCHECKED_CAST")
+                        val inputSchema = generateSchema(parameterTypes) as DataSchema<Any>?
+                        inputSchema?.title = actionInputAnnotation?.title
+                        inputSchema?.description = actionInputAnnotation?.description
                         // Handle return type for the output schema
-                        val outputSchema = mapTypeToSchema(function.returnType)
+                        val outputSchema = mapTypeToSchema(function.returnType) as DataSchema<Any>?
+                        outputSchema?.title = actionOutputAnnotation?.title
+                        outputSchema?.description = actionOutputAnnotation?.description
                         action<Any, Any>(function.name) {
                             description = actionAnnotation.description
-                            @Suppress("UNCHECKED_CAST")
-                            input = inputSchema as DataSchema<Any>?
-                            @Suppress("UNCHECKED_CAST")
-                            output = outputSchema as DataSchema<Any>?
+                            input = inputSchema
+                            output = outputSchema
                             safe = actionAnnotation.safe
                             synchronous = actionAnnotation.synchronous
                             idempotent = actionAnnotation.idempotent
@@ -511,7 +516,7 @@ object ExposedThingBuilder {
             else -> {
                 log.debug("Single parameter found, mapping type to schema")
                 val param = parameterTypes.first()
-                mapTypeToSchema(param.type)
+                mapParameterToSchema(param)
             }
         }
     }
@@ -583,6 +588,14 @@ object ExposedThingBuilder {
             }
         }
         return Pair(properties, required)
+    }
+
+    internal fun mapParameterToSchema(param : KParameter): DataSchema<out Any> {
+        val propertyAnnotation = param.findAnnotation<Property>()
+        return mapTypeToSchema(param.type).apply {
+            title = propertyAnnotation?.title
+            description = propertyAnnotation?.description
+        }
     }
 
     internal fun mapTypeToSchema(type: KType): DataSchema<out Any> {

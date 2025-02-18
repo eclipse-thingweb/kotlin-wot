@@ -1,7 +1,7 @@
 package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.Wot
-import integration.ConversationalAgent
+import integration.WotConversationalAgent
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,9 +20,9 @@ class ThingAgentApplicationTest {
     private lateinit var wot: Wot
 
     @Test
-    fun testGenericReadProperty() = runBlocking {
-        val agent = ConversationalAgent.create(wot, "http://localhost:$port/chatagent")
-        val answer = agent.chat("What is the state of my lamp?")
+    fun testChat() = runBlocking {
+        val agent = WotConversationalAgent.create(wot, "http://localhost:$port/chatagent")
+        val answer = agent.chat("What is the state of my lamps?")
         logger.info(answer)
     }
 
@@ -30,13 +30,13 @@ class ThingAgentApplicationTest {
     fun testEventDriven() = runBlocking {
         // Construct the dynamic server URL
 
-        val scraperAgent = ConversationalAgent.create(wot, "http://localhost:$port/scraper")
-        val researchAgent = ConversationalAgent.create(wot, "http://localhost:$port/researcher")
+        val scraperAgent = WotConversationalAgent.create(wot, "http://localhost:$port/scraper")
+        val researchAgent = WotConversationalAgent.create(wot, "http://localhost:$port/researcher")
 
         val latch = CountDownLatch(1)
 
         scraperAgent.consumeEvent("contentRetrieved") {
-            val summary: String = researchAgent.chat("Summarize ${it.value().asText()} for me")
+            val summary: String = researchAgent.chat("Summarize $it for me")
             logger.info(summary)
             latch.countDown()
         }

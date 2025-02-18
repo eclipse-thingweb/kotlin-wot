@@ -4,6 +4,7 @@ import ai.ancf.lmos.arc.agents.functions.LLMFunction
 import ai.ancf.lmos.arc.agents.functions.ParameterSchema
 import ai.ancf.lmos.arc.agents.functions.ParameterType
 import ai.ancf.lmos.arc.spring.Functions
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.schema.*
@@ -21,11 +22,15 @@ object ThingToFunctionsMapper {
 
     private val thingDescriptionsMap = mutableMapOf<String, WoTConsumedThing>()
 
+    private val functionCache = mutableMapOf<String, List<LLMFunction>>()
+
     suspend fun exploreToolDirectory(wot: Wot, functions: Functions, url: String, securityScheme: SecurityScheme): List<LLMFunction> {
         val thingDescriptions = wot.exploreDirectory(url, securityScheme)
-        val retrieveAllFunction = createRetrieveAllFunction(functions, thingDescriptions)
         val consumedThings = consumeThings(wot, thingDescriptions)
-        return retrieveAllFunction + mapAllThingFunctions(functions, consumedThings)
+        val retrieveAllFunction = createRetrieveAllFunction(functions, thingDescriptions)
+        mapAllThingFunctions(functions, consumedThings)
+        val allFunctions = retrieveAllFunction+ functionCache.values.flatten()
+        return allFunctions
     }
 
     private fun createRetrieveAllFunction(functions: Functions, thingDescriptions: Set<WoTThingDescription>): List<LLMFunction> {
@@ -45,18 +50,16 @@ object ThingToFunctionsMapper {
     }
 
     private fun summarizeThingDescriptions(things: Set<WoTThingDescription>): String {
-        return things.joinToString("\n") { thing ->
-            val types = thing.objectType?.types?.joinToString(", ") ?: "N/A"
-            val actions = summarizeActions(thing)
-            val properties = summarizeProperties(thing)
-            """
-            thingId: ${thing.id}, Title: ${thing.title ?: "N/A"}, Types: $types
-            Actions:
-            $actions
-            Properties:
-            $properties
-            """.trimIndent()
+        val summaries = things.map { thing ->
+            ThingSummary(
+                thingId = thing.id,
+                title = thing.title ?: "N/A",
+                types = thing.objectType?.types ?: emptySet(),
+                actions = summarizeActions(thing).split("\n").filter { it.isNotBlank() },
+                properties = summarizeProperties(thing).split("\n").filter { it.isNotBlank() }
+            )
         }
+        return JsonMapper.instance.writeValueAsString(summaries)
     }
 
     private fun summarizeActions(thing: WoTThingDescription): String {
@@ -67,13 +70,13 @@ object ThingToFunctionsMapper {
         return thing.properties.entries.joinToString("\n    ") { (key, property) -> "$key: ${property.title} - ${property.description}" }
     }
 
-    private  fun mapThingDescriptionToFunctions(functions: Functions, thing: WoTConsumedThing): List<LLMFunction> {
+    private  fun mapThingDescriptionToFunctions(functions: Functions, thing: WoTConsumedThing): Set<LLMFunction> {
         val thingDescription = thing.getThingDescription()
         val defaultParams = createDefaultParams()
         val actionFunctions = createActionFunctions(functions, thingDescription, defaultParams)
-        val propertyFunctions = createPropertyFunctions(functions, thing, thingDescription, defaultParams)
-        val readAllPropertiesFunction = createReadAllPropertiesFunction(functions, thing)
-        return actionFunctions + propertyFunctions + readAllPropertiesFunction
+        val propertyFunctions = createPropertyFunctions(functions, thingDescription, defaultParams)
+        val readAllPropertiesFunction = createReadAllPropertiesFunction(functions, thingDescription)
+        return actionFunctions.toSet() + propertyFunctions.toSet() + readAllPropertiesFunction.toSet()
     }
 
     private fun createDefaultParams(): List<Pair<ParameterSchema, Boolean>> {
@@ -84,8 +87,10 @@ object ThingToFunctionsMapper {
         return thingDescription.actions.flatMap { (actionName, action) ->
             val actionParams = action.input?.let { listOf(Pair(mapDataSchemaToParam(it), true)) } ?: emptyList()
             val params = defaultParams + actionParams
-            functions(actionName, action.description ?: "No Description available", thingDescription.title, params) { (thingId, input) ->
-                invokeAction(thingDescription.id, actionName, input, action.input)
+            functionCache.getOrPut(actionName) {
+                functions(actionName, action.description ?: "No Description available", thingDescription.title, params) { (thingId, input) ->
+                    invokeAction(thingDescription.id, actionName, input, action.input)
+                }
             }
         }
     }
@@ -101,13 +106,16 @@ object ThingToFunctionsMapper {
         }
     }
 
-    private fun createReadAllPropertiesFunction(functions: Functions, thing: WoTConsumedThing): List<LLMFunction> {
-        return functions("readAllProperties", "Read all properties of a thing", "This function retrieves all properties of a thing") {
-            thing.readAllProperties().map { (propertyName, futureValue) -> "$propertyName: ${futureValue.value().asText()}" }.joinToString("\n")
+    private fun createReadAllPropertiesFunction(functions: Functions, thingDescription: WoTThingDescription): List<LLMFunction> {
+        val functionKey = "readAllProperties"
+        return functionCache.getOrPut(functionKey) {
+            functions(functionKey, "Read all properties of a thing", "This function retrieves all properties of a thing") {
+                thingDescriptionsMap[thingDescription.id]?.readAllProperties()?.map { (propertyName, futureValue) -> "$propertyName: ${futureValue.value().asText()}" }?.joinToString("\n") ?: "Function call failed"
+            }
         }
     }
 
-    private fun createPropertyFunctions(functions: Functions, thing: WoTConsumedThing, thingDescription: WoTThingDescription, defaultParams: List<Pair<ParameterSchema, Boolean>>): List<LLMFunction> {
+    private fun createPropertyFunctions(functions: Functions, thingDescription: WoTThingDescription, defaultParams: List<Pair<ParameterSchema, Boolean>>): List<LLMFunction> {
         return thingDescription.properties.flatMap { (propertyName, property) ->
             when {
                 property.readOnly -> createReadPropertyFunction(functions, thingDescription, propertyName)
@@ -121,8 +129,11 @@ object ThingToFunctionsMapper {
         functions: Functions,
         thingDescription: WoTThingDescription,
         propertyName: String
-    ) = functions(
-                "read_$propertyName",
+    ) : List<LLMFunction> {
+        val functionKey = "read_$propertyName"
+        return functionCache.getOrPut(functionKey) {
+            functions(
+                functionKey,
                 "Reads the value of the $propertyName property.",
                 thingDescription.title
             ) { (thingId) ->
@@ -133,6 +144,8 @@ object ThingToFunctionsMapper {
                     "Function call failed"
                 }
             }
+        }
+    }
 
     private fun createWritePropertyFunction(
         functions: Functions,
@@ -142,34 +155,37 @@ object ThingToFunctionsMapper {
         defaultParams: List<Pair<ParameterSchema, Boolean>>
     ) : List<LLMFunction> {
         val params = defaultParams + listOf(Pair(mapPropertyToParam(propertyName, property), true))
-        return functions(
-            "set_$propertyName",
-            "Sets the value of the $propertyName property.",
-            thingDescription.title,
-            params
-        ) { (thingId, propertyValue) ->
-            if (propertyValue != null) {
-                try {
-                    val internalThingDescription = thingDescriptionsMap[thingId]?.getThingDescription()
-                    val propertyAffordance = internalThingDescription?.properties?.get(propertyName)
+        val functionKey = "set_$propertyName"
+        return functionCache.getOrPut(functionKey) {
+            functions(
+                functionKey,
+                "Sets the value of the $propertyName property.",
+                thingDescription.title,
+                params
+            ) { (thingId, propertyValue) ->
+                if (propertyValue != null) {
+                    try {
+                        val internalThingDescription = thingDescriptionsMap[thingId]?.getThingDescription()
+                        val propertyAffordance = internalThingDescription?.properties?.get(propertyName)
 
-                    if (internalThingDescription == null || propertyAffordance == null) {
-                        return@functions "Function call failed"
+                        if (internalThingDescription == null || propertyAffordance == null) {
+                            return@functions "Function call failed"
+                        }
+
+                        thingDescriptionsMap[thingId]?.writeProperty(
+                            propertyName,
+                            mapSchemaToJsonNode(propertyAffordance, propertyValue)
+                        )
+                            ?: "Function failed"
+
+                        "Property $propertyName set to $propertyValue"
+                    } catch (e: Exception) {
+                        log.error("Error writing property $propertyName", e)
+                        "Function call failed"
                     }
-
-                    thingDescriptionsMap[thingId]?.writeProperty(
-                        propertyName,
-                        mapSchemaToJsonNode(propertyAffordance, propertyValue)
-                    )
-                        ?: "Function failed"
-
-                    "Property $propertyName set to $propertyValue"
-                } catch (e: Exception) {
-                    log.error("Error writing property $propertyName", e)
+                } else {
                     "Function call failed"
                 }
-            } else {
-                "Function call failed"
             }
         }
     }
@@ -342,3 +358,12 @@ object ThingToFunctionsMapper {
         }
     }
 }
+
+data class ThingSummary(
+    val thingId: String,
+    val title: String,
+    val types: Set<String>,
+    val actions: List<String>,
+    val properties: List<String>
+)
+

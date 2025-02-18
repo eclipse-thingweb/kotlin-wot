@@ -8,6 +8,7 @@ import ai.ancf.lmos.arc.agents.conversation.latest
 import ai.ancf.lmos.arc.agents.conversation.toConversation
 import ai.ancf.lmos.arc.agents.getAgentByName
 import ai.ancf.lmos.arc.core.getOrThrow
+import ai.ancf.lmos.wot.protocol.ConversationalAgent
 import ai.ancf.lmos.wot.protocol.LMOSContext
 import ai.ancf.lmos.wot.protocol.LMOSThingType
 import ai.ancf.lmos.wot.reflection.annotations.*
@@ -21,22 +22,23 @@ import org.springframework.stereotype.Component
 @Context(prefix = LMOSContext.prefix, url = LMOSContext.url)
 @VersionInfo(instance = "1.0.0")
 @Component
-class ScraperAgent(agentProvider: AgentProvider, ) {
+class ScraperAgent(agentProvider: AgentProvider) : ConversationalAgent<String, Unit> {
 
     private val messageFlow = MutableSharedFlow<String>(replay = 1) // Replay last emitted value
 
     val agent = agentProvider.getAgentByName("ScraperAgent") as ChatAgent
 
-    @Action(title = "Ask", description = "Ask the agent a question.")
-    suspend fun ask(chat : Chat) {
-        val assistantMessage = agent.execute(chat.message.toConversation(User("myId"))).getOrThrow().latest<AssistantMessage>() ?:
-            throw RuntimeException("No Assistant response")
-        messageFlow.emit(assistantMessage.content)
-    }
 
     @Event(description = "HTML Content of the scraped web site")
     fun contentRetrieved() : Flow<String> {
         return messageFlow
+    }
+
+    @Action(title = "chat", description = "Ask the agent a question.")
+    override suspend fun chat(message: String) {
+        val assistantMessage = agent.execute(message.toConversation(User("myId"))).getOrThrow().latest<AssistantMessage>() ?:
+        throw RuntimeException("No Assistant response")
+        messageFlow.emit(assistantMessage.content)
     }
 }
 

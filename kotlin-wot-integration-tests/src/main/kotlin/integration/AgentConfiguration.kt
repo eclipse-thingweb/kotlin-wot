@@ -10,6 +10,7 @@ import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -78,14 +79,11 @@ class AgentConfiguration {
         tools = AllTools
     }
 
+    @Bean
+    fun agentEventListener(applicationEventPublisher: ApplicationEventPublisher) = ArcEventListener(applicationEventPublisher)
 
     @Bean
     fun discoverTools(functions: Functions, wot: Wot) : List<LLMFunction> = runBlocking {
-        //discoverTool(wot, functions, "http://localhost:8081/scraper")
-        /*
-        discoverTool(wot, functions, "https://plugfest.webthings.io/things/virtual-things-2",
-            BearerSecurityScheme())
-        */
         ThingToFunctionsMapper.exploreToolDirectory(wot, functions, "https://plugfest.webthings.io/.well-known/wot",
             BearerSecurityScheme())
     }

@@ -8,6 +8,7 @@ import ai.ancf.lmos.arc.agents.conversation.latest
 import ai.ancf.lmos.arc.agents.conversation.toConversation
 import ai.ancf.lmos.arc.agents.getAgentByName
 import ai.ancf.lmos.arc.core.getOrThrow
+import ai.ancf.lmos.wot.protocol.ConversationalAgent
 import ai.ancf.lmos.wot.protocol.LMOSContext
 import ai.ancf.lmos.wot.protocol.LMOSThingType
 import ai.ancf.lmos.wot.reflection.annotations.Action
@@ -23,15 +24,15 @@ import org.springframework.stereotype.Component
 @Context(prefix = LMOSContext.prefix, url = LMOSContext.url)
 @VersionInfo(instance = "1.0.0")
 @Component
-class ResearcherAgent(agentProvider: AgentProvider, ) {
+class ResearcherAgent(agentProvider: AgentProvider) : ConversationalAgent<String, String> {
 
     private val messageFlow = MutableSharedFlow<String>(replay = 1) // Replay last emitted value
 
     val agent = agentProvider.getAgentByName("ResearcherAgent") as ChatAgent
 
-    @Action(title = "Ask", description = "Ask the agent a question.")
-    suspend fun ask(chat : Chat) : String {
-        val assistantMessage = agent.execute(chat.message.toConversation(User("myId"))).getOrThrow().latest<AssistantMessage>() ?:
+    @Action(title = "Chat", description = "Ask the agent a question.")
+    override suspend fun chat(message : String ) : String {
+        val assistantMessage = agent.execute(message.toConversation(User("myId"))).getOrThrow().latest<AssistantMessage>() ?:
             throw RuntimeException("No Assistant response")
         return assistantMessage.content
     }

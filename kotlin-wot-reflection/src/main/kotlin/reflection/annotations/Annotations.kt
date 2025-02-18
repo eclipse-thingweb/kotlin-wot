@@ -11,12 +11,11 @@ annotation class Thing(val id: String, val title: String, val description: Strin
 @Repeatable
 annotation class Context(val prefix: String, val url : String)
 
-
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class VersionInfo(val instance : String, val model : String = "")
 
-@Target(AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Property(val title: String = "", val description: String = "", val readOnly: Boolean = false, val writeOnly: Boolean = false)
 
@@ -25,6 +24,14 @@ annotation class Property(val title: String = "", val description: String = "", 
 annotation class Action(val title: String = "", val description: String = "",
     val safe : Boolean = false, val idempotent : Boolean = false, val synchronous: Boolean = true
 )
+
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class ActionInput(val title: String = "", val description: String = "")
+
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class ActionOutput(val title: String = "", val description: String = "")
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
