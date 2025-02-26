@@ -1,3 +1,27 @@
+spring:
+  application:
+    name: chat-agent    # Service name for tracing (appears in Langfuse UI as the source service)
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0    # Sample 100% of requests for full tracing (adjust in production as needed)
+  observations:
+    annotations:
+      enabled: true       # Enable @Observed (if you use observation annotations in code)
+
+otel:
+  exporter:
+    otlp:
+      endpoint: http://localhost:4318
+    logging:
+      enabled: true
+  propagators:
+    - tracecontext
+  instrumentation:
+    micrometer:
+      enabled: true
+
 arc:
   ai:
     clients:
