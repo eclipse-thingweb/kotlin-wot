@@ -44,12 +44,12 @@ open class HttpProtocolServer(
     private val wait: Boolean = false,
     private val bindHost: String = "0.0.0.0",
     private val bindPort: Int = 8080,
+    private var baseUrls: List<String> = listOf("http://localhost:8080"),
     private val createServer: (host: String, port: Int, servient: Servient) -> EmbeddedServer<*, *> = ::defaultServer
 ) : ProtocolServer {
     val things: MutableMap<String, ExposedThing> = mutableMapOf()
     var started = false
     private var server: EmbeddedServer<*, *>? = null
-    private var actualAddresses: List<String> = listOf("http://$bindHost:$bindPort")
 
     companion object {
         private val log = LoggerFactory.getLogger(HttpProtocolServer::class.java)
@@ -77,27 +77,27 @@ open class HttpProtocolServer(
         log.info("Exposing thing '{}' on HttpProtocolServer", thing.id)
         things[thing.id] = thing
 
-        for (address in actualAddresses) {
+        for (baseUrl in baseUrls) {
             for (contentType in ContentManager.offeredMediaTypes) {
                 // make reporting of all properties optional?
-                val href = "$address/${thing.id}/all/properties"
+                val href = "$baseUrl/${thing.id}/all/properties"
                 val form = Form(href = href, contentType = contentType, op =  listOf( Operation.READ_ALL_PROPERTIES,
                     Operation.READ_MULTIPLE_PROPERTIES))
 
                 thing.forms += form
                 log.debug("Assign '{}' for reading all properties", href)
 
-                exposeProperties(thing, address, contentType)
-                exposeActions(thing, address, contentType)
-                exposeEvents(thing, address, contentType)
+                exposeProperties(thing, baseUrl, contentType)
+                exposeActions(thing, baseUrl, contentType)
+                exposeEvents(thing, baseUrl, contentType)
             }
         }
     }
 
-    internal fun exposeProperties(thing: ExposedThing, address: String, contentType: String) {
+    internal fun exposeProperties(thing: ExposedThing, baseUrl: String, contentType: String) {
         thing.properties.forEach { (name, property) ->
 
-            val href = getHrefWithVariablePattern(address, thing, "properties", name, property)
+            val href = getHrefWithVariablePattern(baseUrl, thing, "properties", name, property)
 
             // Determine the operations based on readOnly/writeOnly status
             val operations = when {
@@ -138,9 +138,9 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeActions(thing: ExposedThing, address: String, contentType: String) {
+    internal fun exposeActions(thing: ExposedThing, baseUrl: String, contentType: String) {
         thing.actions.forEach { (name, action) ->
-            val href: String = getHrefWithVariablePattern(address, thing, "actions", name, action)
+            val href: String = getHrefWithVariablePattern(baseUrl, thing, "actions", name, action)
             // Initialize the form using named parameters
             val form = Form(
                 href = href,
@@ -154,9 +154,9 @@ open class HttpProtocolServer(
         }
     }
 
-    internal fun exposeEvents(thing: ExposedThing, address: String, contentType: String) {
+    internal fun exposeEvents(thing: ExposedThing, baseUrl: String, contentType: String) {
         thing.events.forEach { (name, event) ->
-            val href = getHrefWithVariablePattern(address, thing, "events", name, event)
+            val href = getHrefWithVariablePattern(baseUrl, thing, "events", name, event)
 
             // Create the form using named parameters directly
             val form = Form(
@@ -173,7 +173,7 @@ open class HttpProtocolServer(
     }
 
     private fun getHrefWithVariablePattern(
-        address: String,
+        baseUrl: String,
         thing: ExposedThing,
         type: String,
         interactionName: String,
@@ -184,7 +184,7 @@ open class HttpProtocolServer(
         if (!uriVariables.isNullOrEmpty()) {
             variables = "{?" + java.lang.String.join(",", uriVariables) + "}"
         }
-        return "$address/${thing.id}/$type/$interactionName$variables"
+        return "$baseUrl/${thing.id}/$type/$interactionName$variables"
     }
 
     // Destroy a thing

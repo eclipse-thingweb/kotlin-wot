@@ -18,12 +18,15 @@ wot:
       server:
         enabled: true
         host: localhost
-        port: 8080
+        port: 8181
     http:
       server:
-        enabled: false
+        enabled: true
         host: localhost
         port: 8080
+        baseUrls:
+          - http://localhost:8080
+          - http://not-existing-external-url:8080
     mqtt:
       server:
         enabled: false

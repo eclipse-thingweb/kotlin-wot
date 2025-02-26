@@ -40,13 +40,13 @@ class WebSocketProtocolServer(
     private val wait: Boolean = false,
     private val bindHost: String = "0.0.0.0",
     private val bindPort: Int = 8080,
+    private var baseUrls: List<String> = listOf("ws://localhost:8080"),
     private val createServer: (host: String, port: Int, servient: Servient) -> EmbeddedServer<*, *> = ::defaultWebSocketServer
 ) : ProtocolServer {
     private val things: MutableMap<String, ExposedThing> = mutableMapOf()
 
     var started = false
     private var server: EmbeddedServer<*, *>? = null
-    private var actualAddresses: List<String> = listOf("ws://$bindHost:$bindPort")
 
     companion object {
         private val log = LoggerFactory.getLogger(WebSocketProtocolServer::class.java)
@@ -70,10 +70,10 @@ class WebSocketProtocolServer(
 
         log.info("Exposing thing '{}'", thing.id)
         things[thing.id] = thing
-        for (address in actualAddresses) {
-            exposeProperties(thing, address)
-            exposeActions(thing, address)
-            exposeEvents(thing, address)
+        for (baseUrl in baseUrls) {
+            exposeProperties(thing, baseUrl)
+            exposeActions(thing, baseUrl)
+            exposeEvents(thing, baseUrl)
         }
     }
 
@@ -82,10 +82,10 @@ class WebSocketProtocolServer(
         things.remove(thing.id)
     }
 
-    internal fun exposeProperties(thing: ExposedThing, address: String) {
+    internal fun exposeProperties(thing: ExposedThing, baseUrl: String) {
         thing.properties.forEach { (name, property) ->
 
-            val href = "$address/ws"
+            val href = "$baseUrl/ws"
 
             // Combine all operations (read, write, observe, unobserve) into a single form
             val operations = mutableListOf<Operation>()
@@ -113,10 +113,10 @@ class WebSocketProtocolServer(
         }
     }
 
-    internal fun exposeActions(thing: ExposedThing, address: String) {
+    internal fun exposeActions(thing: ExposedThing, baseUrl: String) {
         thing.actions.forEach { (name, action) ->
             // Construct the href for the action
-            val href = "$address/ws" // WebSocket path for actions
+            val href = "$baseUrl/ws" // WebSocket path for actions
 
             // Create a form for invoking the action
             val form = Form(
@@ -132,10 +132,10 @@ class WebSocketProtocolServer(
         }
     }
 
-    internal fun exposeEvents(thing: ExposedThing, address: String) {
+    internal fun exposeEvents(thing: ExposedThing, baseUrl: String) {
         thing.events.forEach { (name, event) ->
             // Construct the href for the event
-            val href = "$address/ws" // WebSocket path for events
+            val href = "$baseUrl/ws" // WebSocket path for events
 
             // Create a form for subscribing to the event
             val form = Form(
