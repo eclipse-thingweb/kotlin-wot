@@ -686,6 +686,7 @@ object ExposedThingBuilder {
 
     private fun handleEnumString(input: TextNode, classifier: KClass<*>): Any? {
         log.debug("Handling enum StringValue: input={}, classifier={}", input, classifier)
+        @Suppress("UNCHECKED_CAST")
         val enumClass = classifier as KClass<out Enum<*>>
         return enumClass.java.enumConstants?.find { it.name == input.asText() }
             ?: throw IllegalArgumentException("Unknown enum value: ${input.asText()}")
