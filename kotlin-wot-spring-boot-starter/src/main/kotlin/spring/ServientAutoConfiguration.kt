@@ -22,7 +22,13 @@ import org.springframework.context.annotation.Configuration
 
 
 @AutoConfiguration
-@EnableConfigurationProperties(CredentialsProperties::class, HttpServerProperties::class, MqttServerProperties::class, MqttClientProperties::class)
+@EnableConfigurationProperties(
+    CredentialsProperties::class,
+    HttpServerProperties::class,
+    WebsocketProperties::class,
+    MqttServerProperties::class,
+    MqttClientProperties::class
+)
 class ServientAutoConfiguration {
 
     @Bean
@@ -55,8 +61,12 @@ class ServientAutoConfiguration {
             havingValue = "true",
             matchIfMissing = true // By default, enable the server
         )
-        fun webSocketProtocolServer(httpServerProperties: HttpServerProperties): WebSocketProtocolServer {
-            return WebSocketProtocolServer(bindHost = httpServerProperties.host, bindPort = httpServerProperties.port)
+        fun webSocketProtocolServer(websocketProperties: WebsocketProperties): WebSocketProtocolServer {
+            return WebSocketProtocolServer(
+                bindHost = websocketProperties.host,
+                bindPort = websocketProperties.port,
+                baseUrls = websocketProperties.baseUrls
+            )
         }
 
         @Bean
@@ -83,7 +93,11 @@ class ServientAutoConfiguration {
             matchIfMissing = true // By default, enable the server
         )
         fun httpProtocolServer(httpServerProperties: HttpServerProperties): HttpProtocolServer {
-            return HttpProtocolServer(bindHost = httpServerProperties.host, bindPort = httpServerProperties.port)
+            return HttpProtocolServer(
+                bindHost = httpServerProperties.host,
+                bindPort = httpServerProperties.port,
+                baseUrls = httpServerProperties.baseUrls
+            )
         }
 
         @Bean

@@ -395,7 +395,7 @@ class HttpProtocolServerTest {
         // Assert
         assertTrue(exposedThing.forms.isNotEmpty(), "Expected forms to be added to thing")
 
-        val expectedHref = "http://0.0.0.0:8080/${exposedThing.id}/all/properties"
+        val expectedHref = "http://localhost:8080/${exposedThing.id}/all/properties"
         val form = exposedThing.forms.find { it.href == expectedHref  }
         assertNotNull(form, "Expected form for reading all properties to be added")
         assertEquals(CONTENT_TYPE, form.contentType)
@@ -406,12 +406,12 @@ class HttpProtocolServerTest {
     fun `exposeProperties should add forms for read write properties`() {
         // Arrange
         server.started = true
-        val address = "http://0.0.0.0:8080"
+        val baseUrl = "http://localhost:8080"
         // Act
-        server.exposeProperties(exposedThing, address, CONTENT_TYPE)
+        server.exposeProperties(exposedThing, baseUrl, CONTENT_TYPE)
 
         // Assert
-        val expectedHref = "$address/${exposedThing.id}/properties/$PROPERTY_NAME"
+        val expectedHref = "$baseUrl/${exposedThing.id}/properties/$PROPERTY_NAME"
         val form = exposedThing.properties[PROPERTY_NAME]?.forms?.find { it.href == expectedHref }
         assertNotNull(form, "Expected form for property '$PROPERTY_NAME' to be added")
 
@@ -422,12 +422,12 @@ class HttpProtocolServerTest {
     fun `exposeActions should add form for action`() {
         // Arrange
         server.started = true
-        val address = "http://0.0.0.0:8080"
+        val baseUrl = "http://localhost:8080"
         // Act
-        server.exposeActions(exposedThing, address, CONTENT_TYPE)
+        server.exposeActions(exposedThing, baseUrl, CONTENT_TYPE)
 
         // Assert
-        val expectedHref = "$address/${exposedThing.id}/actions/$ACTION_NAME"
+        val expectedHref = "$baseUrl/${exposedThing.id}/actions/$ACTION_NAME"
         val form = exposedThing.actions[ACTION_NAME]?.forms?.find { it.href == expectedHref }
         assertNotNull(form, "Expected form for action 'action1' to be added")
         assertEquals(CONTENT_TYPE, form.contentType, "Content type should match")
@@ -439,12 +439,12 @@ class HttpProtocolServerTest {
     fun `exposeEvents should add form for event`() {
         // Arrange
         server.started = true
-        val address = "http://0.0.0.0:8080"
+        val baseUrl = "http://localhost:8080"
         // Act
-        server.exposeEvents(exposedThing, address, CONTENT_TYPE)
+        server.exposeEvents(exposedThing, baseUrl, CONTENT_TYPE)
 
         // Assert
-        val expectedHref = "$address/${exposedThing.id}/events/$EVENT_NAME"
+        val expectedHref = "$baseUrl/${exposedThing.id}/events/$EVENT_NAME"
         val form = exposedThing.events[EVENT_NAME]?.forms?.find { it.href == expectedHref }
         assertNotNull(form, "Expected form for action 'action1' to be added")
         assertEquals(CONTENT_TYPE, form.contentType, "Content type should match")
