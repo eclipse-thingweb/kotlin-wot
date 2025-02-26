@@ -14,6 +14,9 @@ dependencies {
     implementation("io.ktor:ktor-serialization-jackson")
     implementation("io.ktor:ktor-server-metrics-micrometer")
     implementation("io.ktor:ktor-server-auto-head-response")
+
+    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:2.13.1-alpha")
+
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("ch.qos.logback:logback-classic:1.5.12")
     testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")

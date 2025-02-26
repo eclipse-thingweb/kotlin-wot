@@ -12,6 +12,9 @@ import ai.ancf.lmos.wot.thing.schema.*
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.core.JsonProcessingException
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
@@ -142,11 +145,13 @@ data class ExposedThing(
         return this
     }
 
+    @WithSpan
     suspend fun handleInvokeAction(
-        name: String,
+        @SpanAttribute("wot.action.name") name: String,
         inputContent: Content = EMPTY_CONTENT,
         options: InteractionOptions = InteractionOptions()
     ): Content {
+        Span.current().setAttribute("wot.thing.id", id)
         val action = requireNotNull(actions[name]) {
             "ExposedThing '$title', no action found for '$name'"
         }
@@ -171,10 +176,12 @@ data class ExposedThing(
         }
     }
 
+    @WithSpan
     suspend fun handleReadProperty(
-        name: String,
+        @SpanAttribute("wot.property.name") name: String,
         options: InteractionOptions = InteractionOptions()
     ): Content {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = requireNotNull(properties[name]) {
             "ExposedThing '$title', no property found for '$name'"
         }
@@ -193,11 +200,13 @@ data class ExposedThing(
         return ContentManager.valueToContent(readResultValue.value, contentType)
     }
 
+    @WithSpan
     suspend fun handleWriteProperty(
-        name: String,
+        @SpanAttribute("wot.property.name") name: String,
         inputContent: Content,
         options: InteractionOptions = InteractionOptions()
     ): Content {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = requireNotNull(properties[name]) {
             "ExposedThing '$title', no property found for '$name'"
         }
@@ -220,10 +229,12 @@ data class ExposedThing(
      * Handle the request of a read operation for multiple properties from the protocol binding level
      * @experimental
      */
+    @WithSpan
     private suspend fun handleReadProperties(
         propertyNames: List<String>,
         options: InteractionOptions = InteractionOptions()
     ): Map<String, Content> {
+        Span.current().setAttribute("wot.thing.id", id)
         val output = mutableMapOf<String, Content>()
         for (propertyName in propertyNames) {
             val contentResponse = handleReadProperty(propertyName, options)
@@ -235,9 +246,11 @@ data class ExposedThing(
     /**
      * Handle the request of a read operation for all properties
      */
+    @WithSpan
     suspend fun handleReadAllProperties(
         options: InteractionOptions = InteractionOptions()
     ): Map<String, Content> {
+        Span.current().setAttribute("wot.thing.id", id)
         val propertyNames = properties.keys.toList()
         return handleReadProperties(propertyNames, options)
     }
@@ -245,19 +258,23 @@ data class ExposedThing(
     /**
      * Handle the request of a read operation for multiple properties
      */
+    @WithSpan
     suspend fun handleReadMultipleProperties(
         propertyNames: List<String>,
         options: InteractionOptions = InteractionOptions()
     ): Map<String, Content> {
+        Span.current().setAttribute("wot.thing.id", id)
         return handleReadProperties(propertyNames, options)
     }
 
+    @WithSpan
     suspend fun handleObserveProperty(
         sessionId: String = "default",
-        propertyName: String,
+        @SpanAttribute("wot.property.name") propertyName: String,
         listener: ContentListener,
         options: InteractionOptions = InteractionOptions()
     ) {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = requireNotNull(properties[propertyName]) {
             "ExposedThing '$title', no property found for '$propertyName'"
         }
@@ -284,11 +301,13 @@ data class ExposedThing(
         propertyHandlers[propertyName]?.observeHandler?.handle(options)
     }
 
+    @WithSpan
     suspend fun handleUnobserveProperty(
         sessionId: String = "default",
-        propertyName: String,
+        @SpanAttribute("wot.property.name") propertyName: String,
         options: InteractionOptions = InteractionOptions()
     ) {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = requireNotNull(properties[propertyName]) {
             "ExposedThing '$title', no property found for '$propertyName'"
         }
@@ -315,26 +334,32 @@ data class ExposedThing(
         propertyHandlers[propertyName]?.unobserveHandler?.handle(options)
     }
 
-    override suspend fun emitEvent(eventName: String, data: InteractionInput) {
+    @WithSpan
+    override suspend fun emitEvent(@SpanAttribute("wot.event.name") eventName: String, data: InteractionInput) {
+        Span.current().setAttribute("wot.thing.id", id)
         val event = requireNotNull(events[eventName]) {
             "ExposedThing '$title', no event found for '$eventName'"
         }
         eventListenerRegistry.notify(event, data, event.data)
     }
 
-    override suspend fun emitPropertyChange(propertyName: String, data: InteractionInput) {
+    @WithSpan
+    override suspend fun emitPropertyChange(@SpanAttribute("wot.property.name") propertyName: String, data: InteractionInput) {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = requireNotNull(properties[propertyName]) {
             "ExposedThing '$title', no property found for '$propertyName'"
         }
         propertyListeners.notify(property, data, property)
     }
 
+    @WithSpan
     suspend fun handleSubscribeEvent(
-        sessionId: String = "default",
-        eventName: String,
+        @SpanAttribute("sessionId") sessionId: String = "default",
+        @SpanAttribute("wot.event.name") eventName: String,
         listener: ContentListener,
         options: InteractionOptions = InteractionOptions()
     ) {
+        Span.current().setAttribute("wot.thing.id", id)
         val event = requireNotNull(events[eventName]) {
             "ExposedThing '$title', no event found for '$eventName'"
         }
@@ -359,11 +384,13 @@ data class ExposedThing(
         eventHandlers[eventName]?.subscribe?.handle(options)
     }
 
+    @WithSpan
     suspend fun handleUnsubscribeEvent(
-        sessionId: String = "default",
-        eventName: String,
+        @SpanAttribute("sessionId") sessionId: String = "default",
+        @SpanAttribute("wot.event.name") eventName: String,
         options: InteractionOptions = InteractionOptions()
     ) {
+        Span.current().setAttribute("wot.thing.id", id)
         val event = requireNotNull(events[eventName]) {
             "ExposedThing '$title', no event found for '$eventName'"
         }

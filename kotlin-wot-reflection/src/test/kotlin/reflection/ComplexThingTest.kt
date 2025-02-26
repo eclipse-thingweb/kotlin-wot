@@ -4,6 +4,7 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.reflection.things.ComplexThing
 import ai.ancf.lmos.wot.thing.schema.*
+import assertk.assertThat
 import kotlin.test.*
 
 class ComplexThingTest {
@@ -170,8 +171,10 @@ class ComplexThingTest {
         val nestedConfigProperty = thingDescription.properties["nestedConfig"]
         assertNotNull(nestedConfigProperty, "'nestedConfig' property should not be null")
         assertIs<ObjectProperty>(nestedConfigProperty, "'nestedConfig' should be a ObjectProperty")
+        assertEquals("A nested configuration object", nestedConfigProperty.description)
         assertEquals(2, nestedConfigProperty.properties.size, "'nestedConfig' should contain 2 properties")
         assertIs<StringSchema>(nestedConfigProperty.properties["name"])
+        assertEquals("The name of the config", nestedConfigProperty.properties["name"]?.description)
         assertIs<ArraySchema<*>>(nestedConfigProperty.properties["values"],"'values' should be an ArraySchema<Int>")
         val array = nestedConfigProperty.properties["values"] as ArraySchema<*>
         assertIs<IntegerSchema>(array.items, "'value items' should be an ArraySchema<Int>")
@@ -213,7 +216,11 @@ class ComplexThingTest {
         assertNotNull(processDataAction, "'processData' action should not be null")
         assertIs<ActionAffordance<*, *>>(processDataAction, "'processData' should be an ActionAffordance")
         assertIs<ObjectSchema>(processDataAction.input, "'processData' action input should be an ObjectSchema")
+        val inputData = processDataAction.input as ObjectSchema
+        assertThat("The input to proces", inputData.description)
         assertIs<ObjectSchema>(processDataAction.output, "'processData' action output should be an ObjectSchema")
+        val outputData = processDataAction.output as ObjectSchema
+        assertThat("The output", outputData.description)
     }
 
     @Test
@@ -224,7 +231,11 @@ class ComplexThingTest {
         assertNotNull(computeAction, "'compute' action should not be null")
         assertIs<ActionAffordance<*, *>>(computeAction, "'compute' should be an ActionAffordance")
         assertIs<ObjectSchema>(computeAction.input, "'compute' action input should be an ObjectSchema")
+        val inputData = computeAction.input as ObjectSchema
+        assertThat("A parameter", inputData.properties["a"]?.description)
         assertIs<ObjectSchema>(computeAction.output, "'compute' action output should be an ObjectSchema")
+        val outputData = computeAction.output as ObjectSchema
+        assertThat("The sum", outputData.properties["sum"]?.description)
     }
 
     @Test
@@ -279,6 +290,8 @@ class ComplexThingTest {
         assertNotNull(processInputAction, "'processInput' action should not be null")
         assertIs<ActionAffordance<*, *>>(processInputAction, "'processInput' should be an ActionAffordance")
         assertIs<StringSchema>(processInputAction.input, "'processInput' action input should be an StringSchema")
+        val inputData = processInputAction.input as StringSchema
+        assertThat("The input to process", inputData.description)
         assertIs<NullSchema>(processInputAction.output, "'processInput' action output should be a NullSchema")
     }
 

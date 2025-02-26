@@ -5,6 +5,7 @@ import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.reflection.annotations.*
 import ai.ancf.lmos.wot.reflection.annotations.Context
 import ai.ancf.lmos.wot.reflection.annotations.Link
+import ai.ancf.lmos.wot.reflection.annotations.ObjectProperty
 import ai.ancf.lmos.wot.reflection.annotations.VersionInfo
 import ai.ancf.lmos.wot.thing.DEFAULT_CONTEXT
 import ai.ancf.lmos.wot.thing.ExposedThing
@@ -353,6 +354,7 @@ object ExposedThingBuilder {
                         inputSchema?.title = actionInputAnnotation?.title
                         inputSchema?.description = actionInputAnnotation?.description
                         // Handle return type for the output schema
+                        @Suppress("UNCHECKED_CAST")
                         val outputSchema = mapTypeToSchema(function.returnType) as DataSchema<Any>?
                         outputSchema?.title = actionOutputAnnotation?.title
                         outputSchema?.description = actionOutputAnnotation?.description
@@ -601,8 +603,12 @@ object ExposedThingBuilder {
         val required: MutableList<String> = mutableListOf()
 
         kClass.memberProperties.forEach { property ->
+            val propertyAnnotation = property.findAnnotation<ObjectProperty>()
             val returnType = property.returnType
-            val schemaForParam = mapTypeToSchema(returnType)
+            val schemaForParam = mapTypeToSchema(returnType).apply {
+                title = propertyAnnotation?.title
+                description = propertyAnnotation?.description
+            }
             properties[property.name] = schemaForParam
             if (!returnType.isMarkedNullable) {
                 required.add(property.name)
@@ -620,6 +626,8 @@ object ExposedThingBuilder {
     }
 
     internal fun mapTypeToSchema(type: KType): DataSchema<out Any> {
+
+
         log.debug("Mapping type to schema: {}", type)
         return when (type.classifier) {
             Int::class -> IntegerSchema()

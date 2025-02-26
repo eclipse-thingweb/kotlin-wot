@@ -1,5 +1,6 @@
 dependencies {
     implementation(platform("io.ktor:ktor-bom:3.0.3"))
+
     api(project(":kotlin-wot"))
     api(project(":kotlin-wot-lmos-protocol"))
     implementation("org.slf4j:slf4j-api")
@@ -7,6 +8,10 @@ dependencies {
     implementation("io.ktor:ktor-server-websockets")
     implementation("io.ktor:ktor-client-websocket:1.1.4")
     implementation("io.ktor:ktor-server-content-negotiation")
+
+    // Tracing
+    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:2.13.1-alpha")
+
     implementation("io.ktor:ktor-client-cio")
     implementation("io.ktor:ktor-client-auth")
     implementation("io.ktor:ktor-client-logging")

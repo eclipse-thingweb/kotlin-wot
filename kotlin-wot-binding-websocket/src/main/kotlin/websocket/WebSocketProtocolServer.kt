@@ -11,6 +11,7 @@ import ai.ancf.lmos.wot.thing.form.Form
 import ai.ancf.lmos.wot.thing.form.Operation
 import ai.ancf.lmos.wot.thing.schema.ContentListener
 import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
+import ai.ancf.lmos.wot.tracing.withSpan
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -31,6 +32,10 @@ import io.ktor.websocket.*
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -154,10 +159,12 @@ class WebSocketProtocolServer(
 
 // Default server setup
 fun defaultWebSocketServer(host: String, port: Int, servient: Servient): EmbeddedServer<*, *> {
+
     return embeddedServer(Netty, port = port, host = host) {
         setupRoutingWithWebSockets(servient)
     }
 }
+
 
 fun Application.setupRoutingWithWebSockets(servient: Servient) {
     install(CallLogging)
@@ -196,41 +203,74 @@ fun Application.setupRoutingWithWebSockets(servient: Servient) {
             }
         }
 
+
         webSocket("/ws") {
-            val sessionId = UUID.randomUUID().toString()
+            val sessionId = this.call.request.headers["Sec-WebSocket-Key"] ?: UUID.randomUUID().toString()
+            handleWebSocketSession(sessionId, servient)
+        }
+    }
+}
 
-            for (frame in incoming) {
-                if (frame is Frame.Text) {
-                    try {
-                        // Deserialize the message to WoTMessage
-                        val message: WoTMessage = JsonMapper.instance.readValue(frame.readText())
-                        // Retrieve the thingId from the message
-                        val thingId = message.thingId
-                        val thing = servient.things[thingId]
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleWebSocketSession(
+    @SpanAttribute("websocket.session.id") sessionId: String,
+    servient: Servient
+) {
+    for (frame in incoming) {
+        if (frame is Frame.Text) {
+            try {
+                withSpan("WebSocketProtocolServer.receiveMessage", {
+                    setSpanKind(SpanKind.SERVER)
+                }) { span ->
+                    // Deserialize the message to WoTMessage
+                    val message: WoTMessage = JsonMapper.instance.readValue(frame.readText())
+                    // Retrieve the thingId from the message
+                    val thingId = message.thingId
+                    val thing = servient.things[thingId]
 
-                        if (thing == null) {
-                            sendError(thingId, message.messageId, ErrorType.THING_NOT_FOUND)
-                            return@webSocket
-                        }
+                    span.setAttribute("websocket.message.id", message.messageId)
+                    span.setAttribute("websocket.message.thing.id", thingId)
+                    span.setAttribute("websocket.session.id", sessionId)
 
-                        // Handle the message based on its type
-                        when (message) {
-                            is ReadAllPropertiesMessage -> handleReadAllProperties(thing, message, thingId)
-                            is ReadPropertyMessage -> handleReadProperty(thing, message, thingId)
-                            is WritePropertyMessage -> handleWriteProperty(thing, message, thingId)
-                            is ObservePropertyMessage -> handleObserveProperty(thing, message, thingId, sessionId)
-                            is UnobservePropertyMessage -> handleUnobserveProperty(thing, message, thingId, sessionId)
-                            is InvokeActionMessage -> handleInvokeAction(thing, message, thingId)
-                            is SubscribeEventMessage -> handleSubscribeEvent(thing, message, thingId, sessionId)
-                            is UnsubscribeEventMessage -> handleUnsubscribeEvent(thing, message, thingId, sessionId)
-                            else -> sendError(thingId, message.messageId, ErrorType.UNSUPPORTED_MESSAGE_TYPE)
-                        }
-                    } catch (e: Exception) {
-                        val errorMessage = "Failed to read message"
-                        log.warn(errorMessage, e)
-                        close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, errorMessage))
+                    if (thing == null) {
+                        sendError(thingId, message.messageId, ErrorType.THING_NOT_FOUND)
+                        return@withSpan
+                    }
+
+                    // Handle the message based on its type
+                    when (message) {
+                        is ReadAllPropertiesMessage -> handleReadAllProperties(thing, message, thingId)
+                        is ReadPropertyMessage -> handleReadProperty(thing, message, thingId)
+                        is WritePropertyMessage -> handleWriteProperty(thing, message, thingId)
+                        is ObservePropertyMessage -> handleObserveProperty(
+                            thing,
+                            message,
+                            thingId,
+                            sessionId
+                        )
+
+                        is UnobservePropertyMessage -> handleUnobserveProperty(
+                            thing,
+                            message,
+                            thingId,
+                            sessionId
+                        )
+
+                        is InvokeActionMessage -> handleInvokeAction(thing, message, thingId)
+                        is SubscribeEventMessage -> handleSubscribeEvent(thing, message, thingId, sessionId)
+                        is UnsubscribeEventMessage -> handleUnsubscribeEvent(
+                            thing,
+                            message,
+                            thingId,
+                            sessionId
+                        )
+
+                        else -> sendError(thingId, message.messageId, ErrorType.UNSUPPORTED_MESSAGE_TYPE)
                     }
                 }
+            } catch (e: Exception) {
+                val errorMessage = "Failed to read message"
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, errorMessage))
             }
         }
     }
@@ -248,6 +288,9 @@ enum class ErrorType {
     UNSUPPORTED_MESSAGE_TYPE
 }
 
+
+
+@WithSpan(kind = SpanKind.SERVER)
 suspend fun DefaultWebSocketServerSession.sendError(thingId: String, correlationId : String, errorType: ErrorType, message: String? = null) {
     val errorJson = when (errorType) {
         ErrorType.THING_NOT_FOUND -> createThingNotFound(thingId, correlationId)
@@ -262,6 +305,7 @@ suspend fun DefaultWebSocketServerSession.sendError(thingId: String, correlation
     sendSerialized(errorJson)
 }
 
+
 private suspend fun readProperty(
     thing: ExposedThing,
     propertyName: String,
@@ -275,7 +319,8 @@ private suspend fun readProperty(
     )
 }
 
-suspend fun DefaultWebSocketServerSession.handleReadAllProperties(thing: ExposedThing, message: ReadAllPropertiesMessage, thingId: String) {
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleReadAllProperties(thing: ExposedThing, message: ReadAllPropertiesMessage, @SpanAttribute("thingId") thingId: String) {
 
     try {
         val propertyMap = thing.handleReadAllProperties().mapValues { entry ->
@@ -292,7 +337,8 @@ suspend fun DefaultWebSocketServerSession.handleReadAllProperties(thing: Exposed
     }
 }
 
-suspend fun DefaultWebSocketServerSession.handleReadProperty(thing: ExposedThing, message: ReadPropertyMessage, thingId: String) {
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleReadProperty(thing: ExposedThing, message: ReadPropertyMessage, @SpanAttribute("thingId") thingId: String) {
     val propertyName = message.property
     val property = thing.properties[propertyName]
 
@@ -311,7 +357,8 @@ suspend fun DefaultWebSocketServerSession.handleReadProperty(thing: ExposedThing
     }
 }
 
-suspend fun DefaultWebSocketServerSession.handleWriteProperty(thing: ExposedThing, message: WritePropertyMessage, thingId: String) {
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleWriteProperty(thing: ExposedThing, message: WritePropertyMessage, @SpanAttribute("thingId")thingId: String) {
     val propertyName = message.property
     val data = message.data
     val property = thing.properties[propertyName]
@@ -330,8 +377,8 @@ suspend fun DefaultWebSocketServerSession.handleWriteProperty(thing: ExposedThin
         }
     }
 }
-
-suspend fun DefaultWebSocketServerSession.handleObserveProperty(thing: ExposedThing, message: ObservePropertyMessage, thingId: String, sessionId: String) {
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleObserveProperty(thing: ExposedThing, message: ObservePropertyMessage, @SpanAttribute("thingId") thingId: String, @SpanAttribute("sessionId") sessionId: String) {
     val propertyName = message.property
     val property = thing.properties[propertyName]
 
@@ -360,8 +407,8 @@ suspend fun DefaultWebSocketServerSession.handleObserveProperty(thing: ExposedTh
         }
     }
 }
-
-suspend fun DefaultWebSocketServerSession.handleUnobserveProperty(thing: ExposedThing, message: UnobservePropertyMessage, thingId: String, sessionId: String) {
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleUnobserveProperty(thing: ExposedThing, message: UnobservePropertyMessage, @SpanAttribute("thingId") thingId: String, @SpanAttribute("sessionId") sessionId: String) {
     val propertyName = message.property
     val property = thing.properties[propertyName]
 
@@ -377,10 +424,15 @@ suspend fun DefaultWebSocketServerSession.handleUnobserveProperty(thing: Exposed
         }
     }
 }
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleInvokeAction(thing: ExposedThing, message: InvokeActionMessage, @SpanAttribute("thingId") thingId: String) {
 
-suspend fun DefaultWebSocketServerSession.handleInvokeAction(thing: ExposedThing, message: InvokeActionMessage, thingId: String) {
+
     val actionName = message.action
     val action = thing.actions[actionName]
+
+    Span.current().setAttribute("wot.thing.id", thingId)
+    Span.current().setAttribute("wot.action.name", actionName)
 
     if (action == null) {
         sendError(thingId, message.messageId, ErrorType.ACTION_NOT_FOUND, actionName)
@@ -401,8 +453,8 @@ suspend fun DefaultWebSocketServerSession.handleInvokeAction(thing: ExposedThing
         }
     }
 }
-
-suspend fun DefaultWebSocketServerSession.handleSubscribeEvent(thing: ExposedThing, message: SubscribeEventMessage, thingId: String, sessionId: String) {
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleSubscribeEvent(thing: ExposedThing, message: SubscribeEventMessage, @SpanAttribute("thingId") thingId: String, @SpanAttribute("sessionId") sessionId: String) {
     val eventName = message.event
     val event = thing.events[eventName]
 
@@ -431,8 +483,8 @@ suspend fun DefaultWebSocketServerSession.handleSubscribeEvent(thing: ExposedThi
         }
     }
 }
-
-suspend fun DefaultWebSocketServerSession.handleUnsubscribeEvent(thing: ExposedThing, message: UnsubscribeEventMessage, thingId: String, sessionId: String) {
+@WithSpan(kind = SpanKind.SERVER)
+suspend fun DefaultWebSocketServerSession.handleUnsubscribeEvent(thing: ExposedThing, message: UnsubscribeEventMessage, @SpanAttribute("thingId") thingId: String, @SpanAttribute("sessionId") sessionId: String) {
     val eventName = message.event
     val event = thing.events[eventName]
 

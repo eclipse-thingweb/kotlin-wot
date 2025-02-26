@@ -82,6 +82,8 @@ class ComplexThing(@Property(readOnly = true) val constructorProperty: String = 
     val exampleMapProperty: Map<String, Int> = mapOf("key1" to 1, "key2" to 2, "key3" to 3)
 
     @Action()
+    @ActionInput(description = "The input to process")
+    @ActionOutput(description = "The output")
     fun processData(input1: Int, input2: String): ComplexResult {
         return ComplexResult("Processed: $input2", input1 * 2)
     }
@@ -112,6 +114,7 @@ class ComplexThing(@Property(readOnly = true) val constructorProperty: String = 
     }
 
     @Action()
+    @ActionInput(description = "The input to process")
     fun processInput(input: String) {
         // This action takes an input and does not return anything
         println("Processed input: $input")
@@ -148,7 +151,7 @@ class ComplexThing(@Property(readOnly = true) val constructorProperty: String = 
 }
 
 // Data classes for input and output structures
-data class NestedConfig(val name: String, val values: List<Int>)
-data class ComplexResult(val message: String, val result: Int)
-data class ComputationParams(val a: Int, val b: Int)
-data class ComputationResult(val sum: Int, val product: Int)
+data class NestedConfig(@ObjectProperty(description = "The name of the config") val name: String, val values: List<Int>)
+data class ComplexResult(@ObjectProperty(description = "The message") val message: String, @ObjectProperty(description = "The result") val result: Int)
+data class ComputationParams(@ObjectProperty(description = "A parameter") val a: Int, val b: Int)
+data class ComputationResult(@ObjectProperty(description = "The sum") val sum: Int, val product: Int)

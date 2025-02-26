@@ -30,9 +30,13 @@ annotation class Link(
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Links(val values: Array<Link>)
 
-@Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE_PARAMETER)
+@Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Property(val title: String = "", val description: String = "", val readOnly: Boolean = false, val writeOnly: Boolean = false)
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class ObjectProperty(val title: String = "", val description: String = "")
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

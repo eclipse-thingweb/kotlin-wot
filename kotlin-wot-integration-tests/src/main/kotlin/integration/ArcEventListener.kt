@@ -1,8 +1,9 @@
 package ai.ancf.lmos.wot.integration
 
-import ai.ancf.lmos.arc.agents.events.Event
-import ai.ancf.lmos.arc.agents.events.EventHandler
+
 import ai.ancf.lmos.wot.JsonMapper
+import org.eclipse.lmos.arc.agents.events.Event
+import org.eclipse.lmos.arc.agents.events.EventHandler
 import org.springframework.context.ApplicationEvent
 import org.springframework.context.ApplicationEventPublisher
 

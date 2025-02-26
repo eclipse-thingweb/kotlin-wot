@@ -1,13 +1,14 @@
 package ai.ancf.lmos.wot.integration
 
-import ai.ancf.lmos.arc.agents.dsl.AllTools
-import ai.ancf.lmos.arc.agents.functions.LLMFunction
-import ai.ancf.lmos.arc.spring.Agents
-import ai.ancf.lmos.arc.spring.Functions
+
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.security.BearerSecurityScheme
 import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
 import kotlinx.coroutines.runBlocking
+import org.eclipse.lmos.arc.agents.dsl.AllTools
+import org.eclipse.lmos.arc.agents.functions.LLMFunction
+import org.eclipse.lmos.arc.spring.Agents
+import org.eclipse.lmos.arc.spring.Functions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
@@ -61,6 +62,7 @@ class AgentConfiguration {
             
         """.trimIndent() }
         model = { "GPT-4o" }
+        filterInput { -"Hello world" }
         tools = AllTools
     }
 
@@ -84,9 +86,12 @@ class AgentConfiguration {
 
     @Bean
     fun discoverTools(functions: Functions, wot: Wot) : List<LLMFunction> = runBlocking {
-        ThingToFunctionsMapper.exploreToolDirectory(wot, functions, "https://plugfest.webthings.io/.well-known/wot",
-            BearerSecurityScheme())
+        ThingToFunctionsMapper.exploreToolDirectory(
+            wot, functions, "https://plugfest.webthings.io/.well-known/wot",
+            BearerSecurityScheme()
+        )
     }
+
 }
 
 data class Resources(

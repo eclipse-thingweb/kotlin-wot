@@ -238,7 +238,7 @@ class WebSocketProtocolClient(
         }
     }
 
-    private suspend fun requestAndReply(form: WoTForm, message: WoTMessage, timeoutMillis: Long = 10000L): Content {
+    private suspend fun requestAndReply(form: WoTForm, message: WoTMessage, timeoutMillis: Long = 100000L): Content {
         val session = getOrCreateSession(form.href)
         val deferred = CompletableDeferred<Content>()
 

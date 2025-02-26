@@ -9,6 +9,7 @@ import ai.ancf.lmos.wot.protocol.ConsumedConversationalAgent
 import ai.ancf.lmos.wot.protocol.ConversationalAgent
 import ai.ancf.lmos.wot.protocol.EventListener
 import ai.ancf.lmos.wot.thing.ConsumedThing
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -24,11 +25,14 @@ class WotConversationalAgent private constructor(private val thing : ConsumedThi
         }
 
         suspend fun create(url: String): ConsumedConversationalAgent<String, String, String> {
-            val wot = Wot.create(Servient(clientFactories = listOf(HttpProtocolClientFactory(), HttpsProtocolClientFactory(), WebSocketProtocolClientFactory())))
+            val wot = Wot.create(Servient(clientFactories = listOf(HttpProtocolClientFactory(), HttpsProtocolClientFactory(),
+                WebSocketProtocolClientFactory()
+            )))
             return create(wot, url)
         }
     }
 
+    @WithSpan
     override suspend fun chat(message: String): String {
         return try {
             thing.invokeAction(actionName = "chat", input = message)

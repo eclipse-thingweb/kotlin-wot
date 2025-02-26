@@ -1,9 +1,6 @@
 package ai.ancf.lmos.wot.integration
 
-import ai.ancf.lmos.arc.agents.functions.LLMFunction
-import ai.ancf.lmos.arc.agents.functions.ParameterSchema
-import ai.ancf.lmos.arc.agents.functions.ParameterType
-import ai.ancf.lmos.arc.spring.Functions
+
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.security.SecurityScheme
@@ -13,6 +10,10 @@ import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.TextNode
+import org.eclipse.lmos.arc.agents.functions.LLMFunction
+import org.eclipse.lmos.arc.agents.functions.ParameterSchema
+import org.eclipse.lmos.arc.agents.functions.ParameterType
+import org.eclipse.lmos.arc.spring.Functions
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 

@@ -19,6 +19,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.module.kotlin.treeToValue
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.slf4j.LoggerFactory
@@ -44,7 +48,9 @@ data class ConsumedThing(
     private val observedProperties: ConcurrentMap<String, Subscription> = ConcurrentHashMap()
     private val clients: MutableMap<String, ProtocolClient> = mutableMapOf()
 
-    override suspend fun readProperty(propertyName: String, options: InteractionOptions?): WoTInteractionOutput {
+    @WithSpan(kind = SpanKind.CLIENT)
+    override suspend fun readProperty(@SpanAttribute("wot.property.name") propertyName: String, options: InteractionOptions?): WoTInteractionOutput {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = this.properties[propertyName]
         requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
 
@@ -88,7 +94,9 @@ data class ConsumedThing(
         return InteractionOutput(content, outputDataSchema)
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     override suspend fun readAllProperties(options: InteractionOptions?): PropertyReadMap {
+        Span.current().setAttribute("wot.thing.id", id)
         val propertyNames = mutableListOf<String>()
 
         // Iterate over all properties
@@ -108,7 +116,9 @@ data class ConsumedThing(
         return readProperties(propertyNames)
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     private suspend fun readProperties(propertyNames: List<String>): PropertyReadMap {
+        Span.current().setAttribute("wot.thing.id", id)
         // Create a list of promises (in Kotlin, this is coroutines)
         val promises: List<Deferred<WoTInteractionOutput>> = propertyNames.map { propertyName ->
             coroutineScope {
@@ -131,9 +141,11 @@ data class ConsumedThing(
     }
 
     // Function to read multiple properties
+    @WithSpan(kind = SpanKind.CLIENT)
     override suspend fun readMultipleProperties(propertyNames: List<String>, options: InteractionOptions?): PropertyReadMap {
         return try {
             // Simply call the internal function for reading the specified properties
+            Span.current().setAttribute("wot.thing.id", id)
             readProperties(propertyNames)
         } catch (e: Exception) {
             // Handle error when reading multiple properties
@@ -142,13 +154,19 @@ data class ConsumedThing(
         }
     }
 
-    override suspend fun writeProperty(propertyName: String, input: InteractionInput, options: InteractionOptions?) {
+    @WithSpan(kind = SpanKind.CLIENT)
+    override suspend fun writeProperty(@SpanAttribute("wot.property.name")propertyName: String, input: InteractionInput, options: InteractionOptions?) {
         val interactionValue = input as? InteractionInput.Value
             ?: throw UnsupportedOperationException("Streaming input is not supported for property: $propertyName")
         writeProperty(propertyName, interactionValue.value)
     }
 
-    override suspend fun writeProperty(propertyName: String, value: JsonNode, options: InteractionOptions?) {
+    @WithSpan(kind = SpanKind.CLIENT)
+    override suspend fun writeProperty(
+        @SpanAttribute("wot.property.name") propertyName: String,
+        value: JsonNode,
+        options: InteractionOptions?) {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = this.properties[propertyName]
         requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
 
@@ -172,7 +190,9 @@ data class ConsumedThing(
         }
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     override suspend fun writeMultipleProperties(valueMap: PropertyWriteMap, options: InteractionOptions?) {
+        Span.current().setAttribute("wot.thing.id", id)
         // Collect all deferred write operations into a list
         val deferredWrites = mutableListOf<Deferred<Unit>>()
 
@@ -195,6 +215,7 @@ data class ConsumedThing(
         value: JsonNode,
         options: InteractionOptions?
     ): WoTInteractionOutput {
+        Span.current().setAttribute("wot.thing.id", id)
         val action = this.actions[actionName]
         requireNotNull(action) { "ConsumedThing '${this.title}' does not have action $actionName" }
 
@@ -219,8 +240,9 @@ data class ConsumedThing(
         }
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     override suspend fun invokeAction(
-        actionName: String,
+        @SpanAttribute("wot.action.name") actionName: String,
         input: InteractionInput,
         options: InteractionOptions?
     ): WoTInteractionOutput {
@@ -229,8 +251,9 @@ data class ConsumedThing(
         return invokeActionInternal(actionName, interactionValue.value, options)
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     override suspend fun invokeAction(
-        actionName: String,
+        @SpanAttribute("wot.action.name")  actionName: String,
         input: JsonNode,
         options: InteractionOptions?
     ): JsonNode {
@@ -260,12 +283,14 @@ data class ConsumedThing(
         return output.value()
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     override suspend fun observeProperty(
-        propertyName: String,
+        @SpanAttribute("wot.property.name") propertyName: String,
         listener: InteractionListener,
         errorListener: ErrorListener?,
         options: InteractionOptions?
     ): Subscription {
+        Span.current().setAttribute("wot.thing.id", id)
         val property = this.properties[propertyName]
         requireNotNull(property) { "ConsumedThing '${this.title}' does not have property $propertyName" }
 
@@ -298,8 +323,9 @@ data class ConsumedThing(
         return subscription
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     suspend fun consumeEvent(
-        eventName: String,
+        @SpanAttribute("wot.event.name") eventName: String,
         options: InteractionOptions = InteractionOptions()
     ): Flow<WoTInteractionOutput> {
 
@@ -323,8 +349,9 @@ data class ConsumedThing(
             .map { handleInteractionOutput(it, form, eventAffordance.data) }
     }
 
+    @WithSpan(kind = SpanKind.CLIENT)
     override suspend fun subscribeEvent(
-        eventName: String,
+        @SpanAttribute("wot.event.name") eventName: String,
         listener: InteractionListener,
         errorListener: ErrorListener?,
         options: InteractionOptions?
