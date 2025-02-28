@@ -33,10 +33,11 @@ class ScraperAgent(agentProvider: AgentProvider) {
     }
 
     @Action(title = "chat", description = "Ask the agent a question.")
-    suspend fun chat(message: String) {
+    suspend fun chat(message: String) : String {
         val assistantMessage = agent.execute(message.toConversation(User("myId"))).getOrThrow().latest<AssistantMessage>() ?:
         throw RuntimeException("No Assistant response")
         messageFlow.emit(assistantMessage.content)
+        return assistantMessage.content
     }
 }
 

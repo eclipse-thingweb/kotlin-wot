@@ -1,22 +1,25 @@
 package ai.ancf.lmos.wot.integration
 
 
+import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.security.BearerSecurityScheme
+import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
-import org.eclipse.lmos.arc.agents.dsl.AllTools
 import org.eclipse.lmos.arc.agents.functions.LLMFunction
 import org.eclipse.lmos.arc.spring.Agents
 import org.eclipse.lmos.arc.spring.Functions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 
 @Configuration
+@EnableConfigurationProperties(ToolProperties::class)
 class AgentConfiguration {
 
     private lateinit var thingDescriptionsMap : Map<String, WoTConsumedThing>
@@ -63,7 +66,7 @@ class AgentConfiguration {
         """.trimIndent() }
         model = { "GPT-4o" }
         filterInput { -"Hello world" }
-        tools = AllTools
+        tools = listOf("devices")
     }
 
     @Bean
@@ -76,20 +79,33 @@ class AgentConfiguration {
     @Bean
     fun scraperArcAgent(agent: Agents) = agent {
         name = "ScraperAgent"
-        prompt { "You can retrieve content by scraping a given URL." }
+        prompt { "You can scrape a page by using the scraper tool." }
         model = { "GPT-4o" }
-        tools = AllTools
+        tools = listOf("fetchContent")
     }
 
     @Bean
     fun agentEventListener(applicationEventPublisher: ApplicationEventPublisher) = ArcEventListener(applicationEventPublisher)
 
     @Bean
-    fun discoverTools(functions: Functions, wot: Wot) : List<LLMFunction> = runBlocking {
-        ThingToFunctionsMapper.exploreToolDirectory(
-            wot, functions, "https://plugfest.webthings.io/.well-known/wot",
-            BearerSecurityScheme()
-        )
+    fun discoverTools(toolProperties: ToolProperties, functions: Functions, wot: Wot) : List<LLMFunction> = runBlocking {
+        toolProperties.tools.flatMap {
+            log.info("Discovering tools for ${it.key}")
+            log.info("Security scheme: ${it.value.securityScheme}")
+            val json = """
+                    {
+                        "scheme": "${it.value.securityScheme}"
+                    }
+                    """
+            val securityScheme = JsonMapper.instance.readValue<SecurityScheme>(json)
+            val createdFunctions = if (it.value.isDirectory) {
+                ThingToFunctionsMapper.exploreToolDirectory(wot, functions, it.key, it.value.url, securityScheme)
+            } else {
+                ThingToFunctionsMapper.requestThingDescription(wot, functions, it.key, it.value.url, securityScheme)
+            }
+            log.info("Added ${createdFunctions.size} functions to group ${it.key}")
+            createdFunctions
+        }
     }
 
 }

@@ -3,6 +3,7 @@ package ai.ancf.lmos.wot.integration
 
 import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
+import ai.ancf.lmos.wot.security.NoSecurityScheme
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.schema.*
 import com.fasterxml.jackson.databind.JsonNode
@@ -25,17 +26,26 @@ object ThingToFunctionsMapper {
 
     private val functionCache = mutableMapOf<String, List<LLMFunction>>()
 
-    suspend fun exploreToolDirectory(wot: Wot, functions: Functions, url: String, securityScheme: SecurityScheme): List<LLMFunction> {
+    suspend fun exploreToolDirectory(wot: Wot, functions: Functions, group: String, url: String, securityScheme: SecurityScheme): List<LLMFunction> {
         val thingDescriptions = wot.exploreDirectory(url, securityScheme)
         val consumedThings = consumeThings(wot, thingDescriptions)
-        val retrieveAllFunction = createRetrieveAllFunction(functions, thingDescriptions)
-        mapAllThingFunctions(functions, consumedThings)
+        val retrieveAllFunction = createRetrieveAllFunction(functions, group, thingDescriptions)
+        mapAllThingFunctions(functions, group, consumedThings)
         val allFunctions = retrieveAllFunction+ functionCache.values.flatten()
         return allFunctions
     }
 
-    private fun createRetrieveAllFunction(functions: Functions, thingDescriptions: Set<WoTThingDescription>): List<LLMFunction> {
-        return functions("retrieveAllThings", "Returns the metadata information of all available devices.", "all_things") {
+    suspend fun requestThingDescription(wot: Wot, functions: Functions, group: String, url: String, securityScheme: SecurityScheme = NoSecurityScheme()): List<LLMFunction> {
+        val thingDescription = wot.requestThingDescription(url, securityScheme)
+        val consumedThings = consumeThings(wot, setOf(thingDescription))
+        val retrieveAllFunction = createRetrieveAllFunction(functions, group, setOf(thingDescription))
+        mapAllThingFunctions(functions, group, consumedThings)
+        val allFunctions = retrieveAllFunction+ functionCache.values.flatten()
+        return allFunctions
+    }
+
+    private fun createRetrieveAllFunction(functions: Functions, group: String, thingDescriptions: Set<WoTThingDescription>): List<LLMFunction> {
+        return functions("retrieveAllThings", "Returns the metadata information of all available devices.", group) {
             summarizeThingDescriptions(thingDescriptions)
         }
     }
@@ -46,8 +56,8 @@ object ThingToFunctionsMapper {
         }
     }
 
-    private fun mapAllThingFunctions(functions: Functions, consumedThings: List<WoTConsumedThing>): List<LLMFunction> {
-        return consumedThings.flatMap { mapThingDescriptionToFunctions(functions, it) }
+    private fun mapAllThingFunctions(functions: Functions, group: String, consumedThings: List<WoTConsumedThing>): List<LLMFunction> {
+        return consumedThings.flatMap { mapThingDescriptionToFunctions(functions, group, it) }
     }
 
     private fun summarizeThingDescriptions(things: Set<WoTThingDescription>): String {
@@ -71,12 +81,12 @@ object ThingToFunctionsMapper {
         return thing.properties.entries.joinToString("\n    ") { (key, property) -> "$key: ${property.title} - ${property.description}" }
     }
 
-    private  fun mapThingDescriptionToFunctions(functions: Functions, thing: WoTConsumedThing): Set<LLMFunction> {
+    private  fun mapThingDescriptionToFunctions(functions: Functions, group: String, thing: WoTConsumedThing): Set<LLMFunction> {
         val thingDescription = thing.getThingDescription()
         val defaultParams = createDefaultParams()
-        val actionFunctions = createActionFunctions(functions, thingDescription, defaultParams)
-        val propertyFunctions = createPropertyFunctions(functions, thingDescription, defaultParams)
-        val readAllPropertiesFunction = createReadAllPropertiesFunction(functions, thingDescription)
+        val actionFunctions = createActionFunctions(functions, group, thingDescription, defaultParams)
+        val propertyFunctions = createPropertyFunctions(functions, group, thingDescription, defaultParams)
+        val readAllPropertiesFunction = createReadAllPropertiesFunction(functions, group, thingDescription)
         return actionFunctions.toSet() + propertyFunctions.toSet() + readAllPropertiesFunction.toSet()
     }
 
@@ -84,12 +94,12 @@ object ThingToFunctionsMapper {
         return listOf(Pair(ParameterSchema("thingId", "The unique identifier of the thing", ParameterType("string"), emptyList()), true))
     }
 
-    private fun createActionFunctions(functions: Functions, thingDescription: WoTThingDescription, defaultParams: List<Pair<ParameterSchema, Boolean>>): List<LLMFunction> {
+    private fun createActionFunctions(functions: Functions, group: String, thingDescription: WoTThingDescription, defaultParams: List<Pair<ParameterSchema, Boolean>>): List<LLMFunction> {
         return thingDescription.actions.flatMap { (actionName, action) ->
             val actionParams = action.input?.let { listOf(Pair(mapDataSchemaToParam(it), true)) } ?: emptyList()
             val params = defaultParams + actionParams
             functionCache.getOrPut(actionName) {
-                functions(actionName, action.description ?: "No Description available", thingDescription.title, params) { (thingId, input) ->
+                functions(actionName, action.description ?: "No Description available", group, params) { (thingId, input) ->
                     invokeAction(thingDescription.id, actionName, input, action.input)
                 }
             }
@@ -107,28 +117,28 @@ object ThingToFunctionsMapper {
         }
     }
 
-    private fun createReadAllPropertiesFunction(functions: Functions, thingDescription: WoTThingDescription): List<LLMFunction> {
+    private fun createReadAllPropertiesFunction(functions: Functions, group: String, thingDescription: WoTThingDescription): List<LLMFunction> {
         val functionKey = "readAllProperties"
         return functionCache.getOrPut(functionKey) {
-            functions(functionKey, "Read all properties of a thing", "This function retrieves all properties of a thing") {
+            functions(functionKey, "Read all properties of a thing", group) {
                 thingDescriptionsMap[thingDescription.id]?.readAllProperties()?.map { (propertyName, futureValue) -> "$propertyName: ${futureValue.value().asText()}" }?.joinToString("\n") ?: "Function call failed"
             }
         }
     }
 
-    private fun createPropertyFunctions(functions: Functions, thingDescription: WoTThingDescription, defaultParams: List<Pair<ParameterSchema, Boolean>>): List<LLMFunction> {
+    private fun createPropertyFunctions(functions: Functions, group: String, thingDescription: WoTThingDescription, defaultParams: List<Pair<ParameterSchema, Boolean>>): List<LLMFunction> {
         return thingDescription.properties.flatMap { (propertyName, property) ->
             when {
-                property.readOnly -> createReadPropertyFunction(functions, thingDescription, propertyName)
-                property.writeOnly -> createWritePropertyFunction(functions, thingDescription, propertyName, property, defaultParams)
-                else -> createReadPropertyFunction(functions, thingDescription, propertyName) + createWritePropertyFunction(functions, thingDescription, propertyName, property, defaultParams)
+                property.readOnly -> createReadPropertyFunction(functions, group, propertyName)
+                property.writeOnly -> createWritePropertyFunction(functions, group, propertyName, property, defaultParams)
+                else -> createReadPropertyFunction(functions, group, propertyName) + createWritePropertyFunction(functions, group, propertyName, property, defaultParams)
             }
         }
     }
 
     private fun createReadPropertyFunction(
         functions: Functions,
-        thingDescription: WoTThingDescription,
+        group: String,
         propertyName: String
     ) : List<LLMFunction> {
         val functionKey = "read_$propertyName"
@@ -136,7 +146,7 @@ object ThingToFunctionsMapper {
             functions(
                 functionKey,
                 "Reads the value of the $propertyName property.",
-                thingDescription.title
+                group,
             ) { (thingId) ->
                 try {
                     thingDescriptionsMap[thingId]?.readProperty(propertyName)?.value()?.asText() ?: "Function call failed"
@@ -150,7 +160,7 @@ object ThingToFunctionsMapper {
 
     private fun createWritePropertyFunction(
         functions: Functions,
-        thingDescription: WoTThingDescription,
+        group: String,
         propertyName: String,
         property: PropertyAffordance<*>,
         defaultParams: List<Pair<ParameterSchema, Boolean>>
@@ -161,7 +171,7 @@ object ThingToFunctionsMapper {
             functions(
                 functionKey,
                 "Sets the value of the $propertyName property.",
-                thingDescription.title,
+                group,
                 params
             ) { (thingId, propertyValue) ->
                 if (propertyValue != null) {

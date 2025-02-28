@@ -11,14 +11,14 @@ wot:
   servient:
     websocket:
       server:
-        enabled: true
-        host: localhost
-        port: 8081
-    http:
-      server:
         enabled: false
         host: localhost
-        port: 8081
+        port: 9099
+    http:
+      server:
+        enabled: true
+        host: localhost
+        port: 9099
     mqtt:
       server:
         enabled: false

@@ -1,6 +1,7 @@
 package ai.ancf.lmos.wot.spring
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.bind.ConstructorBinding
 import org.springframework.validation.annotation.Validated
 
 open class ServerProperties(
@@ -10,14 +11,19 @@ open class ServerProperties(
     var baseUrls: List<String>
 )
 
+
 @ConfigurationProperties(prefix = "wot.servient.http.server", ignoreUnknownFields = true)
 @Validated
-class HttpServerProperties : ServerProperties(
-    baseUrls = listOf("http://localhost:8080")
-)
+class HttpServerProperties(
+    enabled: Boolean = true,
+    host: String = "0.0.0.0",
+    port: Int = 8080
+) : ServerProperties(enabled, host, port, listOf("http://localhost:$port"))
 
 @ConfigurationProperties(prefix = "wot.servient.websocket.server", ignoreUnknownFields = true)
 @Validated
-class WebsocketProperties : ServerProperties(
-    baseUrls = listOf("ws://localhost:8080")
-)
+class WebsocketProperties(
+    enabled: Boolean = true,
+    host: String = "0.0.0.0",
+    port: Int = 8080
+) : ServerProperties(enabled, host, port, listOf("ws://localhost:$port"))

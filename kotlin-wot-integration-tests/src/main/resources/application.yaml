@@ -30,6 +30,13 @@ arc:
         api-key: dummy
         client: azure
         url: https://gpt4-uk.openai.azure.com
+    tools:
+      scraper:
+        url: "http://localhost:9099/scraper"
+      devices:
+        url: "https://plugfest.webthings.io/.well-known/wot"
+        isDirectory: true
+        securityScheme: "bearer"
 
 wot:
   servient:
@@ -47,10 +54,7 @@ wot:
       server:
         enabled: true
         host: localhost
-        port: 8080
-        baseUrls:
-          - http://localhost:8080
-          - http://not-existing-external-url:8080
+        port: 9080
     mqtt:
       server:
         enabled: false
