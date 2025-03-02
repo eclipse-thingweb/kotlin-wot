@@ -8,9 +8,9 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-tasks.named<Test>("test") {
-    enabled = false
-}
+//tasks.named<Test>("test") {
+//    enabled = false
+//}
 
 dependencies {
     // Replace the following with the starter dependencies of specific modules you wish to use
@@ -47,6 +47,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.hivemq:hivemq-mqtt-client:1.3.3")
     implementation("org.testcontainers:testcontainers:1.20.3")
+    testImplementation("app.cash.turbine:turbine:1.2.0")
 
 }
 

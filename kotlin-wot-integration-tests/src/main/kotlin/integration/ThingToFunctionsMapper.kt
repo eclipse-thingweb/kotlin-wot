@@ -37,14 +37,13 @@ object ThingToFunctionsMapper {
 
     suspend fun requestThingDescription(wot: Wot, functions: Functions, group: String, url: String, securityScheme: SecurityScheme = NoSecurityScheme()): List<LLMFunction> {
         val thingDescription = wot.requestThingDescription(url, securityScheme)
-        val consumedThings = consumeThings(wot, setOf(thingDescription))
-        val retrieveAllFunction = createRetrieveAllFunction(functions, group, setOf(thingDescription))
-        mapAllThingFunctions(functions, group, consumedThings)
-        val allFunctions = retrieveAllFunction+ functionCache.values.flatten()
+        val consumedThing = wot.consume(thingDescription)
+        mapThingDescriptionToFunctions2(functions, group, thingDescription)
+        val allFunctions = functionCache.values.flatten()
         return allFunctions
     }
 
-     fun createRetrieveAllFunction(functions: Functions, group: String, thingDescriptions: Set<WoTThingDescription>): List<LLMFunction> {
+    fun createRetrieveAllFunction(functions: Functions, group: String, thingDescriptions: Set<WoTThingDescription>): List<LLMFunction> {
         return functions("retrieveAllThings", "Returns the metadata information of all available devices.", group) {
             summarizeThingDescriptions(thingDescriptions)
         }
@@ -105,13 +104,13 @@ object ThingToFunctionsMapper {
             val params = defaultParams + actionParams
             functionCache.getOrPut(actionName) {
                 functions(actionName, action.description ?: "No Description available", group, params) { (thingId, input) ->
-                    invokeAction(thingDescription.id, actionName, input, action.input)
+                    invokeAction(thingId, actionName, input, action.input)
                 }
             }
         }
     }
 
-    private suspend fun invokeAction(thingId: String, actionName: String, input: String?, inputSchema: DataSchema<*>?): String {
+    private suspend fun invokeAction(thingId: String?, actionName: String, input: String?, inputSchema: DataSchema<*>?): String {
         return try {
             val jsonInput : JsonNode = inputSchema?.let { mapSchemaToJsonNode(it, input!!) } ?: TextNode(input)
             thingDescriptionsMap[thingId]?.invokeAction(actionName, jsonInput)?.asText()

@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.net.MalformedURLException
-import java.net.URL
+import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
@@ -337,7 +337,7 @@ data class ConsumedThing(
 
         if (subscribedEvents.containsKey(eventName)) {
             return flow {
-                throw IllegalStateException("ConsumedThing '$title' already has a function subscribed to $eventName. You can only subscribe once.")
+                throw ConsumedThingException("ConsumedThing '$title' already has a function subscribed to $eventName. You can only subscribe once.")
             }
         }
 
@@ -345,8 +345,19 @@ data class ConsumedThing(
 
         val formWithoutURITemplates = handleUriVariables(this, eventAffordance, form, options)
 
-        return client.subscribeResource(Resource(id, eventName, formWithoutURITemplates), ResourceType.EVENT)
+        val subscription = InternalEventSubscription(this, eventName, client, form)
+        subscribedEvents[eventName] = subscription
+
+         val flow = client.subscribeResource(Resource(id, eventName, formWithoutURITemplates), ResourceType.EVENT)
             .map { handleInteractionOutput(it, form, eventAffordance.data) }
+            .onCompletion {
+                error -> if (error != null) {
+                    log.warn("Error while processing observe property for ${eventAffordance.title}: ${error.message}", error)
+                }
+                subscription.stop(options)
+            }
+
+        return flow
     }
 
     @WithSpan(kind = SpanKind.CLIENT)
@@ -363,7 +374,7 @@ data class ConsumedThing(
         val (client, form) = getClientFor(eventAffordance.forms, Operation.SUBSCRIBE_EVENT, options)
 
         if (subscribedEvents.containsKey(eventName)) {
-            throw IllegalStateException("ConsumedThing '$title' already has a function subscribed to $eventName. You can only subscribe once.")
+            throw ConsumedThingException("ConsumedThing '$title' already has a function subscribed to $eventName. You can only subscribe once.")
         }
 
         log.debug("ConsumedThing '$title' subscribing to ${form.href}")
@@ -760,8 +771,8 @@ fun findFormIndexWithScoring(
 
         // Compare the origins of the URLs
         try {
-            val formUrl = URL(form.href)
-            val refFormUrl = URL(refForm.href)
+            val formUrl = URI(form.href).toURL()
+            val refFormUrl = URI(refForm.href).toURL()
             if (formUrl.protocol == refFormUrl.protocol && formUrl.host == refFormUrl.host) {
                 score += 1
             }

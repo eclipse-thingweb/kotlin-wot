@@ -30,6 +30,17 @@ fun String.toAgentRequest(): AgentRequest {
     )
 }
 
+fun String.toAgentResult(): AgentResult {
+    return AgentResult(
+        messages = listOf(
+            Message(
+                role = "user",
+                content = this
+            )
+        )
+    )
+}
+
 fun AgentResult.lastMessage(): String {
     return this.messages.last().content
 }

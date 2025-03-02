@@ -63,6 +63,7 @@ class WotConversationalAgent private constructor(private val thing : ConsumedThi
     override suspend fun <T : Any> consumeEvent(eventName: String, clazz: KClass<T>): Flow<T> {
         return thing.consumeEvent(eventName).map { event ->
             try {
+                log.info("Event:" + event.value())
                 JsonMapper.instance.treeToValue(event.value(), clazz.java)
             } catch (e: Exception) {
                 log.error("Failed to parse event", e)

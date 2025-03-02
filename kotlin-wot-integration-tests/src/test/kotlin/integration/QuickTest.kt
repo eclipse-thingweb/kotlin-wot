@@ -4,8 +4,12 @@ package ai.ancf.lmos.wot.integration
 import ai.ancf.lmos.sdk.agents.WotConversationalAgent
 import ai.ancf.lmos.sdk.agents.lastMessage
 import ai.ancf.lmos.sdk.agents.toAgentRequest
+import ai.ancf.lmos.sdk.model.AgentEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
-import org.eclipse.lmos.arc.agents.AgentEvent
 import java.util.concurrent.CountDownLatch
 import kotlin.test.Test
 
@@ -41,11 +45,13 @@ class QuickTest {
             println("Event: $it")
             latch.countDown()
         }
-         */
-        agent.consumeEvent("agentEvent", AgentEvent::class).collect {
+        */
+
+        agent.consumeEvent("agentEvent", AgentEvent::class).onEach {
             println("Event: $it")
             latch.countDown()
-        }
+        }.launchIn(CoroutineScope(Dispatchers.IO))
+
 
         //val command = "What is the state of my lamp?"
         val command = "Scrape the page https://eclipse.dev/lmos/\""

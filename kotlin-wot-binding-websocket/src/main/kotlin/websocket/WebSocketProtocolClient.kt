@@ -91,6 +91,7 @@ class WebSocketProtocolClient(
             requestAndReply(resource.form, message)
         } finally {
             resourceChannels[resource.name]?.close()
+            resourceChannels.remove(resource.name)
         }
     }
 
@@ -105,7 +106,7 @@ class WebSocketProtocolClient(
         resourceChannels[resource.name] = channel
 
         return channel.consumeAsFlow().onCompletion {
-            resourceChannels.remove(resource.name)
+            unlinkResource(resource, resourceType)
         }
     }
 

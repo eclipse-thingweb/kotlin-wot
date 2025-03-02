@@ -27,7 +27,7 @@ arc:
     clients:
       - id: GPT-4o
         model-name: GPT35T-1106
-        api-key: 0c798e9b59c64f07ab35d0b1aee65d19
+        api-key: dummy
         client: langchain4j-azure
         url: https://gpt4-uk.openai.azure.com
     tools:
