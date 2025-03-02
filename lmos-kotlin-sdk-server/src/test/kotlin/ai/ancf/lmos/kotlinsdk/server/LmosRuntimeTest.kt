@@ -1,9 +1,10 @@
 package ai.ancf.lmos.kotlinsdk.server
 
-import ai.ancf.lmos.kotlinsdk.base.model.AgentRequest
-import ai.ancf.lmos.kotlinsdk.base.model.AgentResult
-import ai.ancf.lmos.kotlinsdk.base.model.AnonymizationEntity
-import ai.ancf.lmos.kotlinsdk.base.model.Message
+
+import ai.ancf.lmos.sdk.model.AgentRequest
+import ai.ancf.lmos.sdk.model.AgentResult
+import ai.ancf.lmos.sdk.model.AnonymizationEntity
+import ai.ancf.lmos.sdk.model.Message
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -16,8 +17,8 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.jackson.*
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 
 
 class LmosRuntimeTest {

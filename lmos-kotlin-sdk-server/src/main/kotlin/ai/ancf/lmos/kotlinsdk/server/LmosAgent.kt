@@ -1,9 +1,8 @@
 package ai.ancf.lmos.kotlinsdk.server
 
-import ai.ancf.lmos.kotlinsdk.base.model.AgentRequest
-import ai.ancf.lmos.kotlinsdk.base.model.AgentResult
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
-import kotlinx.coroutines.flow.Flow
+import ai.ancf.lmos.sdk.model.AgentRequest
+import ai.ancf.lmos.sdk.model.AgentResult
+
 
 data class LmosAgent(
     var id: String,

@@ -1,12 +1,17 @@
 package ai.ancf.lmos.kotlinsdk.server
 
-import ai.ancf.lmos.kotlinsdk.base.*
-import ai.ancf.lmos.kotlinsdk.base.model.AgentRequest
-import ai.ancf.lmos.kotlinsdk.base.model.AgentResult
+import ai.ancf.lmos.sdk.DataSchemaBuilder
+import ai.ancf.lmos.sdk.LMOSContext
+import ai.ancf.lmos.sdk.LMOSThingTypes
+import ai.ancf.lmos.sdk.model.AgentRequest
+import ai.ancf.lmos.sdk.model.AgentResult
 import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.Wot
 import ai.ancf.lmos.wot.thing.DEFAULT_CONTEXT
-import ai.ancf.lmos.wot.thing.schema.*
+import ai.ancf.lmos.wot.thing.schema.Context
+import ai.ancf.lmos.wot.thing.schema.DataSchema
+import ai.ancf.lmos.wot.thing.schema.VersionInfo
+import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createType
 
@@ -26,7 +31,7 @@ class LmosRuntime(private val servient: Servient) {
 
     suspend fun add(agent: LmosAgent)  {
         val agentThing = agent.toThing(wot)
-        servient.addThing(agentThing)
+        //servient.addThing(agentThing)
         servient.expose(agentThing.getThingDescription().id)
     }
 
@@ -43,7 +48,7 @@ private fun LmosAgent.toThing(wot: Wot): WoTExposedThing {
         id = this@toThing.id
         title = this@toThing.title
         description = this@toThing.description
-        objectType = LmosThingTypes.AGENT
+        objectType = LMOSThingTypes.AGENT
 
         val context = Context(DEFAULT_CONTEXT)
         context.addContext(LMOSContext.prefix, LMOSContext.url)

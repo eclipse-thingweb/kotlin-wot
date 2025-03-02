@@ -10,7 +10,7 @@ subprojects {
     apply(plugin = "maven-publish")
 
     group = "ai.ancf.lmos"
-    version = "0.1.0-SNAPSHOT"
+    version = "0.1.3-SNAPSHOT"
 
     dependencies {
         testImplementation(kotlin("test"))

@@ -1,4 +1,4 @@
-package ai.ancf.lmos.wot.example
+package ai.ancf.lmos.wot.integration
 
 
 import ai.ancf.lmos.wot.protocol.LMOSContext
@@ -10,12 +10,12 @@ import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
 
 
-@Thing(id= "scraper", title="Tool",
+@Thing(id= "scraperTool", title="Tool",
     description= "An HTML scraper.", type = LMOSThingType.TOOL)
 @VersionInfo(instance = "1.0.0")
 @Context(prefix = LMOSContext.prefix, url = LMOSContext.url)
 @Component
-class HtmlTool() {
+class ScraperTool() {
 
     @Action(title = "Fetch Content", description = "Fetches the content from the specified URL.")
     @ActionInput(title = "url", description = "The URL to fetch content from.")

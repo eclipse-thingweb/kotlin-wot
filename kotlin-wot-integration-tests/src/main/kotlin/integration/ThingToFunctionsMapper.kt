@@ -44,7 +44,7 @@ object ThingToFunctionsMapper {
         return allFunctions
     }
 
-    private fun createRetrieveAllFunction(functions: Functions, group: String, thingDescriptions: Set<WoTThingDescription>): List<LLMFunction> {
+     fun createRetrieveAllFunction(functions: Functions, group: String, thingDescriptions: Set<WoTThingDescription>): List<LLMFunction> {
         return functions("retrieveAllThings", "Returns the metadata information of all available devices.", group) {
             summarizeThingDescriptions(thingDescriptions)
         }
@@ -57,7 +57,7 @@ object ThingToFunctionsMapper {
     }
 
     private fun mapAllThingFunctions(functions: Functions, group: String, consumedThings: List<WoTConsumedThing>): List<LLMFunction> {
-        return consumedThings.flatMap { mapThingDescriptionToFunctions(functions, group, it) }
+        return consumedThings.flatMap { mapThingDescriptionToFunctions(functions, group, it.getThingDescription()) }
     }
 
     private fun summarizeThingDescriptions(things: Set<WoTThingDescription>): String {
@@ -81,13 +81,18 @@ object ThingToFunctionsMapper {
         return thing.properties.entries.joinToString("\n    ") { (key, property) -> "$key: ${property.title} - ${property.description}" }
     }
 
-    private  fun mapThingDescriptionToFunctions(functions: Functions, group: String, thing: WoTConsumedThing): Set<LLMFunction> {
-        val thingDescription = thing.getThingDescription()
+    fun mapThingDescriptionToFunctions(functions: Functions, group: String, thingDescription: WoTThingDescription): Set<LLMFunction> {
         val defaultParams = createDefaultParams()
         val actionFunctions = createActionFunctions(functions, group, thingDescription, defaultParams)
         val propertyFunctions = createPropertyFunctions(functions, group, thingDescription, defaultParams)
         val readAllPropertiesFunction = createReadAllPropertiesFunction(functions, group, thingDescription)
         return actionFunctions.toSet() + propertyFunctions.toSet() + readAllPropertiesFunction.toSet()
+    }
+
+    fun mapThingDescriptionToFunctions2(functions: Functions, group: String, thingDescription: WoTThingDescription): Set<LLMFunction> {
+        val actionFunctions = createActionFunctions(functions, group, thingDescription, emptyList())
+        val propertyFunctions = createPropertyFunctions(functions, group, thingDescription, emptyList())
+        return actionFunctions.toSet() + propertyFunctions.toSet()
     }
 
     private fun createDefaultParams(): List<Pair<ParameterSchema, Boolean>> {

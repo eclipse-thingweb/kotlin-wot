@@ -1,10 +1,11 @@
-package ai.ancf.lmos.kotlinsdk.base.model
+package ai.ancf.lmos.sdk.model
+
 
 data class AgentRequest(
     val messages: List<Message>,
-    val conversationContext: ConversationContext,
-    val systemContext: List<SystemContextEntry>,
-    val userContext: UserContext,
+    val conversationContext: ConversationContext? = null,
+    val systemContext: List<SystemContextEntry>? = null,
+    val userContext: UserContext? = null,
 )
 
 data class UserContext(

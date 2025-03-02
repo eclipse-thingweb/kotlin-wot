@@ -1,4 +1,4 @@
-package ai.ancf.lmos.kotlinsdk.base
+package ai.ancf.lmos.sdk
 
 object LMOSContext {
         const val prefix = "lmos"

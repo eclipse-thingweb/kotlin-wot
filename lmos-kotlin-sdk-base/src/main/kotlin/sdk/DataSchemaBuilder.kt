@@ -1,4 +1,4 @@
-package ai.ancf.lmos.kotlinsdk.base
+package ai.ancf.lmos.sdk
 
 import ai.ancf.lmos.wot.thing.schema.*
 import kotlin.reflect.KClass

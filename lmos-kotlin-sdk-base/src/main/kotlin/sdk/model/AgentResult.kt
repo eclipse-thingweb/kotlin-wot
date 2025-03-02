@@ -1,4 +1,5 @@
-package ai.ancf.lmos.kotlinsdk.base.model
+package ai.ancf.lmos.sdk.model
+
 
 data class AgentResult(
     val status: String? = null,

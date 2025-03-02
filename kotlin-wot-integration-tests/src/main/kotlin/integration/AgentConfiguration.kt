@@ -7,6 +7,7 @@ import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
+import org.eclipse.lmos.arc.agents.dsl.AllTools
 import org.eclipse.lmos.arc.agents.functions.LLMFunction
 import org.eclipse.lmos.arc.spring.Agents
 import org.eclipse.lmos.arc.spring.Functions
@@ -22,14 +23,15 @@ import org.springframework.context.annotation.Configuration
 @EnableConfigurationProperties(ToolProperties::class)
 class AgentConfiguration {
 
-    private lateinit var thingDescriptionsMap : Map<String, WoTConsumedThing>
+    private lateinit var thingDescriptionsMap: Map<String, WoTConsumedThing>
 
-    private val log : Logger = LoggerFactory.getLogger(AgentConfiguration::class.java)
+    private val log: Logger = LoggerFactory.getLogger(AgentConfiguration::class.java)
 
     @Bean
     fun chatArcAgent(agent: Agents) = agent {
         name = "ChatAgent"
-        prompt { """
+        prompt {
+            """
             You are a professional smart home assistant.  
             ## Instructions  
 
@@ -63,7 +65,8 @@ class AgentConfiguration {
             - "Set the thermostat to 72°F."  
             - "Lock the front door."  
             
-        """.trimIndent() }
+        """.trimIndent()
+        }
         model = { "GPT-4o" }
         filterInput { -"Hello world" }
         tools = listOf("devices")
@@ -81,11 +84,13 @@ class AgentConfiguration {
         name = "ScraperAgent"
         prompt { "You can scrape a page by using the scraper tool." }
         model = { "GPT-4o" }
-        tools = listOf("fetchContent")
+        tools = AllTools
     }
 
     @Bean
-    fun agentEventListener(applicationEventPublisher: ApplicationEventPublisher) = ArcEventListener(applicationEventPublisher)
+    fun agentEventListener(applicationEventPublisher: ApplicationEventPublisher) =
+        ArcEventListener(applicationEventPublisher)
+
 
     @Bean
     fun discoverTools(toolProperties: ToolProperties, functions: Functions, wot: Wot) : List<LLMFunction> = runBlocking {
@@ -108,12 +113,19 @@ class AgentConfiguration {
         }
     }
 
+    /*
+    @Bean
+    fun discoverLocalTools(functions: Functions, wot: Wot, scraperTool: ScraperTool) : List<LLMFunction>{
+        log.info("Map Scraper to LLM Functions")
+        val exposedThing = ExposedThingBuilder.createExposedThing(wot, scraperTool, ScraperTool::class)
+        return if(exposedThing != null) {
+            ThingToFunctionsMapper
+                .mapThingDescriptionToFunctions2(functions, "scraper",
+                    exposedThing.getThingDescription()).toList()
+        }else{
+            emptyList()
+        }
+    }
+    */
+
 }
-
-data class Resources(
-    val milk: Int,
-    val water: Int ,
-    val chocolate : Int,
-    val coffeeBeans: Int
-)
-

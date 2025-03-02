@@ -1,7 +1,7 @@
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-    api(project(":kotlin-wot"))
     api(project(":lmos-kotlin-sdk-base"))
+    implementation(project(":kotlin-wot"))
     implementation("org.slf4j:slf4j-api:2.0.16")
 
     testImplementation(platform("io.ktor:ktor-bom:3.1.0"))

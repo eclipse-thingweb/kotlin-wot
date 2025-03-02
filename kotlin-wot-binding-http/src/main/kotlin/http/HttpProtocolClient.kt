@@ -124,8 +124,15 @@ fun createHttpClient(): HttpClient {
             engine {
                 proxy = ProxyBuilder.http(proxyUrl)
             }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 50000
+            }
         }
     } else {
-        HttpClient(CIO)
+        HttpClient(CIO) {
+            install(HttpTimeout) {
+                requestTimeoutMillis = 50000
+            }
+        }
     }
 }

@@ -43,8 +43,7 @@ interface Wot {
     suspend fun exploreDirectory(directoryUrl: String, securityScheme: SecurityScheme = NoSecurityScheme()): Set<WoTThingDescription>
 
     /**
-     * Accepts a `thing` argument of type [ThingDescription] and returns an [ ] object.<br></br> The result can be used to start exposing interfaces for thing
-     * interaction. Returns a failed future if thing with same id is already exposed.
+     * Accepts a `thing` argument of type [ThingDescription] and returns an [WoTExposedThing].
      *
      * @param thingDescription
      * @return

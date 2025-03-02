@@ -1,8 +1,8 @@
-package ai.ancf.lmos.kotlinsdk.base
+package ai.ancf.lmos.sdk
 
 import ai.ancf.lmos.wot.thing.schema.Type
 
-object LmosThingTypes {
+object LMOSThingTypes {
     val TOOL = Type("lmos:Tool")
     val AGENT = Type("lmos:Agent")
 }

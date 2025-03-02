@@ -47,7 +47,7 @@ class DefaultWot(private val servient: Servient) : Wot {
         return if (servient.addThing(exposedThing)) {
             exposedThing
         } else {
-            throw WotException("Thing already exists: " + thingDescription.id)
+            exposedThing
         }
     }
 
