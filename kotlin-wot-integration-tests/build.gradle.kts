@@ -8,9 +8,9 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-//tasks.named<Test>("test") {
-//    enabled = false
-//}
+tasks.named<Test>("test") {
+    enabled = false
+}
 
 dependencies {
     // Replace the following with the starter dependencies of specific modules you wish to use

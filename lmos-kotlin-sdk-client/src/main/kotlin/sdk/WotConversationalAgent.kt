@@ -10,6 +10,8 @@ import ai.ancf.lmos.wot.binding.http.HttpsProtocolClientFactory
 import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolClientFactory
 import ai.ancf.lmos.wot.thing.ConsumedThing
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
@@ -53,7 +55,19 @@ class WotConversationalAgent private constructor(private val thing : ConsumedThi
                 listener.handleEvent(parsedEvent)
             } catch (e: Exception) {
                 log.error("Failed to parse event", e)
+                throw e
             }
         })
+    }
+
+    override suspend fun <T : Any> consumeEvent(eventName: String, clazz: KClass<T>): Flow<T> {
+        return thing.consumeEvent(eventName).map { event ->
+            try {
+                JsonMapper.instance.treeToValue(event.value(), clazz.java)
+            } catch (e: Exception) {
+                log.error("Failed to parse event", e)
+                throw e
+            }
+        }
     }
 }

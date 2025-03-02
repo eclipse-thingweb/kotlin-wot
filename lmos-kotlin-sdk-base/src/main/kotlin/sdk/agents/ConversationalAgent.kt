@@ -3,6 +3,7 @@ package ai.ancf.lmos.sdk.agents
 import ai.ancf.lmos.sdk.model.AgentRequest
 import ai.ancf.lmos.sdk.model.AgentResult
 import ai.ancf.lmos.sdk.model.Message
+import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
 
 interface ConversationalAgent {
@@ -11,6 +12,7 @@ interface ConversationalAgent {
 
 interface ConsumedConversationalAgent: ConversationalAgent {
     suspend fun <T : Any> consumeEvent(eventName: String, clazz: KClass<T>, listener: EventListener<T>)
+    suspend fun <T : Any> consumeEvent(eventName: String, clazz: KClass<T>) : Flow<T>
 }
 
 fun interface EventListener<T> {
