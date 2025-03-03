@@ -1,12 +1,17 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.example
 
 
 import ai.ancf.lmos.wot.protocol.LMOSContext
 import ai.ancf.lmos.wot.protocol.LMOSThingType
-import ai.ancf.lmos.wot.reflection.annotations.Action
-import ai.ancf.lmos.wot.reflection.annotations.Context
-import ai.ancf.lmos.wot.reflection.annotations.Thing
-import ai.ancf.lmos.wot.reflection.annotations.VersionInfo
+import ai.ancf.lmos.wot.reflection.annotations.*
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
 
@@ -19,7 +24,11 @@ import org.springframework.stereotype.Component
 class HtmlTool() {
 
     @Action(title = "Fetch Content", description = "Fetches the content from the specified URL.")
+    @ActionInput(title = "url", description = "The URL to fetch content from.")
+    @ActionOutput(title = "content", description = "The content fetched from the URL.")
+    @WithSpan
     suspend fun fetchContent(url: String): String {
+        Span.current().setAttribute("lmos.agent.scraper.input.url", url)
         return try {
             val document = Jsoup.connect(url).get()
             document.outerHtml()

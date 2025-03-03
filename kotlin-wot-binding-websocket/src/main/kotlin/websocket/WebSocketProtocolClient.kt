@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.binding.websocket
 
 import ai.ancf.lmos.wot.JsonMapper
@@ -91,6 +97,7 @@ class WebSocketProtocolClient(
             requestAndReply(resource.form, message)
         } finally {
             resourceChannels[resource.name]?.close()
+            resourceChannels.remove(resource.name)
         }
     }
 
@@ -105,7 +112,7 @@ class WebSocketProtocolClient(
         resourceChannels[resource.name] = channel
 
         return channel.consumeAsFlow().onCompletion {
-            resourceChannels.remove(resource.name)
+            unlinkResource(resource, resourceType)
         }
     }
 

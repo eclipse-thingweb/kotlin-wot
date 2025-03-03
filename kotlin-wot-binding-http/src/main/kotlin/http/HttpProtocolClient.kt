@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.binding.http
 
 import ai.ancf.lmos.wot.content.Content
@@ -124,8 +130,15 @@ fun createHttpClient(): HttpClient {
             engine {
                 proxy = ProxyBuilder.http(proxyUrl)
             }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 50000
+            }
         }
     } else {
-        HttpClient(CIO)
+        HttpClient(CIO) {
+            install(HttpTimeout) {
+                requestTimeoutMillis = 50000
+            }
+        }
     }
 }

@@ -3,14 +3,14 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 import java.net.URI
 
 plugins {
-    kotlin("plugin.spring") version "1.9.10"
-    id("org.springframework.boot") version "3.1.5" // Use the latest compatible version
-    id("io.spring.dependency-management") version "1.1.3"
+    kotlin("plugin.spring") version "1.9.25"
+    id("org.springframework.boot") version "3.4.2"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
-tasks.named<Test>("test") {
-    enabled = false
-}
+//tasks.named<Test>("test") {
+//    enabled = false
+//}
 
 dependencies {
     // Replace the following with the starter dependencies of specific modules you wish to use
@@ -18,7 +18,8 @@ dependencies {
     api(project(":kotlin-wot-binding-websocket"))
     api(project(":kotlin-wot-binding-mqtt"))
     api(project(":kotlin-wot-spring-boot-starter"))
-    api(project(":kotlin-wot-lmos-protocol"))
+    api(project(":lmos-kotlin-sdk-client"))
+    api(project(":lmos-kotlin-sdk-server"))
     implementation("org.eclipse.lmos:arc-azure-client:0.1.0-SNAPSHOT")
 
     api("org.eclipse.lmos:arc-spring-boot-starter:0.1.0-SNAPSHOT")
@@ -40,10 +41,13 @@ dependencies {
     //implementation("io.opentelemetry:opentelemetry-exporter-otlp")
 
     implementation("dev.langchain4j:langchain4j-azure-open-ai:1.0.0-beta1")
+    implementation("org.jsoup:jsoup:1.7.2")
+
     //implementation("dev.langchain4j:langchain4j:0.35.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.hivemq:hivemq-mqtt-client:1.3.3")
     implementation("org.testcontainers:testcontainers:1.20.3")
+    testImplementation("app.cash.turbine:turbine:1.2.0")
 
 }
 

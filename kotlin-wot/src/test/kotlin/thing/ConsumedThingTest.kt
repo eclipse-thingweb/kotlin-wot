@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.JsonMapper
@@ -5,6 +11,7 @@ import ai.ancf.lmos.wot.Servient
 import ai.ancf.lmos.wot.content.Content
 import ai.ancf.lmos.wot.content.ContentManager
 import ai.ancf.lmos.wot.content.JsonCodec
+import ai.ancf.lmos.wot.content.toJsonContent
 import ai.ancf.lmos.wot.security.BasicSecurityScheme
 import ai.ancf.lmos.wot.thing.action.ThingAction
 import ai.ancf.lmos.wot.thing.event.ThingEvent
@@ -15,14 +22,14 @@ import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import ai.anfc.lmos.wot.binding.Resource
 import ai.anfc.lmos.wot.binding.ResourceType
+import app.cash.turbine.test
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import io.mockk.*
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.*
 
 class ConsumedThingTest {
 
@@ -157,6 +164,59 @@ class ConsumedThingTest {
         assertNotNull(subscription)
         assertEquals(true, subscription.active)
     }
+
+    @Test
+    fun `subscribe twice to the same event should fail`(): Unit = runBlocking {
+        val listener = mockk<InteractionListener>(relaxed = true)
+        coEvery { protocolClient.subscribeResource(any<Resource>(), any<ResourceType>()) } returns emptyFlow()
+
+        consumedThing.subscribeEvent("testEvent", listener)
+        assertFailsWith<ConsumedThingException> { consumedThing.subscribeEvent("testEvent", listener) }
+    }
+
+    @Test
+    fun `test consumeEvent`(): Unit = runBlocking {
+        coEvery { protocolClient.subscribeResource(any<Resource>(), any<ResourceType>()) } returns flow {
+            emit("testValue".toJsonContent())
+        }
+
+        consumedThing.consumeEvent("testEvent").test {
+            val item = awaitItem().value()
+            val value : String = JsonMapper.instance.treeToValue(item)
+            assertEquals("testValue", value)
+            awaitComplete()
+        }
+
+        coVerify { protocolClient.unlinkResource(any<Resource>(), any<ResourceType>()) }
+    }
+
+    @Test
+    fun `test consumeEvent with error`(): Unit = runBlocking {
+        coEvery { protocolClient.subscribeResource(any<Resource>(), any<ResourceType>()) } returns flow {
+            throw Exception("test error")
+        }
+
+        consumedThing.consumeEvent("testEvent").test {
+            val error = awaitError() // Waits for the expected exception
+            assertTrue(error is Exception)
+        }
+
+        coVerify { protocolClient.unlinkResource(any<Resource>(), any<ResourceType>()) }
+    }
+
+    @Test
+    fun `consume twice to the same event should fail`(): Unit = runBlocking {
+        coEvery { protocolClient.subscribeResource(any<Resource>(), any<ResourceType>()) } returns emptyFlow()
+
+        consumedThing.consumeEvent("testEvent")
+        consumedThing.consumeEvent("testEvent").test {
+            val error = awaitError() // Waits for the expected exception
+            assertTrue(error is ConsumedThingException)
+        }
+
+        coVerify(exactly = 0) { protocolClient.unlinkResource(any<Resource>(), any<ResourceType>()) }
+    }
+
 
     @Test
     fun testEquals() {

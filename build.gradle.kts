@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.20"
     id("org.jetbrains.kotlinx.kover") version "0.8.3"
+    id("org.cadixdev.licenser") version "0.6.1"
     `maven-publish`
 }
 
@@ -8,9 +9,19 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "org.jetbrains.kotlinx.kover")
     apply(plugin = "maven-publish")
+    apply(plugin = "org.cadixdev.licenser")
 
     group = "ai.ancf.lmos"
-    version = "0.1.0-SNAPSHOT"
+    version = "0.1.3-SNAPSHOT"
+
+    license {
+        header(rootProject.file("LICENSE"))
+        include("**/*.java")
+        include("**/*.kt")
+        include("**/*.yaml")
+        exclude("**/*.properties")
+    }
+
 
     dependencies {
         testImplementation(kotlin("test"))

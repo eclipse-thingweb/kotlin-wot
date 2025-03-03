@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.thing
 
 import ai.ancf.lmos.wot.content.ContentManager
@@ -9,6 +15,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
+import kotlin.coroutines.cancellation.CancellationException
 
 class ProtocolListenerRegistry {
 
@@ -78,6 +85,9 @@ class ProtocolListenerRegistry {
                 try {
                     val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
                     listener.handle(content)
+                } catch (e: CancellationException) {
+                    log.info("Cancellation exception while notifying listener", e)
+                    throw e // Rethrow cancellation exception
                 } catch (e: Exception) {
                     log.error("Error while notifying listener", e)
                 }
@@ -91,6 +101,9 @@ class ProtocolListenerRegistry {
             try {
                 val content = ContentManager.valueToContent(interactionInputValue.value, contentType)
                 listener.handle(content)
+            } catch (e: CancellationException) {
+                log.info("Cancellation exception while notifying listener", e)
+                throw e // Rethrow cancellation exception
             } catch (e: Exception) {
                 log.error("Error while notifying listener", e)
             }
