@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.binding.websocket
 
 import ai.ancf.lmos.wot.JsonMapper
@@ -206,8 +212,19 @@ fun Application.setupRoutingWithWebSockets(servient: Servient) {
 
         webSocket("/ws") {
             val sessionId = this.call.request.headers["Sec-WebSocket-Key"] ?: UUID.randomUUID().toString()
-            handleWebSocketSession(sessionId, servient)
+            try {
+                handleWebSocketSession(sessionId, servient)
+            } finally {
+                // This will be triggered when the WebSocket connection is closed
+                cleanUp(sessionId, servient)
+            }
         }
+    }
+}
+
+fun cleanUp(sessionId: String, servient: Servient)  {
+    servient.things.values.forEach { thing ->
+        thing.unregisterAllListeners(sessionId)
     }
 }
 
@@ -483,6 +500,7 @@ suspend fun DefaultWebSocketServerSession.handleSubscribeEvent(thing: ExposedThi
         }
     }
 }
+
 @WithSpan(kind = SpanKind.SERVER)
 suspend fun DefaultWebSocketServerSession.handleUnsubscribeEvent(thing: ExposedThing, message: UnsubscribeEventMessage, @SpanAttribute("thingId") thingId: String, @SpanAttribute("sessionId") sessionId: String) {
     val eventName = message.event

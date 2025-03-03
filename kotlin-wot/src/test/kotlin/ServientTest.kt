@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot
 
 import ai.ancf.lmos.wot.content.Content

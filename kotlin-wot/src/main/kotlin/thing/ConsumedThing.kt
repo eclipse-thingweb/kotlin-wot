@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.thing
 
 import AugmentedForm
@@ -351,7 +357,7 @@ data class ConsumedThing(
          val flow = client.subscribeResource(Resource(id, eventName, formWithoutURITemplates), ResourceType.EVENT)
             .map { handleInteractionOutput(it, form, eventAffordance.data) }
             .onCompletion {
-                error -> if (error != null) {
+                error -> if (error != null && error !is CancellationException) { // Ignore cancellations
                     log.warn("Error while processing observe property for ${eventAffordance.title}: ${error.message}", error)
                 }
                 subscription.stop(options)

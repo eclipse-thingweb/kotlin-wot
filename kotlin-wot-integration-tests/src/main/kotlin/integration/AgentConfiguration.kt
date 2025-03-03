@@ -1,11 +1,19 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.integration
 
 
-import ai.ancf.lmos.wot.JsonMapper
 import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.security.SecurityScheme
+import ai.ancf.lmos.wot.integration.ThingToFunctionsMapper.mapDataSchemaToParam
+import ai.ancf.lmos.wot.integration.ThingToFunctionsMapper.mapSchemaToJsonNode
+import ai.ancf.lmos.wot.security.NoSecurityScheme
 import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
 import kotlinx.coroutines.runBlocking
 import org.eclipse.lmos.arc.agents.dsl.AllTools
 import org.eclipse.lmos.arc.agents.functions.LLMFunction
@@ -92,6 +100,8 @@ class AgentConfiguration {
         ArcEventListener(applicationEventPublisher)
 
 
+    /*
+
     @Bean
     fun discoverTools(toolProperties: ToolProperties, functions: Functions, wot: Wot) : List<LLMFunction> = runBlocking {
         toolProperties.tools.flatMap {
@@ -111,6 +121,29 @@ class AgentConfiguration {
             log.info("Added ${createdFunctions.size} functions to group ${it.key}")
             createdFunctions
         }
+    }
+
+     */
+
+    @Bean
+    fun scraperToolFunctions(toolProperties: ToolProperties, functions: Functions, wot: Wot, scraperTool: ScraperTool) : List<LLMFunction> = runBlocking {
+
+        val thingDescription = wot.requestThingDescription(toolProperties.tools["scraper"]?.url!!, NoSecurityScheme())
+        val consumedThing = wot.consume(thingDescription)
+
+         thingDescription.actions.flatMap { (actionName, action) ->
+            val actionParams = action.input?.let { listOf(Pair(mapDataSchemaToParam(it), true)) } ?: emptyList()
+             functions(actionName, action.description ?: "No Description available", "scraper", actionParams) { input ->
+                 try {
+                     val jsonInput : JsonNode = action.output?.let { mapSchemaToJsonNode(it, input.first()!!) } ?: TextNode(input.first()!!)
+                     consumedThing.invokeAction(actionName, jsonInput).asText()
+                         ?: "Function call failed"
+                 } catch (e: Exception) {
+                     "Function call failed"
+                 }
+             }
+        }
+
     }
 
     /*

@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package reflection
 
 import ai.ancf.lmos.wot.Servient

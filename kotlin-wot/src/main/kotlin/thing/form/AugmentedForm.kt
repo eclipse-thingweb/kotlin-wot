@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import ai.ancf.lmos.wot.security.SecurityScheme
 import ai.ancf.lmos.wot.thing.form.Form

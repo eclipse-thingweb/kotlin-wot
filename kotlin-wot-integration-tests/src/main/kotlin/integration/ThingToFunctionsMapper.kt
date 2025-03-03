@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: Robert Winkler
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package ai.ancf.lmos.wot.integration
 
 
@@ -205,7 +211,7 @@ object ThingToFunctionsMapper {
         }
     }
 
-    private fun mapSchemaToJsonNode(schema: DataSchema<*>, value: String): JsonNode {
+    fun mapSchemaToJsonNode(schema: DataSchema<*>, value: String): JsonNode {
         return when (schema) {
             is StringSchema -> TextNode(value)
             is IntegerSchema -> IntNode(value.toIntOrNull() ?: 0)

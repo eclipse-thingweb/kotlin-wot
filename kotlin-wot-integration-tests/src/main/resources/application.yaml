@@ -1,3 +1,9 @@
+#
+# SPDX-FileCopyrightText: Robert Winkler
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
 spring:
   application:
     name: chat-agent    # Service name for tracing (appears in Langfuse UI as the source service)
