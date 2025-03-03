@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.filter
+package org.eclipse.thingweb.thing.filter
 
 /**
  * Defines "Where" to search for things during a discovery process.

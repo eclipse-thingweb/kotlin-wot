@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection
+package org.eclipse.thingweb.reflection
 
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.buildObjectSchema
-import ai.ancf.lmos.wot.thing.schema.DataSchema
-import ai.ancf.lmos.wot.thing.schema.IntegerSchema
-import ai.ancf.lmos.wot.thing.schema.StringSchema
+import org.eclipse.thingweb.reflection.ExposedThingBuilder.buildObjectSchema
+import org.eclipse.thingweb.thing.schema.DataSchema
+import org.eclipse.thingweb.thing.schema.IntegerSchema
+import org.eclipse.thingweb.thing.schema.StringSchema
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

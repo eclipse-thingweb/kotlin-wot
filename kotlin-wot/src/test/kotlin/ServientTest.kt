@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot
+package org.eclipse.thingweb
 
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentCodecException
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.Context
-import ai.ancf.lmos.wot.thing.schema.Type
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.content.ContentCodecException
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.schema.Context
+import org.eclipse.thingweb.thing.schema.Type
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory

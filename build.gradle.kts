@@ -11,7 +11,7 @@ subprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "org.cadixdev.licenser")
 
-    group = "ai.ancf.lmos"
+    group = "org.eclipse.thingweb"
     version = "0.1.3-SNAPSHOT"
 
     license {

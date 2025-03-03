@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.spring
+package org.eclipse.thingweb.spring
 
 
-import ai.ancf.lmos.wot.credentials.ApiKeyCredentials
-import ai.ancf.lmos.wot.credentials.BasicCredentials
-import ai.ancf.lmos.wot.credentials.BearerCredentials
+import org.eclipse.thingweb.credentials.ApiKeyCredentials
+import org.eclipse.thingweb.credentials.BasicCredentials
+import org.eclipse.thingweb.credentials.BearerCredentials
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.validation.annotation.Validated
 
@@ -26,7 +26,7 @@ data class Credentials(
     val password: String? = null, // for Basic credentials
     val apiKey: String? = null // for API Key credentials
 ) {
-    fun convert(): ai.ancf.lmos.wot.credentials.Credentials {
+    fun convert(): org.eclipse.thingweb.credentials.Credentials {
         return when (type) {
             "bearer" -> {
                 if (token != null) {

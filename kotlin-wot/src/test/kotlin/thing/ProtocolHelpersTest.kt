@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
 
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.StringProperty
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.form.Operation
+import org.eclipse.thingweb.thing.schema.StringProperty
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

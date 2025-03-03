@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot
+package org.eclipse.thingweb
 
-import ai.ancf.lmos.wot.security.NoSecurityScheme
-import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.ThingDescription
-import ai.ancf.lmos.wot.thing.filter.ThingFilter
-import ai.ancf.lmos.wot.thing.schema.WoTConsumedThing
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.security.NoSecurityScheme
+import org.eclipse.thingweb.security.SecurityScheme
+import org.eclipse.thingweb.thing.ConsumedThing
+import org.eclipse.thingweb.thing.ThingDescription
+import org.eclipse.thingweb.thing.filter.ThingFilter
+import org.eclipse.thingweb.thing.schema.WoTConsumedThing
+import org.eclipse.thingweb.thing.schema.WoTExposedThing
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
 import kotlinx.coroutines.flow.Flow
 import java.net.URI
 

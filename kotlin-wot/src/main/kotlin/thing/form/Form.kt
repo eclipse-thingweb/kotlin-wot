@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.form
+package org.eclipse.thingweb.thing.form
 
-import ai.ancf.lmos.wot.thing.OperationsDeserializer
-import ai.ancf.lmos.wot.thing.schema.WoTAdditionalExpectedResponse
-import ai.ancf.lmos.wot.thing.schema.WoTExpectedResponse
-import ai.ancf.lmos.wot.thing.schema.WoTForm
+import org.eclipse.thingweb.thing.OperationsDeserializer
+import org.eclipse.thingweb.thing.schema.WoTAdditionalExpectedResponse
+import org.eclipse.thingweb.thing.schema.WoTExpectedResponse
+import org.eclipse.thingweb.thing.schema.WoTForm
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties

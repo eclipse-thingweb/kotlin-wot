@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.mqtt
+package org.eclipse.thingweb.binding.mqtt
 
-import ai.ancf.lmos.wot.binding.websocket.SecureWebSocketProtocolClientFactory
-import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolClientFactory
+import org.eclipse.thingweb.binding.websocket.SecureWebSocketProtocolClientFactory
+import org.eclipse.thingweb.binding.websocket.WebSocketProtocolClientFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

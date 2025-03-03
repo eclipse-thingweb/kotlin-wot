@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
-import ai.ancf.lmos.wot.thing.schema.ContentListener
-import ai.ancf.lmos.wot.thing.schema.DataSchema
-import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
-import ai.ancf.lmos.wot.thing.schema.InteractionInput
+import org.eclipse.thingweb.thing.schema.ContentListener
+import org.eclipse.thingweb.thing.schema.DataSchema
+import org.eclipse.thingweb.thing.schema.InteractionAffordance
+import org.eclipse.thingweb.thing.schema.InteractionInput
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 

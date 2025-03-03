@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.content
+package org.eclipse.thingweb.content
 
-import ai.ancf.lmos.wot.thing.schema.BooleanSchema
-import ai.ancf.lmos.wot.thing.schema.IntegerSchema
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
-import ai.ancf.lmos.wot.thing.schema.StringSchema
+import org.eclipse.thingweb.thing.schema.BooleanSchema
+import org.eclipse.thingweb.thing.schema.IntegerSchema
+import org.eclipse.thingweb.thing.schema.ObjectSchema
+import org.eclipse.thingweb.thing.schema.StringSchema
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.LongNode

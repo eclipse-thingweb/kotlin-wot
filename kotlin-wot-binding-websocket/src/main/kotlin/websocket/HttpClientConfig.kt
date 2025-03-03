@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.websocket
+package org.eclipse.thingweb.binding.websocket
 
-import ai.ancf.lmos.wot.security.SecurityScheme
+import org.eclipse.thingweb.security.SecurityScheme
 
 data class HttpClientConfig(
     val port: Int?,

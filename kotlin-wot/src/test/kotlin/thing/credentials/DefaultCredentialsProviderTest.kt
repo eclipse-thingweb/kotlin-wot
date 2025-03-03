@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.credentials
+package org.eclipse.thingweb.thing.credentials
 
 
-import ai.ancf.lmos.wot.credentials.BasicCredentials
-import ai.ancf.lmos.wot.credentials.BearerCredentials
-import ai.ancf.lmos.wot.credentials.DefaultCredentialsProvider
-import ai.ancf.lmos.wot.credentials.NoCredentialsFound
-import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import ai.ancf.lmos.wot.security.BearerSecurityScheme
-import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.form.Form
+import org.eclipse.thingweb.credentials.BasicCredentials
+import org.eclipse.thingweb.credentials.BearerCredentials
+import org.eclipse.thingweb.credentials.DefaultCredentialsProvider
+import org.eclipse.thingweb.credentials.NoCredentialsFound
+import org.eclipse.thingweb.security.BasicSecurityScheme
+import org.eclipse.thingweb.security.BearerSecurityScheme
+import org.eclipse.thingweb.security.SecurityScheme
+import org.eclipse.thingweb.thing.form.Form
 import kotlin.test.*
 
 class DefaultCredentialsProviderTest {

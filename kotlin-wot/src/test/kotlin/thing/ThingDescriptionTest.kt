@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
-import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import ai.ancf.lmos.wot.thing.schema.*
+import org.eclipse.thingweb.security.BasicSecurityScheme
+import org.eclipse.thingweb.thing.schema.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.Test

@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
 import AugmentedForm
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.ServientException
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.credentials.DefaultCredentialsProvider
-import ai.ancf.lmos.wot.parseInteractionOptions
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.*
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.ServientException
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.credentials.DefaultCredentialsProvider
+import org.eclipse.thingweb.parseInteractionOptions
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.form.Operation
+import org.eclipse.thingweb.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.Resource

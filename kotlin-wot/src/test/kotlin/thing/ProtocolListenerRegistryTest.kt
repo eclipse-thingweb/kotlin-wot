@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.ContentListener
-import ai.ancf.lmos.wot.thing.schema.StringProperty
-import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.schema.ContentListener
+import org.eclipse.thingweb.thing.schema.StringProperty
+import org.eclipse.thingweb.thing.schema.toInteractionInputValue
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest

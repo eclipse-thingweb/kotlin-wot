@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.schema
+package org.eclipse.thingweb.thing.schema
 
-import ai.ancf.lmos.wot.thing.TypeDeserializer
-import ai.ancf.lmos.wot.thing.TypeSerializer
+import org.eclipse.thingweb.thing.TypeDeserializer
+import org.eclipse.thingweb.thing.TypeSerializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 

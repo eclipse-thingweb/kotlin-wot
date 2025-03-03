@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.content
+package org.eclipse.thingweb.content
 
-import ai.ancf.lmos.wot.thing.schema.ObjectSchema
-import ai.ancf.lmos.wot.thing.schema.StringSchema
+import org.eclipse.thingweb.thing.schema.ObjectSchema
+import org.eclipse.thingweb.thing.schema.StringSchema
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*

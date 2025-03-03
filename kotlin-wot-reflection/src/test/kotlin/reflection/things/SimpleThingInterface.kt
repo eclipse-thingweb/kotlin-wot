@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection.things
+package org.eclipse.thingweb.reflection.things
 
-import ai.ancf.lmos.wot.reflection.annotations.Action
+import org.eclipse.thingweb.reflection.annotations.Action
 
 interface SimpleThingInterface {
 

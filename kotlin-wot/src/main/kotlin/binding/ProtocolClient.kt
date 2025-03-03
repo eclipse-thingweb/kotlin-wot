@@ -6,12 +6,12 @@
 
 package ai.anfc.lmos.wot.binding
 
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.credentials.CredentialsProvider
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.ThingDescription
-import ai.ancf.lmos.wot.thing.filter.ThingFilter
-import ai.ancf.lmos.wot.thing.schema.WoTForm
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.credentials.CredentialsProvider
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.ThingDescription
+import org.eclipse.thingweb.thing.filter.ThingFilter
+import org.eclipse.thingweb.thing.schema.WoTForm
 import kotlinx.coroutines.flow.Flow
 
 /**

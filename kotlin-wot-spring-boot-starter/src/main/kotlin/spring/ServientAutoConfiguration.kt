@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.spring
+package org.eclipse.thingweb.spring
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
-import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
-import ai.ancf.lmos.wot.binding.http.HttpsProtocolClientFactory
-import ai.ancf.lmos.wot.binding.mqtt.MqttClientConfig
-import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolClientFactory
-import ai.ancf.lmos.wot.binding.mqtt.MqttProtocolServer
-import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolClientFactory
-import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolServer
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.binding.http.HttpProtocolClientFactory
+import org.eclipse.thingweb.binding.http.HttpProtocolServer
+import org.eclipse.thingweb.binding.http.HttpsProtocolClientFactory
+import org.eclipse.thingweb.binding.mqtt.MqttClientConfig
+import org.eclipse.thingweb.binding.mqtt.MqttProtocolClientFactory
+import org.eclipse.thingweb.binding.mqtt.MqttProtocolServer
+import org.eclipse.thingweb.binding.websocket.WebSocketProtocolClientFactory
+import org.eclipse.thingweb.binding.websocket.WebSocketProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import org.springframework.beans.factory.annotation.Qualifier

@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.example
+package org.eclipse.thingweb.example
 
 
-import ai.ancf.lmos.wot.protocol.LMOSContext
-import ai.ancf.lmos.wot.protocol.LMOSThingType
-import ai.ancf.lmos.wot.reflection.annotations.*
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import org.eclipse.thingweb.protocol.LMOSContext
+import org.eclipse.thingweb.protocol.LMOSThingType
+import org.eclipse.thingweb.reflection.annotations.*
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
 

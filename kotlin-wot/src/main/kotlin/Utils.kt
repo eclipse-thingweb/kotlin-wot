@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot
+package org.eclipse.thingweb
 
-import ai.ancf.lmos.wot.thing.ThingDescription
-import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
-import ai.ancf.lmos.wot.thing.schema.InteractionOptions
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
-import ai.ancf.lmos.wot.thing.validateInteractionOptions
+import org.eclipse.thingweb.thing.ThingDescription
+import org.eclipse.thingweb.thing.schema.InteractionAffordance
+import org.eclipse.thingweb.thing.schema.InteractionOptions
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.thing.validateInteractionOptions
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper

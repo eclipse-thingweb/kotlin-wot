@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.WoTForm
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.security.SecurityScheme
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.schema.WoTForm
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import org.slf4j.LoggerFactory

@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.event
+package org.eclipse.thingweb.thing.event
 
-import ai.ancf.lmos.wot.thing.schema.Type
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.DataSchema
-import ai.ancf.lmos.wot.thing.schema.EventAffordance
+import org.eclipse.thingweb.thing.schema.Type
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.schema.DataSchema
+import org.eclipse.thingweb.thing.schema.EventAffordance
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY

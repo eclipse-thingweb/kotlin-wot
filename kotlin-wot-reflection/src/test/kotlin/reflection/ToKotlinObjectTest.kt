@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection
+package org.eclipse.thingweb.reflection
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.toKotlinObject
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.reflection.ExposedThingBuilder.toKotlinObject
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly

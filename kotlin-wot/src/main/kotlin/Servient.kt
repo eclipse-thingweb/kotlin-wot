@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot
+package org.eclipse.thingweb
 
-import ai.ancf.lmos.wot.content.ContentCodecException
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.credentials.Credentials
-import ai.ancf.lmos.wot.credentials.DefaultCredentialsProvider
-import ai.ancf.lmos.wot.security.*
-import ai.ancf.lmos.wot.thing.*
-import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod.*
-import ai.ancf.lmos.wot.thing.filter.ThingFilter
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.content.ContentCodecException
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.credentials.Credentials
+import org.eclipse.thingweb.credentials.DefaultCredentialsProvider
+import org.eclipse.thingweb.security.*
+import org.eclipse.thingweb.thing.*
+import org.eclipse.thingweb.thing.filter.DiscoveryMethod.*
+import org.eclipse.thingweb.thing.filter.ThingFilter
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.schema.WoTExposedThing
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
 import ai.anfc.lmos.wot.binding.*
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import kotlinx.coroutines.async

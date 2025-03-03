@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.http
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import ai.ancf.lmos.wot.security.BearerSecurityScheme
-import ai.ancf.lmos.wot.security.NoSecurityScheme
-import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.form.Form
+package org.eclipse.thingweb.binding.http
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.security.BasicSecurityScheme
+import org.eclipse.thingweb.security.BearerSecurityScheme
+import org.eclipse.thingweb.security.NoSecurityScheme
+import org.eclipse.thingweb.security.SecurityScheme
+import org.eclipse.thingweb.thing.form.Form
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.marcinziolo.kotlin.wiremock.*

@@ -6,7 +6,7 @@
 
 package http
 
-import ai.ancf.lmos.wot.security.SecurityScheme
+import org.eclipse.thingweb.security.SecurityScheme
 
 data class HttpClientConfig(
     val port: Int?,

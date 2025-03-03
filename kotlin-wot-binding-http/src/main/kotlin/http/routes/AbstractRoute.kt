@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.http.routes
+package org.eclipse.thingweb.binding.http.routes
 
-import ai.ancf.lmos.wot.binding.http.routes.AbstractRoute
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.content.ContentManager.isSupportedMediaType
+import org.eclipse.thingweb.binding.http.routes.AbstractRoute
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.content.ContentManager.isSupportedMediaType
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*

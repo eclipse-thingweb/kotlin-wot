@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.spring
+package org.eclipse.thingweb.spring
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder
-import ai.ancf.lmos.wot.reflection.annotations.Thing
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.reflection.ExposedThingBuilder
+import org.eclipse.thingweb.reflection.annotations.Thing
+import org.eclipse.thingweb.thing.schema.WoTExposedThing
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger

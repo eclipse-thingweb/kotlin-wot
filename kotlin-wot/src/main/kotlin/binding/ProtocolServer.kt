@@ -6,8 +6,8 @@
 
 package ai.anfc.lmos.wot.binding
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.thing.ExposedThing
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.thing.ExposedThing
 
 /**
  * A ProtocolServer defines how to expose Thing for interaction via a specific protocol (e.g. HTTP,

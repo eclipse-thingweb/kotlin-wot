@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection
+package org.eclipse.thingweb.reflection
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.binding.http.HttpProtocolServer
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.content.toJsonContent
-import ai.ancf.lmos.wot.reflection.things.SimpleThing
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.schema.ContentListener
-import ai.ancf.lmos.wot.thing.schema.Link
-import ai.ancf.lmos.wot.thing.schema.StringSchema
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.binding.http.HttpProtocolServer
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.content.toJsonContent
+import org.eclipse.thingweb.reflection.things.SimpleThing
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.schema.ContentListener
+import org.eclipse.thingweb.thing.schema.Link
+import org.eclipse.thingweb.thing.schema.StringSchema
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import java.util.concurrent.CountDownLatch

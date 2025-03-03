@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection.things
+package org.eclipse.thingweb.reflection.things
 
-import ai.ancf.lmos.wot.reflection.annotations.*
+import org.eclipse.thingweb.reflection.annotations.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow

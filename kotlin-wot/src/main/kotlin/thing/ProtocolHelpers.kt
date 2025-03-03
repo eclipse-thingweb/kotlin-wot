@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.InteractionAffordance
-import ai.ancf.lmos.wot.thing.schema.PropertyAffordance
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.form.Operation
+import org.eclipse.thingweb.thing.schema.InteractionAffordance
+import org.eclipse.thingweb.thing.schema.PropertyAffordance
 import java.net.URI
 
 // Find a form matching the URI scheme, request URL, and optionally content type

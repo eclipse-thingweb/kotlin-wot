@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.websocket
+package org.eclipse.thingweb.binding.websocket
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.credentials.CredentialsProvider
-import ai.ancf.lmos.wot.thing.schema.WoTForm
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.credentials.CredentialsProvider
+import org.eclipse.thingweb.thing.schema.WoTForm
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientException
 import ai.anfc.lmos.wot.binding.Resource

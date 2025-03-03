@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.schema
+package org.eclipse.thingweb.thing.schema
 
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentManager
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.content.ContentManager
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.flow.Flow
 

@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.WoTDSL
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.Content.Companion.EMPTY_CONTENT
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.*
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.WoTDSL
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.content.Content.Companion.EMPTY_CONTENT
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.thing.form.Operation
+import org.eclipse.thingweb.thing.schema.*
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.core.JsonProcessingException

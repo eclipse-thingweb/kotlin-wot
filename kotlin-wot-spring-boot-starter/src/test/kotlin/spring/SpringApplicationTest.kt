@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.spring
+package org.eclipse.thingweb.spring
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.credentials.BearerCredentials
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.credentials.BearerCredentials
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.env.Environment

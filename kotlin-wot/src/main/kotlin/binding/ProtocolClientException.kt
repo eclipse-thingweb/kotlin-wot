@@ -6,7 +6,7 @@
 
 package ai.anfc.lmos.wot.binding
 
-import ai.ancf.lmos.wot.ServientException
+import org.eclipse.thingweb.ServientException
 
 
 /**

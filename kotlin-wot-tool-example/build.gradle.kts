@@ -16,7 +16,7 @@ dependencies {
 }
 
 springBoot {
-    mainClass.set("ai.ancf.lmos.wot.example.ToolApplicationKt")
+    mainClass.set("org.eclipse.thingweb.example.ToolApplicationKt")
 }
 
 tasks.register("downloadOtelAgent") {

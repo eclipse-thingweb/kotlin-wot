@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.filter
+package org.eclipse.thingweb.thing.filter
 
-import ai.ancf.lmos.wot.ServientException
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
+import org.eclipse.thingweb.ServientException
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.schema.WoTExposedThing
 
 /**
  * Is used in the discovery process and filters the things according to certain properties

@@ -6,14 +6,14 @@
 
 package websocket
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.binding.http.HttpProtocolClientFactory
-import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolClientFactory
-import ai.ancf.lmos.wot.binding.websocket.WebSocketProtocolServer
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.exposedThing
-import ai.ancf.lmos.wot.thing.schema.*
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.binding.http.HttpProtocolClientFactory
+import org.eclipse.thingweb.binding.websocket.WebSocketProtocolClientFactory
+import org.eclipse.thingweb.binding.websocket.WebSocketProtocolServer
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.exposedThing
+import org.eclipse.thingweb.thing.schema.*
 import com.fasterxml.jackson.databind.node.NullNode
 import io.mockk.clearAllMocks
 import kotlinx.coroutines.runBlocking

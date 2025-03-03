@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.mqtt
+package org.eclipse.thingweb.binding.mqtt
 
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.thing.form.Form
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.thing.form.Form
 import app.cash.turbine.test
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client

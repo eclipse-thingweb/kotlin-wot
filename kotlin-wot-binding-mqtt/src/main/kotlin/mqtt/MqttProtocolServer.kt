@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.mqtt
+package org.eclipse.thingweb.binding.mqtt
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.ContentListener
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.form.Operation
+import org.eclipse.thingweb.thing.schema.ContentListener
 import ai.anfc.lmos.wot.binding.ProtocolServer
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.hivemq.client.mqtt.datatypes.MqttQos

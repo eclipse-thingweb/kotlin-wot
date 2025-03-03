@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.form
+package org.eclipse.thingweb.thing.form
 
 import AugmentedForm
-import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import ai.ancf.lmos.wot.thing.schema.WoTForm
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.security.BasicSecurityScheme
+import org.eclipse.thingweb.thing.schema.WoTForm
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.Test

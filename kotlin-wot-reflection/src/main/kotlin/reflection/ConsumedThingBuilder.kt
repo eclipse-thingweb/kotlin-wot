@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection
+package org.eclipse.thingweb.reflection
 
 /*
 class ConsumedThingBuilder {

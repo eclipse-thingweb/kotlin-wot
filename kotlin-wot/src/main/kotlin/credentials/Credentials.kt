@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.credentials
+package org.eclipse.thingweb.credentials
 
-import ai.ancf.lmos.wot.thing.schema.WoTForm
+import org.eclipse.thingweb.thing.schema.WoTForm
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.util.*

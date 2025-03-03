@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.schema
+package org.eclipse.thingweb.thing.schema
 
-import ai.ancf.lmos.wot.JsonMapper
+import org.eclipse.thingweb.JsonMapper
 import com.fasterxml.jackson.databind.JsonNode
 
 // Extension function for creating an InteractionInput.Value from a string

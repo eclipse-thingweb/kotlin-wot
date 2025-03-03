@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.protocol
+package org.eclipse.thingweb.protocol
 
 class LMOSThingType {
 

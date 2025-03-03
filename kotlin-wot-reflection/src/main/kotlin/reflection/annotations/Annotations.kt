@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection.annotations
+package org.eclipse.thingweb.reflection.annotations
 
-import ai.ancf.lmos.wot.thing.DEFAULT_TYPE
+import org.eclipse.thingweb.thing.DEFAULT_TYPE
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

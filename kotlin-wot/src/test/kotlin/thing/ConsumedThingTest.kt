@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing
+package org.eclipse.thingweb.thing
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.content.Content
-import ai.ancf.lmos.wot.content.ContentManager
-import ai.ancf.lmos.wot.content.JsonCodec
-import ai.ancf.lmos.wot.content.toJsonContent
-import ai.ancf.lmos.wot.security.BasicSecurityScheme
-import ai.ancf.lmos.wot.thing.action.ThingAction
-import ai.ancf.lmos.wot.thing.event.ThingEvent
-import ai.ancf.lmos.wot.thing.form.Form
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.schema.*
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.content.Content
+import org.eclipse.thingweb.content.ContentManager
+import org.eclipse.thingweb.content.JsonCodec
+import org.eclipse.thingweb.content.toJsonContent
+import org.eclipse.thingweb.security.BasicSecurityScheme
+import org.eclipse.thingweb.thing.action.ThingAction
+import org.eclipse.thingweb.thing.event.ThingEvent
+import org.eclipse.thingweb.thing.form.Form
+import org.eclipse.thingweb.thing.form.Operation
+import org.eclipse.thingweb.thing.schema.*
 import ai.anfc.lmos.wot.binding.ProtocolClient
 import ai.anfc.lmos.wot.binding.ProtocolClientFactory
 import ai.anfc.lmos.wot.binding.Resource

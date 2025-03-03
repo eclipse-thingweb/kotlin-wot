@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.security
+package org.eclipse.thingweb.security
 
 import com.fasterxml.jackson.annotation.JsonInclude
 

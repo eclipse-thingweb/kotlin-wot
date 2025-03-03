@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.mqtt
+package org.eclipse.thingweb.binding.mqtt
 
 
 internal class MqttProtocolException : Exception {

@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.http
+package org.eclipse.thingweb.binding.http
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.ThingDescription
-import ai.ancf.lmos.wot.thing.exposedThing
-import ai.ancf.lmos.wot.thing.form.Operation
-import ai.ancf.lmos.wot.thing.form.Operation.READ_PROPERTY
-import ai.ancf.lmos.wot.thing.form.Operation.WRITE_PROPERTY
-import ai.ancf.lmos.wot.thing.schema.InteractionInput
-import ai.ancf.lmos.wot.thing.schema.StringSchema
-import ai.ancf.lmos.wot.thing.schema.stringSchema
-import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.ThingDescription
+import org.eclipse.thingweb.thing.exposedThing
+import org.eclipse.thingweb.thing.form.Operation
+import org.eclipse.thingweb.thing.form.Operation.READ_PROPERTY
+import org.eclipse.thingweb.thing.form.Operation.WRITE_PROPERTY
+import org.eclipse.thingweb.thing.schema.InteractionInput
+import org.eclipse.thingweb.thing.schema.StringSchema
+import org.eclipse.thingweb.thing.schema.stringSchema
+import org.eclipse.thingweb.thing.schema.toInteractionInputValue
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature

@@ -6,12 +6,12 @@
 
 package reflection
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder
-import ai.ancf.lmos.wot.reflection.things.ComplexThing
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.reflection.ExposedThingBuilder
+import org.eclipse.thingweb.reflection.things.ComplexThing
+import org.eclipse.thingweb.thing.schema.WoTExposedThing
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
 import kotlin.test.BeforeTest
 
 class ConsumedThingBuilderTest {

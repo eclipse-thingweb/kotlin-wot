@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.credentials
+package org.eclipse.thingweb.credentials
 
 
-import ai.ancf.lmos.wot.security.*
-import ai.ancf.lmos.wot.thing.schema.WoTForm
+import org.eclipse.thingweb.security.*
+import org.eclipse.thingweb.thing.schema.WoTForm
 import org.slf4j.LoggerFactory
 
 class DefaultCredentialsProvider(

@@ -6,15 +6,15 @@
 
 package websocket
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.binding.websocket.*
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.exposedThing
-import ai.ancf.lmos.wot.thing.schema.InteractionInput
-import ai.ancf.lmos.wot.thing.schema.StringSchema
-import ai.ancf.lmos.wot.thing.schema.stringSchema
-import ai.ancf.lmos.wot.thing.schema.toInteractionInputValue
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.binding.websocket.*
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.exposedThing
+import org.eclipse.thingweb.thing.schema.InteractionInput
+import org.eclipse.thingweb.thing.schema.StringSchema
+import org.eclipse.thingweb.thing.schema.stringSchema
+import org.eclipse.thingweb.thing.schema.toInteractionInputValue
 import ai.anfc.lmos.wot.binding.ProtocolServerException
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.NullNode

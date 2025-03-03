@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.content
+package org.eclipse.thingweb.content
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.thing.schema.DataSchema
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.thing.schema.DataSchema
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import java.io.IOException

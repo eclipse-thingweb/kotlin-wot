@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection
+package org.eclipse.thingweb.reflection
 
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.addActionHandler
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.addEventHandler
-import ai.ancf.lmos.wot.reflection.ExposedThingBuilder.addPropertyHandler
-import ai.ancf.lmos.wot.thing.ExposedThing
+import org.eclipse.thingweb.reflection.ExposedThingBuilder.addActionHandler
+import org.eclipse.thingweb.reflection.ExposedThingBuilder.addEventHandler
+import org.eclipse.thingweb.reflection.ExposedThingBuilder.addPropertyHandler
+import org.eclipse.thingweb.thing.ExposedThing
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

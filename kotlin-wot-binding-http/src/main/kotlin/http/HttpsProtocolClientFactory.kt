@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.binding.http
+package org.eclipse.thingweb.binding.http
 
 /**
  * Creates new [HttpProtocolClient] instances that allow consuming Things via HTTPS.

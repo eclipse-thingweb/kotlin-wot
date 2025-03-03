@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.form
+package org.eclipse.thingweb.thing.form
 
-import ai.ancf.lmos.wot.JsonMapper
+import org.eclipse.thingweb.JsonMapper
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option
 import kotlin.test.Test

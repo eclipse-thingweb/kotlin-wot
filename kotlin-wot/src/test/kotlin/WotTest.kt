@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot
+package org.eclipse.thingweb
 
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.ThingDescription
-import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod
-import ai.ancf.lmos.wot.thing.filter.ThingFilter
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.ThingDescription
+import org.eclipse.thingweb.thing.filter.DiscoveryMethod
+import org.eclipse.thingweb.thing.filter.ThingFilter
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList

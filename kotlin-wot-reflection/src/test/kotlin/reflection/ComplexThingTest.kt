@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection
+package org.eclipse.thingweb.reflection
 
-import ai.ancf.lmos.wot.Servient
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.things.ComplexThing
-import ai.ancf.lmos.wot.thing.schema.*
+import org.eclipse.thingweb.Servient
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.reflection.things.ComplexThing
+import org.eclipse.thingweb.thing.schema.*
 import assertk.assertThat
 import kotlin.test.*
 

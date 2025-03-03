@@ -6,10 +6,10 @@
 
 package spring
 
-import ai.ancf.lmos.wot.credentials.ApiKeyCredentials
-import ai.ancf.lmos.wot.credentials.BasicCredentials
-import ai.ancf.lmos.wot.credentials.BearerCredentials
-import ai.ancf.lmos.wot.spring.Credentials
+import org.eclipse.thingweb.credentials.ApiKeyCredentials
+import org.eclipse.thingweb.credentials.BasicCredentials
+import org.eclipse.thingweb.credentials.BearerCredentials
+import org.eclipse.thingweb.spring.Credentials
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

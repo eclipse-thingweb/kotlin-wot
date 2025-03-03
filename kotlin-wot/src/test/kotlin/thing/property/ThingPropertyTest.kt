@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.thing.property
+package org.eclipse.thingweb.thing.property
 
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.thing.schema.Type
-import ai.ancf.lmos.wot.thing.schema.*
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.thing.schema.Type
+import org.eclipse.thingweb.thing.schema.*
 import com.fasterxml.jackson.module.kotlin.readValue
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import net.javacrumbs.jsonunit.core.Option

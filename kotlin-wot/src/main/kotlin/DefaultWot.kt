@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot
+package org.eclipse.thingweb
 
 
-import ai.ancf.lmos.wot.security.SecurityScheme
-import ai.ancf.lmos.wot.thing.ConsumedThing
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.ThingDescription
-import ai.ancf.lmos.wot.thing.filter.DiscoveryMethod
-import ai.ancf.lmos.wot.thing.filter.ThingFilter
-import ai.ancf.lmos.wot.thing.schema.WoTExposedThing
-import ai.ancf.lmos.wot.thing.schema.WoTThingDescription
+import org.eclipse.thingweb.security.SecurityScheme
+import org.eclipse.thingweb.thing.ConsumedThing
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.ThingDescription
+import org.eclipse.thingweb.thing.filter.DiscoveryMethod
+import org.eclipse.thingweb.thing.filter.ThingFilter
+import org.eclipse.thingweb.thing.schema.WoTExposedThing
+import org.eclipse.thingweb.thing.schema.WoTThingDescription
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.flow.Flow

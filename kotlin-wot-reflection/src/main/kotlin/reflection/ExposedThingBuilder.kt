@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package ai.ancf.lmos.wot.reflection
+package org.eclipse.thingweb.reflection
 
-import ai.ancf.lmos.wot.JsonMapper
-import ai.ancf.lmos.wot.Wot
-import ai.ancf.lmos.wot.reflection.annotations.*
-import ai.ancf.lmos.wot.reflection.annotations.Context
-import ai.ancf.lmos.wot.reflection.annotations.Link
-import ai.ancf.lmos.wot.reflection.annotations.ObjectProperty
-import ai.ancf.lmos.wot.reflection.annotations.VersionInfo
-import ai.ancf.lmos.wot.thing.DEFAULT_CONTEXT
-import ai.ancf.lmos.wot.thing.ExposedThing
-import ai.ancf.lmos.wot.thing.schema.*
-import ai.ancf.lmos.wot.thing.schema.ArraySchema
-import ai.ancf.lmos.wot.thing.schema.IntegerSchema
-import ai.ancf.lmos.wot.thing.schema.NumberSchema
-import ai.ancf.lmos.wot.thing.schema.StringSchema
-import ai.ancf.lmos.wot.thing.thingDescription
+import org.eclipse.thingweb.JsonMapper
+import org.eclipse.thingweb.Wot
+import org.eclipse.thingweb.reflection.annotations.*
+import org.eclipse.thingweb.reflection.annotations.Context
+import org.eclipse.thingweb.reflection.annotations.Link
+import org.eclipse.thingweb.reflection.annotations.ObjectProperty
+import org.eclipse.thingweb.reflection.annotations.VersionInfo
+import org.eclipse.thingweb.thing.DEFAULT_CONTEXT
+import org.eclipse.thingweb.thing.ExposedThing
+import org.eclipse.thingweb.thing.schema.*
+import org.eclipse.thingweb.thing.schema.ArraySchema
+import org.eclipse.thingweb.thing.schema.IntegerSchema
+import org.eclipse.thingweb.thing.schema.NumberSchema
+import org.eclipse.thingweb.thing.schema.StringSchema
+import org.eclipse.thingweb.thing.thingDescription
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -74,7 +74,7 @@ object ExposedThingBuilder {
                 objectType = Type(thingAnnotation.type)
                 val contexts = clazz.findAnnotations<Context>()
                 if(contexts.isNotEmpty()){
-                    val context = ai.ancf.lmos.wot.thing.schema.Context(DEFAULT_CONTEXT)
+                    val context = org.eclipse.thingweb.thing.schema.Context(DEFAULT_CONTEXT)
                     contexts.forEach {
                         context.addContext(it.prefix, it.url)
                     }
@@ -83,10 +83,10 @@ object ExposedThingBuilder {
                 description = thingAnnotation.description
                 val versionInfoAnnotation = clazz.findAnnotation<VersionInfo>()
                 if(versionInfoAnnotation != null){
-                    version = ai.ancf.lmos.wot.thing.schema.VersionInfo(versionInfoAnnotation.instance, versionInfoAnnotation.model)
+                    version = org.eclipse.thingweb.thing.schema.VersionInfo(versionInfoAnnotation.instance, versionInfoAnnotation.model)
                 }
                 clazz.findAnnotation<Link>()?.let { linkAnnotation ->
-                    links.add(ai.ancf.lmos.wot.thing.schema.Link(
+                    links.add(org.eclipse.thingweb.thing.schema.Link(
                         href = linkAnnotation.href,
                         type = linkAnnotation.type,
                         rel = linkAnnotation.rel,
@@ -96,7 +96,7 @@ object ExposedThingBuilder {
                     ))
                 }
                 clazz.findAnnotation<Links>()?.values?.forEach { linkAnnotation ->
-                    links.add(ai.ancf.lmos.wot.thing.schema.Link(
+                    links.add(org.eclipse.thingweb.thing.schema.Link(
                         href = linkAnnotation.href,
                         type = linkAnnotation.type,
                         rel = linkAnnotation.rel,
