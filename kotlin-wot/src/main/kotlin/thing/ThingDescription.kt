@@ -126,25 +126,6 @@ data class ThingDescription @JsonCreator constructor(
         securityDefinitions[name] = securityScheme
     }
 
-    fun getPropertiesByObjectType(objectType: String): Map<String, PropertyAffordance<*>> {
-        return getPropertiesByExpandedObjectType(getExpandedObjectType(objectType))
-    }
-
-    private fun getPropertiesByExpandedObjectType(objectType: String): Map<String, PropertyAffordance<*>> {
-        return properties.filter { (_, property) ->
-            property.objectType?.defaultType?.let { getExpandedObjectType(it) } == objectType
-        }.toMap()
-    }
-
-    fun getExpandedObjectType(objectType: String): String {
-
-        val parts = objectType.split(":", limit = 2)
-        val prefix = if (parts.size == 2) parts[0] else null
-        val suffix = parts.last()
-
-        return objectContext?.getUrl(prefix)?.let { "$it#$suffix" } ?: objectType
-    }
-
     fun toJson() : String{
         return try {
             JsonMapper.instance.writeValueAsString(this)
