@@ -73,10 +73,10 @@ object ExposedThingBuilder {
                 title = thingAnnotation.title
                 objectType = Type(thingAnnotation.type)
                 val contexts = clazz.findAnnotations<Context>()
-                if(contexts.isNotEmpty()){
+                if (contexts.isNotEmpty()) {
                     val context = org.eclipse.thingweb.thing.schema.Context(DEFAULT_CONTEXT)
                     contexts.forEach {
-                        context.addContext(it.prefix, it.url)
+                        if (it.prefix.isEmpty()) context.addContext(it.url) else context.addContext(it.prefix, it.url)
                     }
                     objectContext = context
                 }

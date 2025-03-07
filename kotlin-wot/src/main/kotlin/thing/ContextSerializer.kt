@@ -23,20 +23,20 @@ internal class ContextSerializer : JsonSerializer<Context>() {
         gen: JsonGenerator,
         serializers: SerializerProvider
     ) {
-        val defaultUrl: String? = context.defaultUrl
+        val defaultUrls: List<String> = context.defaultUrls
         val prefixedUrls: Map<String, String> = context.prefixedUrls
-        val hasDefaultUrl = defaultUrl != null
+        val hasDefaultUrls = defaultUrls.isNotEmpty()
         val hasPrefixedUrls = prefixedUrls.isNotEmpty()
-        if (hasDefaultUrl && hasPrefixedUrls) {
+        if (hasDefaultUrls && hasPrefixedUrls) {
             gen.writeStartArray()
         }
-        if (hasDefaultUrl) {
-            gen.writeString(defaultUrl)
+        defaultUrls.forEach {
+            gen.writeString(it)
         }
         if (hasPrefixedUrls) {
             gen.writeObject(prefixedUrls)
         }
-        if (hasDefaultUrl && hasPrefixedUrls) {
+        if (hasDefaultUrls && hasPrefixedUrls) {
             gen.writeEndArray()
         }
     }

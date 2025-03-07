@@ -15,7 +15,7 @@ annotation class Thing(val id: String, val title: String, val description: Strin
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @Repeatable
-annotation class Context(val prefix: String, val url : String)
+annotation class Context(val prefix: String = "", val url : String)
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
