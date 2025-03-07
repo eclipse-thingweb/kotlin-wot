@@ -25,9 +25,9 @@ internal class ContextSerializer : JsonSerializer<Context>() {
     ) {
         val defaultUrls: List<String> = context.defaultUrls
         val prefixedUrls: Map<String, String> = context.prefixedUrls
-        val hasDefaultUrls = defaultUrls.isNotEmpty()
+        val hasMoreThanOneDefaultUrl = defaultUrls.size > 1
         val hasPrefixedUrls = prefixedUrls.isNotEmpty()
-        if (hasDefaultUrls && hasPrefixedUrls) {
+        if (hasMoreThanOneDefaultUrl || hasPrefixedUrls) {
             gen.writeStartArray()
         }
         defaultUrls.forEach {
@@ -36,7 +36,7 @@ internal class ContextSerializer : JsonSerializer<Context>() {
         if (hasPrefixedUrls) {
             gen.writeObject(prefixedUrls)
         }
-        if (hasDefaultUrls && hasPrefixedUrls) {
+        if (hasMoreThanOneDefaultUrl || hasPrefixedUrls) {
             gen.writeEndArray()
         }
     }
