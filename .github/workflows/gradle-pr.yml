@@ -3,7 +3,7 @@ name: build-pr
 on:
   push:
     branches-ignore:
-      - 'main'
+      - 'master'
 
 jobs:
   CI:
