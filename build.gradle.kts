@@ -1,9 +1,11 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     kotlin("jvm") version "2.0.20"
     id("org.jetbrains.kotlinx.kover") version "0.8.3"
     id("org.cadixdev.licenser") version "0.6.1"
-    id("com.jaredsburrows.license") version "0.9.8"
-    `maven-publish`
+    id("com.vanniktech.maven.publish") version "0.31.0"
+    id("org.cyclonedx.bom") version "2.2.0" apply false
 }
 
 subprojects {
@@ -11,10 +13,11 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlinx.kover")
     apply(plugin = "maven-publish")
     apply(plugin = "org.cadixdev.licenser")
-    apply(plugin = "com.jaredsburrows.license")
+    apply(plugin = "com.vanniktech.maven.publish")
+    apply(plugin = "org.cyclonedx.bom")
 
     group = "org.eclipse.thingweb"
-    version = "0.1.3-SNAPSHOT"
+    version = "0.1.0-SNAPSHOT"
 
     license {
         header(rootProject.file("LICENSE"))
@@ -48,20 +51,33 @@ subprojects {
         add("archives", tasks["javadocJar"])
     }
 
-    publishing {
-        publications {
-            create<MavenPublication>("mavenKotlin") {
-                from(components["java"])
-                artifact(tasks["sourcesJar"])
-                artifact(tasks["javadocJar"])
-                artifactId = project.name
+    mavenPublishing {
+        publishToMavenCentral(SonatypeHost.DEFAULT, automaticRelease = true)
+        signAllPublications()
+
+        pom {
+            name = "kotlin-wot"
+            description = "A Framework for implementing Web of Things in Kotlin."
+            url = "https://github.com/eclipse-thingweb/kotlin-wot"
+            licenses {
+                license {
+                    name = "Apache-2.0"
+                    distribution = "repo"
+                    url = "https://github.com/eclipse-thingweb/kotlin-wot/blob/master/LICENSES/Apache-2.0.txt"
+                }
+            }
+            developers {
+                developer {
+                    id = "robwin"
+                    name = "Robert Winkler"
+                    email = "opensource@telekom.de"
+                }
+            }
+            scm {
+                url = "https://github.com/eclipse-thingweb/kotlin-wot.git"
             }
         }
-        repositories {
-            mavenLocal()
-        }
     }
-
 
     tasks.test {
         useJUnitPlatform()

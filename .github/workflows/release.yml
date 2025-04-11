@@ -1,0 +1,120 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        type: choice
+        description: What do you want to release?
+        options: 
+        - Milestone
+        - Release
+  workflow_call:
+    inputs:
+      release-type:
+        default: "Milestone"
+        required: true
+        type: string
+      registry-name:
+        default: eclipse-lmos
+        type: string
+        required: false
+    secrets:
+      oss-username:
+        required: true
+      oss-password:
+        required: true
+      signing-key-id:
+        required: true
+      signing-key:
+        required: true
+      signing-key-password:
+        required: true
+      bot-token:
+        required: true
+      registry-username:
+        required: false
+      registry-password:
+        required: false
+    outputs:
+      version:
+       value: ${{ jobs.build-and-release.outputs.version }}
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      version: ${{ steps.Publish.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: master
+          token: ${{ secrets.bot-token }}
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@v5.0.0
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4.7.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4.3.0
+      - name: Publish
+        id: Publish
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.oss-username }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.oss-password }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.signing-key-id }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.signing-key }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.signing-key-password }}
+          REGISTRY_URL: ghcr.io
+          REGISTRY_USERNAME: ${{ secrets.registry-username }}
+          REGISTRY_PASSWORD: ${{ secrets.registry-password }}
+          REGISTRY_NAMESPACE: ${{ inputs.registry-name }}
+          GH_TOKEN: ${{ secrets.bot-token }}
+        run: |
+          git config --global user.email "cicd@ancf.ai"
+          git config --global user.name "CICD"
+          git fetch -t -q
+
+          # Extract version without -SNAPSHOT suffix from gradle.properties
+          version=$(sed -n -E 's/^version[[:blank:]]*=[[:blank:]]*(.*)-SNAPSHOT$/\1/p' gradle.properties)
+          oldSnapshotVersion="${version}-SNAPSHOT"
+
+          # In case of milestone release, set milestone release version based on previous milestone release versions
+          if [ "${{ github.event.inputs.release-type }}" == "Milestone" ]; then
+            oldMilestone=$(git tag -l "${version}-M*" --sort=v:refname | tail -n 1)
+            if [ "${oldMilestone}" == "" ]; then
+              version=${version}-M1
+            else
+              version=${version}-M$((10#${oldMilestone##*-M}+1))
+            fi
+          fi
+
+          # In case of non-milestone releses, increase the snapshot version in master branch
+          if [ "${{ github.event.inputs.release-type }}" == "Milestone" ]; then
+            nextSnapshotVersion="${oldSnapshotVersion}"
+          else
+            major=$(echo $version | cut -d. -f1)
+            minor=$(echo $version | cut -d. -f2)
+            nextSnapshotVersion="${major}.$((minor+1)).0-SNAPSHOT"
+          fi
+
+          echo "Releasing ${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          
+          # Update version, build, publish release jars and (optionally) docker image and helm chart
+          ./gradlew :release -Prelease.useAutomaticVersion=true "-Prelease.releaseVersion=${version}" "-Prelease.newVersion=${nextSnapshotVersion}" --no-parallel
+          git checkout "${version}"
+          ./gradlew publish --no-configuration-cache
+
+          # Generate release notes
+          if [ "${{ github.event.inputs.release-type }}" == "Milestone" ]; then
+            gh release create "${version}" --generate-notes --prerelease
+          else
+            gh release create "${version}" --generate-notes --latest
+          fi

@@ -1,0 +1,12 @@
+name: build-pr
+
+on:
+  push:
+    branches-ignore:
+      - 'master'
+
+jobs:
+  CI:
+    uses: eclipse-lmos/.github/.github/workflows/gradle-ci.yml@main
+    permissions:
+      contents: read
