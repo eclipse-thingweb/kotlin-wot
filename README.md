@@ -16,7 +16,30 @@ NOTE: The library is still under development
 WoT provides a protocol-agnostic architecture that supports an array of standards such as HTTP, WebSockets, MQTT, CoAP, and more, using protocol bindings to decouple application logic from transport-layer specifics. By leveraging widely adopted web standards like JSON, JSON Schema, and Linked Data, WoT ensures data and metadata are both interoperable and semantically rich, enabling intelligent systems to discover, understand, and communicate with Things efficiently.
 Designed for flexibility, WoT is applicable across a broad spectrum of domains, including AI-driven multi-agent systems, smart homes, and industrial IoT ecosystems. By using the [WoT Scripting API](https://www.w3.org/TR/wot-scripting-api/) you can directly communicate with Things via the Browser.
 
-<img src="https://github.com/user-attachments/assets/5a1a4fc4-0cca-4290-b4b7-96309f723b0c" width="80%">
+## Adding kotlin-wot to Your Gradle Project
+
+To use **kotlin-wot** in your project, you need to add the required dependencies and configure the repository in your `build.gradle.kts` file.
+
+```kotlin
+plugins {
+    kotlin("jvm") version "1.9.10"
+    id("org.springframework.boot") version "3.1.5"
+    id("io.spring.dependency-management") version "1.1.3"
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+    }
+}
+
+dependencies {
+    implementation("org.eclipse.thingweb:kotlin-wot-spring-boot-starter:0.1.0-SNAPSHOT")
+    implementation("org.eclipse.thingweb:kotlin-wot-binding-http:0.1.0-SNAPSHOT")
+    implementation("org.eclipse.thingweb:kotlin-wot-binding-websocket:0.1.0-SNAPSHOT")
+}
+```
 
 ## Thing Description (TD)
 
