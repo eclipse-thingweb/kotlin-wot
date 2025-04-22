@@ -7,7 +7,6 @@
 package org.eclipse.thingweb.spring
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.bind.ConstructorBinding
 import org.springframework.validation.annotation.Validated
 
 open class ServerProperties(
@@ -23,13 +22,15 @@ open class ServerProperties(
 class HttpServerProperties(
     enabled: Boolean = true,
     host: String = "0.0.0.0",
-    port: Int = 8080
-) : ServerProperties(enabled, host, port, listOf("http://localhost:$port"))
+    port: Int = 8080,
+    baseUrls: List<String> = listOf("http://localhost:$port")
+) : ServerProperties(enabled, host, port, baseUrls)
 
 @ConfigurationProperties(prefix = "wot.servient.websocket.server", ignoreUnknownFields = true)
 @Validated
 class WebsocketProperties(
     enabled: Boolean = true,
     host: String = "0.0.0.0",
-    port: Int = 8080
-) : ServerProperties(enabled, host, port, listOf("ws://localhost:$port"))
+    port: Int = 8080,
+    baseUrls: List<String> = listOf("ws://localhost:$port")
+) : ServerProperties(enabled, host, port, baseUrls)
