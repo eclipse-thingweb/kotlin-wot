@@ -41,6 +41,31 @@ dependencies {
 }
 ```
 
+## Adding kotlin-wot to your Gradle project
+
+To use **kotlin-wot** in your project, you need to add the required dependencies and configure the repository in your `build.gradle.kts` file.
+
+```kotlin
+plugins {
+    kotlin("jvm") version "1.9.10"
+    id("org.springframework.boot") version "3.1.5"
+    id("io.spring.dependency-management") version "1.1.3"
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+    }
+}
+
+dependencies {
+    implementation("org.eclipse.thingweb:kotlin-wot-spring-boot-starter:0.1.0-SNAPSHOT")
+    implementation("org.eclipse.thingweb:kotlin-wot-binding-http:0.1.0-SNAPSHOT")
+    implementation("org.eclipse.thingweb:kotlin-wot-binding-websocket:0.1.0-SNAPSHOT")
+}
+```
+
 ## Thing Description (TD)
 
 WoT defines an **information model** for describing Things and Services, including how to interact with them. This model is encapsulated in the **Thing Description (TD)**, a JSON-LD document that outlines the following:
