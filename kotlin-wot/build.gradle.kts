@@ -1,8 +1,8 @@
 dependencies {
     //implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.20")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
 
     // Tracing
     api(platform("io.opentelemetry:opentelemetry-bom:1.47.0"))
