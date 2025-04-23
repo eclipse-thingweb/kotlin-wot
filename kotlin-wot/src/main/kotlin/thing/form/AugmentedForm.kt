@@ -27,8 +27,6 @@ data class AugmentedForm(
         private val log = LoggerFactory.getLogger(AugmentedForm::class.java)
     }
 
-
-
     @get:JsonIgnore
     val hrefScheme: String?
         get() = try {

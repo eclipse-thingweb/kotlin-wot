@@ -29,7 +29,7 @@ class UriTemplate(private val template: String) {
 
         // Handle any remaining unresolved placeholders, for example, if a placeholder is missing a value.
         // For this example, let's throw an exception if we have unresolved placeholders
-        val remainingPlaceholders = Pattern.compile("\\{([a-zA-Z0-9_]+)}")
+        val remainingPlaceholders = Pattern.compile("\\{([a-zA-Z0-9_]+)\\}")
             .matcher(expandedUri)
 
         if (remainingPlaceholders.find()) {
