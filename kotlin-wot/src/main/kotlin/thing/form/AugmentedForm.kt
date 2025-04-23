@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.databind.JsonNode
 import org.eclipse.thingweb.security.SecurityScheme
 import org.eclipse.thingweb.thing.form.Form
 import org.eclipse.thingweb.thing.schema.WoTForm
 import org.eclipse.thingweb.thing.schema.WoTThingDescription
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.databind.JsonNode
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URISyntaxException
@@ -80,7 +80,7 @@ data class AugmentedForm(
             .map { it.value }
 
     private fun filterUriVariables(href: String): List<String> {
-        val regex = Regex("\\{[?+#./;&]?([^}]+)}") // Extracts text inside `{}` while ignoring optional prefix
+        val regex = Regex("\\{[?+#./;&]?([^}]+)\\}") // Extracts text inside `{}` while ignoring optional prefix
         return regex.findAll(href)
             .map { it.groupValues[1] } // Directly access group value (instead of using `?.value`)
             .flatMap { it.split(",") } // Handle multiple variables inside `{}` (comma-separated)

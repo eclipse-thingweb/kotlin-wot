@@ -1,7 +1,6 @@
 dependencies {
     implementation(platform("io.ktor:ktor-bom:3.0.3"))
     api(project(":kotlin-wot"))
-    implementation("org.slf4j:slf4j-api")
     implementation("io.ktor:ktor-server-core")
     implementation("io.ktor:ktor-server-netty")
     implementation("io.ktor:ktor-client-core")
