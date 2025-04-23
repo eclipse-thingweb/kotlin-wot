@@ -10,7 +10,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation")
 
     // Tracing
-    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:2.13.1-alpha")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:2.16.0-alpha-SNAPSHOT")
 
     implementation("io.ktor:ktor-client-cio")
     implementation("io.ktor:ktor-client-auth")
