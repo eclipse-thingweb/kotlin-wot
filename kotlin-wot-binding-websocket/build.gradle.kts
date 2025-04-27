@@ -3,7 +3,6 @@ dependencies {
 
     api(project(":kotlin-wot"))
     api(project(":kotlin-wot-lmos-protocol"))
-    implementation("org.slf4j:slf4j-api")
     implementation("io.ktor:ktor-server-netty")
     implementation("io.ktor:ktor-server-websockets")
     implementation("io.ktor:ktor-client-websocket:1.1.4")
