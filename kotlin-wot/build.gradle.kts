@@ -1,6 +1,6 @@
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
 
     // Tracing
