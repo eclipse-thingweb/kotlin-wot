@@ -214,6 +214,7 @@ fun Application.setupRouting(servient: Servient) {
             throw cause // re-throw if you want it to be logged
         }
     }
+    /*
     install(MicrometerMetrics) {
         meterBinders = listOf(
             JvmMemoryMetrics(),
@@ -221,6 +222,7 @@ fun Application.setupRouting(servient: Servient) {
             ProcessorMetrics()
         )
     }
+    */
     setupJackson()
     routing {
         route("/") {
